@@ -28,24 +28,15 @@ spring:
   application:
     name: DCSA-Backend
   r2dbc:
-    url: r2dbc:postgresql://${db_hostname}
+    url: r2dbc:postgresql://${DB_HOSTNAME:localhost:5432}
     name: dcsa_openapi
     properties:
       schema: dcsa_im_v3_0
     username: dcsa_db_owner
     password: 9c072fe8-c59c-11ea-b8d1-7b6577e9f3f5
     initialization-mode: always
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: https://dcsa.eu.auth0.com/
   webflux:
     base-path: ${dcsa.url.prefix:}/v1
-
-auth0:
-  audience: localhost
-  enabled: false
 
 springdoc:
   api-docs:
@@ -62,10 +53,10 @@ server:
 
 logging:
   level:
-    root: INFO
+    root: ${LOG_LEVEL:INFO}
     org:
       springframework:
-        r2dbc: INFO
+        r2dbc: ${LOG_LEVEL:INFO}
 
 management:
   endpoint:
