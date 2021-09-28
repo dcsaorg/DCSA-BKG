@@ -8,8 +8,5 @@ RUN apt-get update \
 
 EXPOSE 9090
 ENV DB_HOSTNAME db
-COPY run-in-container.sh /run.sh
-RUN chmod +x /run.sh
-COPY src/main/resources/application.yaml .
 COPY target/dcsa_bkg-*.jar .
 CMD java -jar dcsa_bkg-*.jar
