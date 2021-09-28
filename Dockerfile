@@ -7,7 +7,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 9090
-ENV DB_HOSTNAME db AUTH0_ENABLED true
+ENV DB_HOSTNAME db
 COPY run-in-container.sh /run.sh
 RUN chmod +x /run.sh
 COPY src/main/resources/application.yaml .

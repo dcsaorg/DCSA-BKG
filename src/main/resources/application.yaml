@@ -45,7 +45,7 @@ spring:
 
 auth0:
   audience: localhost
-  enabled: ${AUTH0_ENABLED:false}
+  enabled: false
 
 springdoc:
   api-docs:

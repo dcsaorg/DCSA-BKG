@@ -3,8 +3,7 @@ services:
     web:
         environment:
             - DB_HOSTNAME=db
-            - AUTH0_ENABLED=true
-        container_name: dcsa_tnt
+        container_name: dcsa_bkg
         build:
             .
         ports:
