@@ -28,7 +28,7 @@ spring:
   application:
     name: DCSA-Backend
   r2dbc:
-    url: r2dbc:postgresql://${db_hostname}
+    url: r2dbc:postgresql://${DB_HOSTNAME:localhost:5432}
     name: dcsa_openapi
     properties:
       schema: dcsa_im_v3_0
@@ -45,7 +45,7 @@ spring:
 
 auth0:
   audience: localhost
-  enabled: false
+  enabled: ${AUTH0_ENABLED:false}
 
 springdoc:
   api-docs:
@@ -62,10 +62,10 @@ server:
 
 logging:
   level:
-    root: INFO
+    root: ${LOG_LEVEL:INFO}
     org:
       springframework:
-        r2dbc: INFO
+        r2dbc: ${LOG_LEVEL:INFO}
 
 management:
   endpoint:
