@@ -1,4 +1,4 @@
-package org.dcsa.booking.config;
+package org.dcsa.bkg.config;
 
 import org.dcsa.core.repository.ExtendedRepositoryImpl;
 import org.springframework.context.annotation.ComponentScan;
