@@ -28,6 +28,7 @@ import javax.validation.constraints.Size;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @Validated
@@ -81,7 +82,7 @@ public class EventController extends AbstractEventController<BKGEventService, Ev
       @RequestParam(value = "transportDocumentTypeCode", required = false)
           @ValidEnum(clazz = TransportDocumentTypeCode.class)
           String transportDocumentTypeCode,
-      @RequestParam(value = "limit", defaultValue = "1", required = false) @Min(1) int limit,
+      @RequestParam(value = "limit", defaultValue = "20", required = false) @Min(1) int limit,
       ServerHttpResponse response,
       ServerHttpRequest request) {
     return super.findAll(response, request);
@@ -89,6 +90,21 @@ public class EventController extends AbstractEventController<BKGEventService, Ev
 
   @Override
   public Mono<Event> create(@Valid @RequestBody Event event) {
+    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
+  }
+
+  @Override
+  public Mono<Event> update(UUID id, Event event) {
+    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
+  }
+
+  @Override
+  public Mono<Void> delete(Event event) {
+    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
+  }
+
+  @Override
+  public Mono<Void> deleteById(UUID id) {
     return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
   }
 

@@ -63,12 +63,4 @@ public class BKGEventServiceImpl extends GenericEventServiceImpl implements BKGE
         .switchIfEmpty(getShipmentEventRelatedEntities(id))
         .switchIfEmpty(Mono.error(new NotFoundException("No event was found with id: " + id)));
   }
-
-  @Override
-  public Mono<Event> create(Event event) {
-    if (event.getEventType() == EventType.SHIPMENT) {
-      return shipmentEventService.create((ShipmentEvent) event).cast(Event.class);
-    }
-    return Mono.error(new IllegalStateException("Unexpected value: " + event.getEventType()));
-  }
 }
