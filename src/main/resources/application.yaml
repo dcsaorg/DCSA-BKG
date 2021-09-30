@@ -25,6 +25,8 @@ pagination:
   defaultPageSize: 20
 
 spring:
+  profiles:
+    active: dev # test, prod
   application:
     name: DCSA-Backend
   r2dbc:
@@ -37,13 +39,6 @@ spring:
     initialization-mode: always
   webflux:
     base-path: ${dcsa.url.prefix:}/v1
-
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    # swagger-ui custom path
-    path: /docs
 
 server:
   port: 9090
