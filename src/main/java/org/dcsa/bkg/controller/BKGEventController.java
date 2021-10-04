@@ -11,46 +11,34 @@ import org.dcsa.core.events.util.ExtendedGenericEventRequest;
 import org.dcsa.core.extendedrequest.ExtendedRequest;
 import org.dcsa.core.validator.ValidEnum;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @Validated
-@RequestMapping(
-    value = "events",
-    produces = {MediaType.APPLICATION_JSON_VALUE})
-public class EventController extends AbstractEventController<BKGEventService, Event> {
+public class BKGEventController extends AbstractEventController<BKGEventService, Event> {
 
   private final BKGEventService bkgEventService;
 
-  public EventController(@Qualifier("BKGEventServiceImpl") BKGEventService bkgEventService) {
+  public BKGEventController(@Qualifier("BKGEventServiceImpl") BKGEventService bkgEventService) {
     this.bkgEventService = bkgEventService;
   }
 
   @Override
   public BKGEventService getService() {
     return this.bkgEventService;
-  }
-
-  @Override
-  public String getType() {
-    return "Event";
   }
 
   @Override
@@ -67,7 +55,7 @@ public class EventController extends AbstractEventController<BKGEventService, Ev
     };
   }
 
-  @GetMapping
+  @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
   public Flux<Event> findAll(
       @RequestParam(value = "shipmentEventTypeCode", required = false)
           @ValidEnum(clazz = ShipmentEventTypeCode.class)
@@ -87,28 +75,4 @@ public class EventController extends AbstractEventController<BKGEventService, Ev
       ServerHttpRequest request) {
     return super.findAll(response, request);
   }
-
-  @Override
-  public Mono<Event> create(@Valid @RequestBody Event event) {
-    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
-  }
-
-  @Override
-  public Mono<Event> update(UUID id, Event event) {
-    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
-  }
-
-  @Override
-  public Mono<Void> delete(Event event) {
-    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
-  }
-
-  @Override
-  public Mono<Void> deleteById(UUID id) {
-    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
-  }
-
-  @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Invalid param value")
-  @ExceptionHandler(ConstraintViolationException.class)
-  public void badRequest() {}
 }
