@@ -8,6 +8,7 @@ import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.extendedrequest.ExtendedParameters;
 import org.dcsa.core.extendedrequest.ExtendedRequest;
+import org.dcsa.core.security.SecurityConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,16 +17,11 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.http.MediaType;
 import org.springframework.r2dbc.core.binding.BindMarkersFactory;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -39,7 +35,7 @@ import java.util.UUID;
 @DisplayName("Tests for BKG Event Controller")
 @ActiveProfiles("test")
 @WebFluxTest(controllers = {BKGEventController.class})
-@Import(value = {GlobalExceptionHandler.class})
+@Import(value = {GlobalExceptionHandler.class, SecurityConfig.class})
 class BKGEventControllerTest {
 
   @Autowired WebTestClient webTestClient;
@@ -56,15 +52,6 @@ class BKGEventControllerTest {
 
   private Event event;
   private ShipmentEvent shipmentEvent;
-
-  @TestConfiguration
-  @EnableWebFluxSecurity
-  static class WebFluxSecurityConfig {
-    @Bean
-    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-      return http.csrf().disable().build();
-    }
-  }
 
   @BeforeEach
   void init() {
