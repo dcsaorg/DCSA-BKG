@@ -1,6 +1,6 @@
 package org.dcsa.bkg.controller;
 
-import org.dcsa.bkg.model.transferobjects.BookingSummaryTo;
+import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
@@ -72,7 +72,7 @@ class BKGSummariesControllerTest {
 
     UUID uuid = UUID.randomUUID();
 
-    BookingSummaryTo bookingSummaryTo = new BookingSummaryTo();
+    BookingSummaryTO bookingSummaryTo = new BookingSummaryTO();
     bookingSummaryTo.setBookingAcknowledgementID(uuid);
     bookingSummaryTo.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingSummaryTo.setDeliveryTypeAtDestination(ReceiptDeliveryType.CY);

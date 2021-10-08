@@ -1,7 +1,7 @@
 package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.dcsa.bkg.model.transferobjects.BookingSummaryTo;
+import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.springframework.http.MediaType;
@@ -25,7 +25,7 @@ public class BKGSummariesController {
   private final BookingService bookingService;
 
   @GetMapping
-  public Flux<BookingSummaryTo> getBookingRequestSummaries(
+  public Flux<BookingSummaryTO> getBookingRequestSummaries(
       @RequestParam(value = "bookingAcknowledgementID", required = false)
           String bookingAcknowledgementID,
       @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
