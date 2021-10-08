@@ -34,7 +34,9 @@
 		<dependency>
 			<groupId>org.dcsa</groupId>
 			<artifactId>dcsa_event_core</artifactId>
-			<version>${dcsa.events.version}${dcsa.event.tag}${dcsa.artifacttype}</version>
+			<!-- Revert once changes are finalized-->
+			<!--<version>${dcsa.events.version}${dcsa.event.tag}${dcsa.artifacttype}</version>-->
+			<version>0.0.32-dev-bkg-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
