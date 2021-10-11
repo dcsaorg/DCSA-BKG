@@ -1,0 +1,55 @@
+name: DCSA-BKG CI
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!master'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Java JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+          server-id: github
+          server-username: ${{ secrets.DCSA_USER }}
+          server-password: ${{ secrets.DCSA_PACKAGES_PAT }}
+
+      - name: maven-settings-xml-action
+        uses: whelk-io/maven-settings-xml-action@v12
+        with:
+          repositories: '[{ "id": "github", "name": "DCSA Backend repo", "url": "https://maven.pkg.github.com/dcsaorg/DCSA-Core", "releases": { "enabled": "true" }, "snapshots": { "enabled": "true" } }]'
+          servers: '[{ "id": "github", "username": "${{ secrets.DCSA_USER }}", "password": "${{ secrets.DCSA_PACKAGES_PAT }}" }]'
+
+      - name: Checkout dcsaorg/DCSA-Event-Core
+        uses: actions/checkout@v2.3.1
+        with:
+          repository: dcsaorg/DCSA-Event-Core
+          ref: dev-bkg
+          path: DCSA-Event-Core
+          token: ${{ secrets.REPO_ACCESS_PAT }}
+
+      - name: Install DCSA-Event-Core package
+        run: cd DCSA-Event-Core && mvn -B -X install -DskipTests -Dsha1=-${{ github.ref }} -Dchangelist=-SNAPSHOT
+
+      - name: set mvn version variable
+        run: echo "MAVEN_PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)- " >> $GITHUB_ENV
+      - run: echo $MAVEN_PROJECT_VERSION
+
+      - name: Fetch backend
+        uses: actions/checkout@v2
+        with:
+          path: DCSA-BKG
+          submodules: recursive
+      - name: Build Booking API
+        run: cd DCSA-BKG && mvn package -DskipTests -Ddcsa.version=$MAVEN_PROJECT_VERSION -Ddcsa.core.tag=${{ github.ref }} -Ddcsa.artifacttype=-SNAPSHOT #Need to skip the tests as they depend on a running DB
+      - name: Build and run the microservices
+        run: cd DCSA-BKG && docker-compose -f docker-compose.yml up -d -V

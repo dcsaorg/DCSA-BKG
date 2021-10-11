@@ -1,6 +1,9 @@
-name: Microservices CI
+name: DCSA-BKG CI
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   build:
