@@ -37,11 +37,9 @@ jobs:
           path: DCSA-Event-Core
           token: ${{ secrets.REPO_ACCESS_PAT }}
 
-      - name: Install DCSA-Event-Core package
-        run: cd DCSA-Event-Core && mvn -B -X install -DskipTests -Dsha1=-${{ github.ref }} -Dchangelist=-SNAPSHOT
+      - name: Install DCSA-Event-Core package & set mvn version variable
+        run: cd DCSA-Event-Core && mvn -B -X install -DskipTests -Dsha1=-${{ github.ref }} -Dchangelist=-SNAPSHOT && echo "MAVEN_PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)- " >> $GITHUB_ENV
 
-      - name: set mvn version variable
-        run: echo "MAVEN_PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)- " >> $GITHUB_ENV
       - run: echo $MAVEN_PROJECT_VERSION
 
       - name: Fetch backend
