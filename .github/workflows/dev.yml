@@ -11,17 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Java JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
           java-version: 11
-
-      - name: Set up Maven Central Repository
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-          server-id: github
-          server-username: ${{ secrets.DCSA_USER }}
-          server-password: ${{ secrets.DCSA_PACKAGES_PAT }}
 
       - name: maven-settings-xml-action
         uses: whelk-io/maven-settings-xml-action@v12
@@ -37,10 +29,10 @@ jobs:
           path: DCSA-Event-Core
           token: ${{ secrets.REPO_ACCESS_PAT }}
 
-      - name: Install DCSA-Event-Core package & set mvn version variable
-        run: cd DCSA-Event-Core && mvn -B -X install -DskipTests -Dsha1=-${{ github.ref }} -Dchangelist=-SNAPSHOT && echo "MAVEN_PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)- " >> $GITHUB_ENV
+      - name: Set dcsa-event-core mvn version variable
+        run: cd DCSA-Event-Core && echo "DCSA_EVENT_CORE_PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)- " >> $GITHUB_ENV
 
-      - run: echo $MAVEN_PROJECT_VERSION
+      - run: echo $DCSA_EVENT_CORE_PROJECT_VERSION
 
       - name: Fetch backend
         uses: actions/checkout@v2
@@ -48,6 +40,6 @@ jobs:
           path: DCSA-BKG
           submodules: recursive
       - name: Build Booking API
-        run: cd DCSA-BKG && mvn package -DskipTests -Ddcsa.events.version=$MAVEN_PROJECT_VERSION -Ddcsa.event.tag=${{ github.ref }} -Ddcsa.artifacttype=-SNAPSHOT #Need to skip the tests as they depend on a running DB
+        run: cd DCSA-BKG && mvn package -DskipTests -Ddcsa.events.version=$DCSA_EVENT_CORE_PROJECT_VERSION -Ddcsa.event.tag=dev-bkg -Ddcsa.artifacttype=-SNAPSHOT #Need to skip the tests as they depend on a running DB
       - name: Build and run the microservices
         run: cd DCSA-BKG && docker-compose -f docker-compose.yml up -d -V
