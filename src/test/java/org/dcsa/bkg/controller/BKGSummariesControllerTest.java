@@ -90,15 +90,13 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setSubmissionDateTime(OffsetDateTime.now());
     bookingSummaryTo.setAMSACIFilingRequired(true);
     bookingSummaryTo.setDestinationFilingRequired(true);
-    bookingSummaryTo.setOtiCarrierCode("234234");
-    bookingSummaryTo.setSeriesCarrierCode("1234");
     bookingSummaryTo.setContractQuotationReference("DKK");
     bookingSummaryTo.setExpectedDepartureDate(OffsetDateTime.now());
     bookingSummaryTo.setTransportDocumentType(TransportDocumentTypeCode.BOL);
     bookingSummaryTo.setTransportDocumentReference("ASV23142ASD");
     bookingSummaryTo.setBookingChannelReference("ABC12313");
     bookingSummaryTo.setIncoTerms(IncoTerms.FCA);
-    bookingSummaryTo.setCommunicationChannel("API");
+    bookingSummaryTo.setCommunicationChannel(CommunicationChannel.AO);
     bookingSummaryTo.setEquipmentSubstitutionAllowed(true);
 
     Mockito.when(bookingService.getBookingRequestSummaries()).thenReturn(Flux.just(bookingSummaryTo));

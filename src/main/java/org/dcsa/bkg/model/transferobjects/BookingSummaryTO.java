@@ -1,7 +1,6 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.dcsa.core.events.model.enums.*;
 
@@ -47,12 +46,6 @@ public class BookingSummaryTO {
 
   private boolean isDestinationFilingRequired;
 
-  @JsonProperty("OTICarrierCode")
-  private String otiCarrierCode;
-
-  @JsonProperty("800SeriesCarrierCode")
-  private String seriesCarrierCode;
-
   private String contractQuotationReference;
 
   @JsonFormat(pattern = "yyyy-MM-dd")
@@ -66,7 +59,7 @@ public class BookingSummaryTO {
 
   private IncoTerms incoTerms;
 
-  private String communicationChannel;
+  private CommunicationChannel communicationChannel;
 
   private boolean isEquipmentSubstitutionAllowed;
 }
