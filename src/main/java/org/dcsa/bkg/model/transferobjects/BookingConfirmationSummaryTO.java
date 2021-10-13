@@ -10,14 +10,13 @@ import java.time.OffsetDateTime;
 @Data
 public class BookingConfirmationSummaryTO {
 
-    @Size(max = 35)
-    private String carrierBookingReferenceID;
+  @Size(max = 35)
+  private String carrierBookingReferenceID;
 
-    private String termsAndConditions;
+  private String termsAndConditions;
 
-    private Location placeOfIssue;
+  private Location placeOfIssue;
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
-    private OffsetDateTime bookingRequestDateTime;
-
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+  private OffsetDateTime bookingRequestDateTime;
 }

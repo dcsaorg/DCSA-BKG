@@ -18,19 +18,19 @@ import javax.validation.constraints.Min;
 @RestController
 @Validated
 @RequestMapping(
-        value = "/booking-confirmation-summaries",
-        produces = {MediaType.APPLICATION_JSON_VALUE})
+    value = "/booking-confirmation-summaries",
+    produces = {MediaType.APPLICATION_JSON_VALUE})
 public class BKGConfirmationSummariesController {
 
-    private final BookingConfirmationService bookingConfirmationService;
+  private final BookingConfirmationService bookingConfirmationService;
 
-    @GetMapping
-    public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
-            @RequestParam(value = "carrierBookingReferenceID", required = false)
-                    String carrierBookingReferenceID,
-            @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
-            @RequestParam(value = "limit", defaultValue = "100") @Min(1) int limit) {
-        // ToDo: adjust this when the IM is ready for booking
-        return bookingConfirmationService.getBookingConfirmationSummaries();
-    }
+  @GetMapping
+  public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
+      @RequestParam(value = "carrierBookingReferenceID", required = false)
+          String carrierBookingReferenceID,
+      @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
+      @RequestParam(value = "limit", defaultValue = "100") @Min(1) int limit) {
+    // ToDo: adjust this when the IM is ready for booking
+    return bookingConfirmationService.getBookingConfirmationSummaries();
+  }
 }
