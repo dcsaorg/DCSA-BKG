@@ -34,7 +34,7 @@ class BKGConfirmationSummariesControllerTest {
 
   @Test
   @DisplayName("Get booking summaries should throw bad request for invalid document status.")
-  void bookingRequestSummariesShouldThrowBadRequestForInvalidDocumentStatus() {
+  void bookingConfirmationSummariesShouldThrowBadRequestForInvalidDocumentStatus() {
 
     webTestClient
         .get()
@@ -52,13 +52,16 @@ class BKGConfirmationSummariesControllerTest {
 
   @Test
   @DisplayName("Get booking summaries should throw bad request for limit 0.")
-  void bookingRequestSummariesShouldThrowBadRequestForLimitZero() {
+  void bookingConfirmationSummariesShouldThrowBadRequestForLimitZero() {
 
     webTestClient
         .get()
         .uri(
             uriBuilder ->
-                uriBuilder.path(BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT).queryParam("limit", "0").build())
+                uriBuilder
+                    .path(BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT)
+                    .queryParam("limit", "0")
+                    .build())
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectStatus()
@@ -68,11 +71,13 @@ class BKGConfirmationSummariesControllerTest {
   @Test
   @DisplayName(
       "Get booking confirmation summaries should return valid list of booking request summaries for valid request.")
-  void bookingRequestSummariesShouldReturnListOfBookingRequestSummaries() {
+  void bookingConfirmationSummariesShouldReturnListOfBookingRequestSummaries() {
 
     String carrierBookingReferenceID = UUID.randomUUID().toString().substring(0, 33);
+    OffsetDateTime dateTimeOffset = OffsetDateTime.now();
     UUID addressID = UUID.randomUUID();
     UUID facilityID = UUID.randomUUID();
+    String termsAndConditions = "TERMS AND CONDITIONS!";
 
     Location location = new Location();
     location.setLocationName("Islands Brygge");
@@ -84,7 +89,7 @@ class BKGConfirmationSummariesControllerTest {
 
     BookingConfirmationSummaryTO bookingConfirmationSummaryTO = new BookingConfirmationSummaryTO();
     bookingConfirmationSummaryTO.setCarrierBookingReferenceID(carrierBookingReferenceID);
-    bookingConfirmationSummaryTO.setBookingRequestDateTime(OffsetDateTime.now());
+    bookingConfirmationSummaryTO.setBookingRequestDateTime(dateTimeOffset);
     bookingConfirmationSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
     bookingConfirmationSummaryTO.setPlaceOfIssue(location);
 
@@ -103,6 +108,17 @@ class BKGConfirmationSummariesControllerTest {
         .jsonPath("$")
         .isArray()
         .jsonPath("$.[0].carrierBookingReferenceID")
-        .isEqualTo(carrierBookingReferenceID);
+        .isEqualTo(carrierBookingReferenceID)
+        .jsonPath("$.[0].placeOfIssue.locationName")
+        .isEqualTo(location.getLocationName())
+        .jsonPath("$.[0].placeOfIssue.UNLocationCode")
+        .isEqualTo(location.getUnLocationCode())
+        .jsonPath("$.[0].placeOfIssue.latitude")
+        .isEqualTo(location.getLatitude())
+        .jsonPath("$.[0].placeOfIssue.longitude")
+        .isEqualTo(location.getLongitude())
+        .jsonPath("$.[0].termsAndConditions")
+        .isEqualTo(termsAndConditions)
+    ;
   }
 }
