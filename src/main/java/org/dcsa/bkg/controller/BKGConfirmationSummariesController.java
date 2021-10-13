@@ -1,8 +1,8 @@
 package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.model.transferobjects.BookingConfirmationSummaryTO;
+import org.dcsa.bkg.service.BookingConfirmationService;
 import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -18,19 +18,19 @@ import javax.validation.constraints.Min;
 @RestController
 @Validated
 @RequestMapping(
-        value = "/booking-summaries",
+        value = "/booking-confirmation-summaries",
         produces = {MediaType.APPLICATION_JSON_VALUE})
-public class BKGSummariesController {
+public class BKGConfirmationSummariesController {
 
-    private final BookingService bookingService;
+    private final BookingConfirmationService bookingConfirmationService;
 
     @GetMapping
-    public Flux<BookingSummaryTO> getBookingRequestSummaries(
-            @RequestParam(value = "bookingAcknowledgementID", required = false)
-                    String bookingAcknowledgementID,
+    public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
+            @RequestParam(value = "carrierBookingReferenceID", required = false)
+                    String carrierBookingReferenceID,
             @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
             @RequestParam(value = "limit", defaultValue = "100") @Min(1) int limit) {
         // ToDo: adjust this when the IM is ready for booking
-        return bookingService.getBookingRequestSummaries();
+        return bookingConfirmationService.getBookingConfirmationSummaries();
     }
 }

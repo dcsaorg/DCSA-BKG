@@ -23,44 +23,44 @@ import java.util.UUID;
 @Service
 public class BKGEventServiceImpl extends GenericEventServiceImpl implements BKGEventService {
 
-  private final Set<EventType> SUPPORTED_EVENT_TYPES = Set.of(EventType.SHIPMENT);
+    private final Set<EventType> SUPPORTED_EVENT_TYPES = Set.of(EventType.SHIPMENT);
 
-  public BKGEventServiceImpl(
-      TransportEventService transportEventService,
-      EquipmentEventService equipmentEventService,
-      ShipmentEventService shipmentEventService,
-      OperationsEventService operationsEventService,
-      EventRepository eventRepository,
-      PendingEventRepository pendingEventRepository) {
-    super(
-        shipmentEventService,
-        transportEventService,
-        equipmentEventService,
-        operationsEventService,
-        eventRepository,
-        pendingEventRepository);
-  }
+    public BKGEventServiceImpl(
+            TransportEventService transportEventService,
+            EquipmentEventService equipmentEventService,
+            ShipmentEventService shipmentEventService,
+            OperationsEventService operationsEventService,
+            EventRepository eventRepository,
+            PendingEventRepository pendingEventRepository) {
+        super(
+                shipmentEventService,
+                transportEventService,
+                equipmentEventService,
+                operationsEventService,
+                eventRepository,
+                pendingEventRepository
+        );
+    }
 
-  protected Set<EventType> getSupportedEvents() {
-    return SUPPORTED_EVENT_TYPES;
-  }
+    protected Set<EventType> getSupportedEvents() {
+        return SUPPORTED_EVENT_TYPES;
+    }
 
-  @Override
-  public Flux<Event> findAllExtended(ExtendedRequest<Event> extendedRequest) {
-    return super.findAllExtended(extendedRequest)
-        .concatMap(
-            event -> {
-              if (event.getEventType() == EventType.SHIPMENT) {
-                return shipmentEventService.loadRelatedEntities((ShipmentEvent) event);
-              }
-              return Mono.empty();
-            });
-  }
+    @Override
+    public Flux<Event> findAllExtended(ExtendedRequest<Event> extendedRequest) {
+        return super.findAllExtended(extendedRequest)
+                .concatMap(event -> {
+                    if (event.getEventType() == EventType.SHIPMENT) {
+                        return shipmentEventService.loadRelatedEntities((ShipmentEvent) event);
+                    }
+                    return Mono.empty();
+                });
+    }
 
-  @Override
-  public Mono<Event> findById(UUID id) {
-    return Mono.<Event>empty()
-        .switchIfEmpty(getShipmentEventRelatedEntities(id))
-        .switchIfEmpty(Mono.error(new NotFoundException("No event was found with id: " + id)));
-  }
+    @Override
+    public Mono<Event> findById(UUID id) {
+        return Mono.<Event>empty()
+                .switchIfEmpty(getShipmentEventRelatedEntities(id))
+                .switchIfEmpty(Mono.error(new NotFoundException("No event was found with id: " + id)));
+    }
 }
