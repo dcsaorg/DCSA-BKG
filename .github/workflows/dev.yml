@@ -1,4 +1,4 @@
-name: DCSA-BKG CI
+name: DCSA-BKG DEV CI
 
 on:
   push:
