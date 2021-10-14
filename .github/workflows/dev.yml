@@ -48,16 +48,18 @@ jobs:
       - name: Build and run the microservices
         run: cd DCSA-BKG && docker-compose -f docker-compose.yml up -d -V
 
-      - name: Backend Status
+      - name: Fetch Backend Status
         run: |
           sleep 10
           echo "::set-output name=STATUS::$(curl -s http://localhost:9090/v1/actuator/health | jq -r '.status')"
         id: healthcheck
 
-      - name: Output health status
-        run: echo "The service is ${{ steps.healthcheck.outputs.STATUS }}"
+      - name: Confirm microservice status
+        if: ${{ steps.healthcheck.outputs.STATUS == 'UP' }}
+        run: |
+            echo "The DCSA-BKG service is UP."
 
-      - name: Confirm backend status
+      - name: Confirm microservice status
         if: ${{ steps.healthcheck.outputs.STATUS != 'UP' }}
         uses: actions/github-script@v3
         with:
