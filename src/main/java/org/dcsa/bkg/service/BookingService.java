@@ -9,4 +9,6 @@ public interface BookingService {
   Flux<BookingSummaryTO> getBookingRequestSummaries();
 
   Mono<BookingConfirmationTO> getBooking(String carrierBookingReference);
+
+  Mono<Void> cancelBooking(String carrierBookingReference);
 }

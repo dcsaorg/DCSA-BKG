@@ -19,4 +19,9 @@ public class BookingServiceImpl implements BookingService {
   public Mono<BookingConfirmationTO> getBooking(String carrierBookingReference) {
     return Mono.empty();
   }
+
+  @Override
+  public Mono<Void> cancelBooking(String carrierBookingReference) {
+    return Mono.empty();
+  }
 }

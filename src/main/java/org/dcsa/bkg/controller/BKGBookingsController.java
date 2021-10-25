@@ -5,6 +5,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
 import org.dcsa.bkg.service.BookingService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +24,26 @@ public class BKGBookingsController {
   private final BookingService bookingService;
 
   @GetMapping(path = "{carrierBookingReference}")
-  public Mono<BookingConfirmationTO> getBookingReference(@PathVariable @Size(max = 35) String carrierBookingReference) {
+  public Mono<BookingConfirmationTO> getBookingReference(
+      @PathVariable @Size(max = 35) String carrierBookingReference) {
     // ToDo: adjust this when the IM is ready for booking
     return bookingService.getBooking(carrierBookingReference);
+  }
+
+  // To avoid spelling confusion we just accept both spellings
+  @PostMapping(path = "{carrierBookingReference}/cancelation")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public Mono<Void> bookingCancelation(
+      @PathVariable @Size(max = 35) String carrierBookingReference) {
+    // ToDo: adjust this when the IM is ready for booking
+    return bookingCancellation(carrierBookingReference);
+  }
+
+  @PostMapping(path = "{carrierBookingReference}/cancellation")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public Mono<Void> bookingCancellation(
+      @PathVariable @Size(max = 35) String carrierBookingReference) {
+    // ToDo: adjust this when the IM is ready for booking
+    return bookingService.cancelBooking(carrierBookingReference);
   }
 }
