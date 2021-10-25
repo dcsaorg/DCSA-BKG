@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 public interface BookingService {
   Flux<BookingSummaryTO> getBookingRequestSummaries();
 
-  Mono<BookingConfirmationTO> getBooking(String carrierBookingReference );
+  Mono<BookingConfirmationTO> getBooking(String carrierBookingReference);
 }
