@@ -56,7 +56,6 @@
 				<configuration>
 					<excludes>
 						<exclude>org/dcsa/bkg/config/*</exclude>
-						<exclude>org/dcsa/bkg/model/**</exclude>
 						<exclude>org/dcsa/bkg/Application.class</exclude>
 					</excludes>
 				</configuration>
