@@ -4,9 +4,11 @@ import lombok.Data;
 import org.dcsa.bkg.model.enums.TransportPlanStage;
 import org.dcsa.core.events.model.Location;
 import org.dcsa.core.events.model.ModeOfTransport;
+import org.dcsa.core.events.model.enums.DCSATransportType;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.OffsetDateTime;
 
 @Data
 public class TransportTO {
@@ -19,11 +21,11 @@ public class TransportTO {
 
   @NotNull private Location dischargeLocation;
 
-  @NotNull private String plannedDepartureDate;
+  @NotNull private OffsetDateTime plannedDepartureDate;
 
-  @NotNull private String plannedArrivalDate;
+  @NotNull private OffsetDateTime plannedArrivalDate;
 
-  private ModeOfTransport modeOfTransport;
+  private DCSATransportType modeOfTransport;
 
   @NotNull
   @Size(max = 35)
