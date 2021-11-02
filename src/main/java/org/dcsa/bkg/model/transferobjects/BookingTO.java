@@ -54,7 +54,7 @@ public class BookingTO {
   @Size(max = 35, message = "ImportLicenseReference has a max size of 35.")
   private String importLicenseReference;
 
-  @JsonFormat(pattern = "yyyy-MM-dd")
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private OffsetDateTime submissionDateTime;
 
   @JsonProperty("isAMSACIFilingRequired")
@@ -66,7 +66,7 @@ public class BookingTO {
   @Size(max = 35, message = "ContractQuotationReference has a max size of 35.")
   private String contractQuotationReference;
 
-  @JsonFormat(pattern = "yyyy-MM-dd")
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private OffsetDateTime expectedDepartureDate;
 
   private TransportDocumentTypeCode transportDocumentType;

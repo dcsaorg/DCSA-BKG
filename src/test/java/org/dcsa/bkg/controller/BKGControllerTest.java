@@ -22,6 +22,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.function.Function;
@@ -54,6 +55,8 @@ class BKGControllerTest {
     bookingTO.setServiceContractReference("x".repeat(30));
     bookingTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
     bookingTO.setCommunicationChannel(CommunicationChannel.AO);
+    bookingTO.setSubmissionDateTime(OffsetDateTime.now());
+    bookingTO.setExpectedDepartureDate(OffsetDateTime.now());
 
     CommodityTO commodityTO = new CommodityTO();
     commodityTO.setCommodityType("x".repeat(20));

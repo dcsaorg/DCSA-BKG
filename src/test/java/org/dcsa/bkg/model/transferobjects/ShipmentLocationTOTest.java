@@ -3,6 +3,7 @@ package org.dcsa.bkg.model.transferobjects;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.dcsa.core.events.model.enums.LocationType;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
@@ -16,7 +17,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.text.SimpleDateFormat;
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.Set;
 
 @DisplayName("Tests for ShipmentLocationTOTest")
@@ -30,13 +31,19 @@ class ShipmentLocationTOTest {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     validator = factory.getValidator();
 
-    objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    // replicating default spring boot config for object mapper
+    // for reference
+    // https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration.java
+    objectMapper =
+        new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     shipmentLocationTO = new ShipmentLocationTO();
     shipmentLocationTO.setLocation(new LocationTO());
     shipmentLocationTO.setLocationType(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
-    shipmentLocationTO.setEventDateTime(OffsetDateTime.now());
+    shipmentLocationTO.setEventDateTime(LocalDate.now());
   }
 
   @Test

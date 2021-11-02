@@ -8,7 +8,7 @@ import org.dcsa.core.events.model.enums.CargoGrossWeight;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 @Data
 public class CommodityTO {
@@ -24,9 +24,9 @@ public class CommodityTO {
   @NotNull(message = "cargoGrossWeight cannot be empty!")
   private CargoGrossWeight cargoGrossWeight;
 
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  private OffsetDateTime exportLicenseIssueDate;
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  private LocalDate exportLicenseIssueDate;
 
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  private OffsetDateTime exportLicenseExpiryDate;
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  private LocalDate exportLicenseExpiryDate;
 }
