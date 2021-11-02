@@ -10,7 +10,7 @@ import org.dcsa.core.events.model.enums.DCSATransportType;
 import org.dcsa.core.events.model.enums.PaymentTerm;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -26,6 +26,7 @@ import reactor.core.publisher.Mono;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 @DisplayName("Tests for BKG Confirmed Booking Controller")
 @ActiveProfiles("test")
@@ -39,11 +40,10 @@ class BKGConfirmedBookingsControllerTest {
 
   private final String CONFIRMED_BOOKING_ENDPOINT = "/confirmed-bookings";
 
-  @Test
-  @DisplayName(
-      "Get confirmed bookings should return valid list of booking request summaries for valid request.")
-  void confirmedBookingsShouldReturnListOfBookingConfirmation() {
+  private BookingConfirmationTO bookingConfirmationTO;
 
+  @BeforeEach
+  void init() {
     String carrierBookingReferenceID = UUID.randomUUID().toString().substring(0, 33);
     OffsetDateTime dateTimeOffset = OffsetDateTime.now();
     UUID addressID = UUID.randomUUID();
@@ -95,7 +95,7 @@ class BKGConfirmedBookingsControllerTest {
     CarrierClauseTO carrierClause = new CarrierClauseTO();
     carrierClause.setClauseContent("ClauseContent");
 
-    BookingConfirmationTO bookingConfirmationTO = new BookingConfirmationTO();
+    bookingConfirmationTO = new BookingConfirmationTO();
     bookingConfirmationTO.setCarrierBookingReferenceID(carrierBookingReferenceID);
     bookingConfirmationTO.setTermsAndConditions(termsAndConditions);
     bookingConfirmationTO.setPlaceOfIssue(location);
@@ -105,73 +105,33 @@ class BKGConfirmedBookingsControllerTest {
     bookingConfirmationTO.setConfirmedEquipments(List.of(confirmedEquipment));
     bookingConfirmationTO.setCharges(List.of(charge));
     bookingConfirmationTO.setCarrierClauses(List.of(carrierClause));
+  }
 
-    Mockito.when(bookingService.getBooking(carrierBookingReferenceID))
-        .thenReturn(Mono.just(bookingConfirmationTO));
+  private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus200 =
+      (exchange) -> exchange.expectStatus().isOk();
 
-    webTestClient
-        .get()
-        .uri(CONFIRMED_BOOKING_ENDPOINT + "/" + carrierBookingReferenceID)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .consumeWith(System.out::println)
-        .jsonPath("$.carrierBookingReferenceID")
-        .isEqualTo(carrierBookingReferenceID)
-        .jsonPath("$.placeOfIssue.locationName")
-        .isEqualTo(location.getLocationName())
-        .jsonPath("$.placeOfIssue.UNLocationCode")
-        .isEqualTo(location.getUnLocationCode())
-        .jsonPath("$.placeOfIssue.latitude")
-        .isEqualTo(location.getLatitude())
-        .jsonPath("$.placeOfIssue.longitude")
-        .isEqualTo(location.getLongitude())
-        .jsonPath("$.termsAndConditions")
-        .isEqualTo(termsAndConditions)
-        .jsonPath("$.carrierClauses.[0].clauseContent")
-        .isEqualTo(carrierClause.getClauseContent())
-        .jsonPath("$.transports.[0].transportPlanStage")
-        .isEqualTo(transport.getTransportPlanStage().toString())
-        .jsonPath("$.transports.[0].modeOfTransport")
-        .isEqualTo(transport.getModeOfTransport().toString())
-        .jsonPath("$.transports.[0].loadLocation")
-        .isNotEmpty()
-        .jsonPath("$.transports.[0].dischargeLocation")
-        .isNotEmpty()
-        .jsonPath("$.transports.[0].vesselName")
-        .isEqualTo(transport.getVesselName())
-        .jsonPath("$.transports.[0].vesselIMONumber")
-        .isEqualTo(transport.getVesselIMONumber())
-        .jsonPath("$.transports.[0].carrierVoyageNumber")
-        .isEqualTo(transport.getCarrierVoyageNumber())
-        .jsonPath("$.shipmentCutOffTimes.[0].cutOffDateTimeCode")
-        .isEqualTo(shipmentCutOffTime.getCutOffDateTimeCode().toString())
-        .jsonPath("$.shipmentLocations.[0].location")
-        .isNotEmpty()
-        .jsonPath("$.shipmentLocations.[0].locationType")
-        .isEqualTo(shipmentLocation.getLocationType().toString())
-        .jsonPath("$.shipmentLocations.[0].displayedName")
-        .isEqualTo(shipmentLocation.getDisplayedName())
-        .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentUnits")
-        .isEqualTo(confirmedEquipment.getConfirmedEquipmentUnits())
-        .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentSizeType")
-        .isEqualTo(confirmedEquipment.getConfirmedEquipmentSizeType())
-        .jsonPath("$.charges.[0].chargeType")
-        .isEqualTo(charge.getChargeType())
-        .jsonPath("$.charges.[0].calculationBasis")
-        .isEqualTo(charge.getCalculationBasis())
-        .jsonPath("$.charges.[0].currencyAmount")
-        .isEqualTo(charge.getCurrencyAmount())
-        .jsonPath("$.charges.[0].currencyCode")
-        .isEqualTo(charge.getCurrencyCode())
-        .jsonPath("$.charges.[0].quantity")
-        .isEqualTo(charge.getQuantity())
-        .jsonPath("$.charges.[0].isUnderShippersResponsibility")
-        .isEqualTo(charge.getIsUnderShippersResponsibility().toString())
-        .jsonPath("$.charges.[0].unitPrice")
-        .isEqualTo(charge.getUnitPrice());
+  private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus204 =
+      (exchange) -> exchange.expectStatus().isNoContent();
+
+  @Test
+  @DisplayName(
+      "Get confirmed bookings should return valid list of booking request summaries for valid request.")
+  void confirmedBookingsShouldReturnListOfBookingConfirmation() {
+
+    Mockito.when(bookingService.getBooking(bookingConfirmationTO.getCarrierBookingReferenceID()))
+            .thenReturn(Mono.just(bookingConfirmationTO));
+
+    WebTestClient.ResponseSpec exchange =
+        webTestClient
+            .get()
+            .uri(
+                CONFIRMED_BOOKING_ENDPOINT
+                    + "/"
+                    + bookingConfirmationTO.getCarrierBookingReferenceID())
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange();
+
+    checkStatus200.andThen(checkBookingResponseJsonSchema).apply(exchange);
   }
 
   @Test
@@ -179,28 +139,96 @@ class BKGConfirmedBookingsControllerTest {
       "Get confirmed bookings should return valid list of booking request summaries for valid request.")
   void confirmedBookingsCancellationShouldReturn204() {
 
-    String carrierBookingReferenceID = UUID.randomUUID().toString().substring(0, 33);
+    WebTestClient.ResponseSpec exchange =
+        webTestClient
+            .post()
+            .uri(
+                CONFIRMED_BOOKING_ENDPOINT
+                    + "/"
+                    + bookingConfirmationTO.getCarrierBookingReferenceID()
+                    + "/cancelation")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange();
 
-    BookingConfirmationTO bookingConfirmationTO = new BookingConfirmationTO();
-    bookingConfirmationTO.setCarrierBookingReferenceID(carrierBookingReferenceID);
-
-    Mockito.when(bookingService.getBooking(carrierBookingReferenceID))
-        .thenReturn(Mono.just(bookingConfirmationTO));
-
-    webTestClient
-        .post()
-        .uri(CONFIRMED_BOOKING_ENDPOINT + "/" + carrierBookingReferenceID + "/cancelation")
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isNoContent();
-
-    webTestClient
-        .post()
-        .uri(CONFIRMED_BOOKING_ENDPOINT + "/" + carrierBookingReferenceID + "/cancellation")
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isNoContent();
+    checkStatus204.apply(exchange);
   }
+
+  @Test
+  @DisplayName(
+      "Get confirmed bookings should return valid list of booking request summaries for valid request.")
+  void confirmedBookingsCancelationShouldReturn204() {
+
+    WebTestClient.ResponseSpec exchange =
+        webTestClient
+            .post()
+            .uri(
+                CONFIRMED_BOOKING_ENDPOINT
+                    + "/"
+                    + bookingConfirmationTO.getCarrierBookingReferenceID()
+                    + "/cancellation")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange();
+    checkStatus204.apply(exchange);
+  }
+
+  private final Function<WebTestClient.ResponseSpec, WebTestClient.BodyContentSpec>
+      checkBookingResponseJsonSchema =
+          (exchange) ->
+              exchange
+                  .expectBody()
+                  .consumeWith(System.out::println)
+                  .jsonPath("$.carrierBookingReferenceID")
+                  .hasJsonPath()
+                  .jsonPath("$.placeOfIssue.locationName")
+                  .hasJsonPath()
+                  .jsonPath("$.placeOfIssue.UNLocationCode")
+                  .hasJsonPath()
+                  .jsonPath("$.placeOfIssue.latitude")
+                  .hasJsonPath()
+                  .jsonPath("$.placeOfIssue.longitude")
+                  .hasJsonPath()
+                  .jsonPath("$.termsAndConditions")
+                  .hasJsonPath()
+                  .jsonPath("$.carrierClauses.[0].clauseContent")
+                  .hasJsonPath()
+                  .jsonPath("$.transports.[0].transportPlanStage")
+                  .hasJsonPath()
+                  .jsonPath("$.transports.[0].modeOfTransport")
+                  .hasJsonPath()
+                  .jsonPath("$.transports.[0].loadLocation")
+                  .hasJsonPath()
+                  .jsonPath("$.transports.[0].dischargeLocation")
+                  .hasJsonPath()
+                  .jsonPath("$.transports.[0].vesselName")
+                  .hasJsonPath()
+                  .jsonPath("$.transports.[0].vesselIMONumber")
+                  .hasJsonPath()
+                  .jsonPath("$.transports.[0].carrierVoyageNumber")
+                  .hasJsonPath()
+                  .jsonPath("$.shipmentCutOffTimes.[0].cutOffDateTimeCode")
+                  .hasJsonPath()
+                  .jsonPath("$.shipmentLocations.[0].location")
+                  .hasJsonPath()
+                  .jsonPath("$.shipmentLocations.[0].locationType")
+                  .hasJsonPath()
+                  .jsonPath("$.shipmentLocations.[0].displayedName")
+                  .hasJsonPath()
+                  .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentUnits")
+                  .hasJsonPath()
+                  .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentSizeType")
+                  .hasJsonPath()
+                  .jsonPath("$.charges.[0].chargeType")
+                  .hasJsonPath()
+                  .jsonPath("$.charges.[0].calculationBasis")
+                  .hasJsonPath()
+                  .jsonPath("$.charges.[0].currencyAmount")
+                  .hasJsonPath()
+                  .jsonPath("$.charges.[0].currencyCode")
+                  .hasJsonPath()
+                  .jsonPath("$.charges.[0].quantity")
+                  .hasJsonPath()
+                  .jsonPath("$.charges.[0].isUnderShippersResponsibility")
+                  .hasJsonPath()
+                  .jsonPath("$.charges.[0].unitPrice")
+                  .hasJsonPath();
 }
