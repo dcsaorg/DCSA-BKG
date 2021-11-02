@@ -12,27 +12,27 @@ import javax.validation.constraints.Size;
 @Data
 public class ChargeTO {
 
-  @NotNull
-  @Size(max = 20)
+  @NotNull(message = "Charge Type is required.")
+  @Size(max = 20, message = "Charge Type has a max size of 20.")
   private String chargeType;
 
-  @NotNull
+  @NotNull(message = "Currency Amount is required.")
   private Number currencyAmount;
 
-  @NotNull
-  @Size(max = 3)
+  @NotNull(message = "Currency Code is required.")
+  @Size(max = 3, message = "Currency Code has a max size of 3.")
   private String currencyCode;
 
-  @NotNull
+  @NotNull(message = "Is Under Shippers Responsibility is required.")
   private PaymentTerm isUnderShippersResponsibility;
 
-  @NotNull
-  @Size(max = 50)
+  @NotNull(message = "Calculation Basis is required.")
+  @Size(max = 50, message = "Calculation Basis has a max size of 50.")
   private String calculationBasis;
 
-  @NotNull
+  @NotNull(message = "Unit Price is required.")
   private Number unitPrice;
 
-  @NotNull
+  @NotNull(message = "Quantity is required.")
   private Number quantity;
 }

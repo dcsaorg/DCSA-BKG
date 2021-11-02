@@ -11,7 +11,7 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.util.Set;
 
-@DisplayName("Tests for ShipmentLocationTOTest")
+@DisplayName("Tests for CarrierClauseTOTest")
 class carrierClauseTOTest {
   private Validator validator;
   private CarrierClauseTO carrierClauseTO;
@@ -26,15 +26,15 @@ class carrierClauseTOTest {
   }
 
   @Test
-  @DisplayName("ShipmentLocationTO should not throw error for valid TO.")
+  @DisplayName("CarrierClauseTO should not throw error for valid TO.")
   void testToVerifyNoErrorIsThrowForValidTo() {
     Set<ConstraintViolation<CarrierClauseTO>> violations = validator.validate(carrierClauseTO);
     Assertions.assertEquals(0, violations.size());
   }
 
   @Test
-  @DisplayName("ShipmentLocationTO should throw error if locationType is not set.")
-  void testToVerifyLocationTypeIsRequired() {
+  @DisplayName("CarrierClauseTO should throw error if ClauseContent is not set.")
+  void testToVerifyCarrierClauseIsRequired() {
     carrierClauseTO.setClauseContent(null);
     Set<ConstraintViolation<CarrierClauseTO>> violations = validator.validate(carrierClauseTO);
     Assertions.assertTrue(
