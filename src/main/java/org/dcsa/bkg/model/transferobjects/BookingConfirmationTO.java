@@ -11,8 +11,8 @@ import java.util.List;
 @Data
 public class BookingConfirmationTO {
 
-  @NotNull
-  @Size(max = 35)
+  @NotNull(message = "Carrier Booking Reference ID is required.")
+  @Size(max = 35, message = "Carrier Booking Reference ID has a max size of 35.")
   private String carrierBookingReferenceID;
 
   private String termsAndConditions;

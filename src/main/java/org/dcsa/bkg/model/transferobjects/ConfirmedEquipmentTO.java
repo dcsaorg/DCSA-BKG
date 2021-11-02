@@ -8,8 +8,8 @@ import javax.validation.constraints.Size;
 @Data
 public class ConfirmedEquipmentTO {
 
-  @NotNull
-  @Size(max = 4)
+  @NotNull(message = "Confirmed Equipment Size Type is required.")
+  @Size(max = 4, message = "Confirmed Equipment Size Type has a max size of 4.")
   private String confirmedEquipmentSizeType;
 
   private int confirmedEquipmentUnits;

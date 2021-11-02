@@ -10,10 +10,10 @@ import java.time.OffsetDateTime;
 @Data
 public class ShipmentCutOffTimeTO {
 
-  @NotNull
+  @NotNull(message = "Cut Off Date Time Code is required.")
   private CutOffDateTimeCode cutOffDateTimeCode;
 
-  @NotNull
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+  @NotNull(message = "Cut Off Date Time is required.")
+  @JsonFormat(pattern = "yyyy-MM-dd")
   private OffsetDateTime cutOffDateTime;
 }

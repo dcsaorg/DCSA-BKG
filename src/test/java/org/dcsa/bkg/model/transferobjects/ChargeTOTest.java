@@ -12,7 +12,7 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.util.Set;
 
-@DisplayName("Tests for ShipmentLocationTOTest")
+@DisplayName("Tests for ChargeTOTest")
 class ChargeTOTest {
   private Validator validator;
   private ChargeTO chargeTO;
@@ -72,7 +72,8 @@ class ChargeTOTest {
     chargeTO.setIsUnderShippersResponsibility(null);
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "Is Under Shippers Responsibility is required.".equals(v.getMessage())));
+        violations.stream()
+            .anyMatch(v -> "Is Under Shippers Responsibility is required.".equals(v.getMessage())));
   }
 
   @Test
