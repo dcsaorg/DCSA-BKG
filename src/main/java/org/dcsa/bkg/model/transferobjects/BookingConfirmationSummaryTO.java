@@ -17,6 +17,6 @@ public class BookingConfirmationSummaryTO {
 
   private Location placeOfIssue;
 
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private OffsetDateTime bookingRequestDateTime;
 }

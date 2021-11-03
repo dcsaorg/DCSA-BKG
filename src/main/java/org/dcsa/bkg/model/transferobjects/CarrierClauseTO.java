@@ -7,6 +7,6 @@ import javax.validation.constraints.NotNull;
 @Data
 public class CarrierClauseTO {
 
-  @NotNull(message = "Clause Content is required.")
+  @NotNull(message = "ClauseContent is required.")
   private String clauseContent;
 }

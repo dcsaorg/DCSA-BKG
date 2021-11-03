@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.dcsa.core.events.model.enums.*;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -20,7 +21,7 @@ public class BookingSummaryTO {
 
   private CargoMovementType cargoMovementTypeAtDestination;
 
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private OffsetDateTime bookingRequestDateTime;
 
   private String serviceContractReference;
@@ -39,7 +40,7 @@ public class BookingSummaryTO {
 
   private String importLicenseReference;
 
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private OffsetDateTime submissionDateTime;
 
   private boolean isAMSACIFilingRequired;
@@ -48,8 +49,8 @@ public class BookingSummaryTO {
 
   private String contractQuotationReference;
 
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  private OffsetDateTime expectedDepartureDate;
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  private LocalDate expectedDepartureDate;
 
   private TransportDocumentTypeCode transportDocumentType;
 
