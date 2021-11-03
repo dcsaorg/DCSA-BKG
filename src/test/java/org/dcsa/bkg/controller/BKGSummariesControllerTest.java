@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -73,7 +74,7 @@ class BKGSummariesControllerTest {
     UUID uuid = UUID.randomUUID();
 
     BookingSummaryTO bookingSummaryTo = new BookingSummaryTO();
-    bookingSummaryTo.setBookingAcknowledgementID(uuid);
+    bookingSummaryTo.setCarrierBookingRequestReference(uuid.toString());
     bookingSummaryTo.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingSummaryTo.setDeliveryTypeAtDestination(ReceiptDeliveryType.CY);
     bookingSummaryTo.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
@@ -91,7 +92,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setAMSACIFilingRequired(true);
     bookingSummaryTo.setDestinationFilingRequired(true);
     bookingSummaryTo.setContractQuotationReference("DKK");
-    bookingSummaryTo.setExpectedDepartureDate(OffsetDateTime.now());
+    bookingSummaryTo.setExpectedDepartureDate(LocalDate.now());
     bookingSummaryTo.setTransportDocumentType(TransportDocumentTypeCode.BOL);
     bookingSummaryTo.setTransportDocumentReference("ASV23142ASD");
     bookingSummaryTo.setBookingChannelReference("ABC12313");
@@ -112,7 +113,7 @@ class BKGSummariesControllerTest {
         .consumeWith(System.out::println)
         .jsonPath("$")
         .isArray()
-        .jsonPath("$.[0].bookingAcknowledgementID")
+        .jsonPath("$.[0].carrierBookingRequestReference")
         .isEqualTo(uuid.toString());
   }
 }

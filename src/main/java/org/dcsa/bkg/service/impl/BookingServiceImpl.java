@@ -1,5 +1,6 @@
 package org.dcsa.bkg.service.impl;
 
+import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.service.impl.BaseServiceImpl;
@@ -52,5 +53,14 @@ public class BookingServiceImpl extends BaseServiceImpl<BookingSummaryTO, UUID> 
   @Override
   public UUID getIdOfEntity(BookingSummaryTO entity) {
     return null;
+  }
+  
+  public Mono<BookingConfirmationTO> getBookingByCarrierBookingReference(String carrierBookingReference) {
+    return Mono.empty();
+  }
+
+  @Override
+  public Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference) {
+    return Mono.empty();
   }
 }
