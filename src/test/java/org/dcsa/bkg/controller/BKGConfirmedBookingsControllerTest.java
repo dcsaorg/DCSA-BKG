@@ -23,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -63,8 +64,8 @@ class BKGConfirmedBookingsControllerTest {
     transport.setModeOfTransport(DCSATransportType.VESSEL);
     transport.setLoadLocation(location);
     transport.setDischargeLocation(location);
-    transport.setPlannedDepartureDate(dateTimeOffset);
-    transport.setPlannedArrivalDate(dateTimeOffset);
+    transport.setPlannedDepartureDate(LocalDate.now());
+    transport.setPlannedArrivalDate(LocalDate.now());
     transport.setVesselName("VesselName");
     transport.setVesselIMONumber("1234567");
     transport.setCarrierVoyageNumber("CarrierVoyageNumber");

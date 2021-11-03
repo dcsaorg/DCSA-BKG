@@ -16,7 +16,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.text.SimpleDateFormat;
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.Set;
 
 @DisplayName("Tests for TransportTOTest")
@@ -37,8 +37,8 @@ class TransportTOTest {
     transportTO.setTransportPlanStageSequenceNumber(25);
     transportTO.setLoadLocation(new Location());
     transportTO.setDischargeLocation(new Location());
-    transportTO.setPlannedDepartureDate(OffsetDateTime.now());
-    transportTO.setPlannedArrivalDate(OffsetDateTime.now().plusSeconds(120));
+    transportTO.setPlannedDepartureDate(LocalDate.now());
+    transportTO.setPlannedArrivalDate(LocalDate.now().plusDays(2));
     transportTO.setVesselName("x".repeat(35));
     transportTO.setVesselIMONumber("x".repeat(7));
     transportTO.setCarrierVoyageNumber("x".repeat(50));

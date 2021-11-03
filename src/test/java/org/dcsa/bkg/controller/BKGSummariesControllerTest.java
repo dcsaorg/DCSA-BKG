@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -91,7 +92,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setAMSACIFilingRequired(true);
     bookingSummaryTo.setDestinationFilingRequired(true);
     bookingSummaryTo.setContractQuotationReference("DKK");
-    bookingSummaryTo.setExpectedDepartureDate(OffsetDateTime.now());
+    bookingSummaryTo.setExpectedDepartureDate(LocalDate.now());
     bookingSummaryTo.setTransportDocumentType(TransportDocumentTypeCode.BOL);
     bookingSummaryTo.setTransportDocumentReference("ASV23142ASD");
     bookingSummaryTo.setBookingChannelReference("ABC12313");
