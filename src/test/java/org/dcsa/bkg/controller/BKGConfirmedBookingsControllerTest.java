@@ -97,7 +97,7 @@ class BKGConfirmedBookingsControllerTest {
     carrierClause.setClauseContent("ClauseContent");
 
     bookingConfirmationTO = new BookingConfirmationTO();
-    bookingConfirmationTO.setCarrierBookingReferenceID(carrierBookingReferenceID);
+    bookingConfirmationTO.setCarrierBookingReference(carrierBookingReferenceID);
     bookingConfirmationTO.setTermsAndConditions(termsAndConditions);
     bookingConfirmationTO.setPlaceOfIssue(location);
     bookingConfirmationTO.setTransports(List.of(transport));
@@ -124,7 +124,7 @@ class BKGConfirmedBookingsControllerTest {
 
     Mockito.when(
             bookingService.getBookingByCarrierBookingReference(
-                bookingConfirmationTO.getCarrierBookingReferenceID()))
+                bookingConfirmationTO.getCarrierBookingReference()))
         .thenReturn(Mono.just(bookingConfirmationTO));
 
     WebTestClient.ResponseSpec exchange =
@@ -133,7 +133,7 @@ class BKGConfirmedBookingsControllerTest {
             .uri(
                 CONFIRMED_BOOKING_ENDPOINT
                     + "/"
-                    + bookingConfirmationTO.getCarrierBookingReferenceID())
+                    + bookingConfirmationTO.getCarrierBookingReference())
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
 
@@ -151,7 +151,7 @@ class BKGConfirmedBookingsControllerTest {
             .uri(
                 CONFIRMED_BOOKING_ENDPOINT
                     + "/"
-                    + bookingConfirmationTO.getCarrierBookingReferenceID()
+                    + bookingConfirmationTO.getCarrierBookingReference()
                     + "/cancelation")
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
@@ -184,7 +184,7 @@ class BKGConfirmedBookingsControllerTest {
             .uri(
                 CONFIRMED_BOOKING_ENDPOINT
                     + "/"
-                    + bookingConfirmationTO.getCarrierBookingReferenceID()
+                    + bookingConfirmationTO.getCarrierBookingReference()
                     + "/cancellation")
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
@@ -197,7 +197,7 @@ class BKGConfirmedBookingsControllerTest {
               exchange
                   .expectBody()
                   .consumeWith(System.out::println)
-                  .jsonPath("$.carrierBookingReferenceID")
+                  .jsonPath("$.carrierBookingReference")
                   .hasJsonPath()
                   .jsonPath("$.placeOfIssue.locationName")
                   .hasJsonPath()

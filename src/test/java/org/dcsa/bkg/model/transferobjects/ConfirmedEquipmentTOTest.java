@@ -35,18 +35,19 @@ class ConfirmedEquipmentTOTest {
   }
 
   @Test
-  @DisplayName("ConfirmedEquipmentTO should throw error if ConfirmedEquipmentSizeType is not set.")
+  @DisplayName("ConfirmedEquipmentTO should throw error if confirmedEquipmentSizeType is not set.")
   void testToVerifyConfirmedEquipmentSizeTypeIsRequired() {
     confirmedEquipmentTO.setConfirmedEquipmentSizeType(null);
     Set<ConstraintViolation<ConfirmedEquipmentTO>> violations =
         validator.validate(confirmedEquipmentTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "Confirmed Equipment Size Type is required.".equals(v.getMessage())));
+        violations.stream()
+            .anyMatch(v -> "ConfirmedEquipmentSizeType is required.".equals(v.getMessage())));
   }
 
   @Test
   @DisplayName(
-      "ConfirmedEquipmentTO should throw error if ConfirmedEquipmentSizeType length exceeds max size of 4.")
+      "ConfirmedEquipmentTO should throw error if confirmedEquipmentSizeType length exceeds max size of 4.")
   void testToConfirmedEquipmentSizeTypeIsNotAllowedToExceed4() {
     confirmedEquipmentTO.setConfirmedEquipmentSizeType("x".repeat(5));
     Set<ConstraintViolation<ConfirmedEquipmentTO>> violations =
@@ -54,6 +55,19 @@ class ConfirmedEquipmentTOTest {
     Assertions.assertTrue(
         violations.stream()
             .anyMatch(
-                v -> "Confirmed Equipment Size Type has a max size of 4.".equals(v.getMessage())));
+                v -> "ConfirmedEquipmentSizeType has a max size of 4.".equals(v.getMessage())));
+  }
+
+  @Test
+  @DisplayName(
+      "ConfirmedEquipmentTO should throw error if confirmedEquipmentUnits is not a positive value.")
+  void testToConfirmedEquipmentUnitsCannotBeNegative() {
+    confirmedEquipmentTO.setConfirmedEquipmentUnits(-1);
+    Set<ConstraintViolation<ConfirmedEquipmentTO>> violations =
+        validator.validate(confirmedEquipmentTO);
+    Assertions.assertTrue(
+        violations.stream()
+            .anyMatch(
+                v -> "ConfirmedEquipmentUnits has to be a positive value.".equals(v.getMessage())));
   }
 }

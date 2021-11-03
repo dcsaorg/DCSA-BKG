@@ -74,7 +74,7 @@ class BKGSummariesControllerTest {
     UUID uuid = UUID.randomUUID();
 
     BookingSummaryTO bookingSummaryTo = new BookingSummaryTO();
-    bookingSummaryTo.setBookingAcknowledgementID(uuid);
+    bookingSummaryTo.setCarrierBookingRequestReference(uuid.toString());
     bookingSummaryTo.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingSummaryTo.setDeliveryTypeAtDestination(ReceiptDeliveryType.CY);
     bookingSummaryTo.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
@@ -113,7 +113,7 @@ class BKGSummariesControllerTest {
         .consumeWith(System.out::println)
         .jsonPath("$")
         .isArray()
-        .jsonPath("$.[0].bookingAcknowledgementID")
+        .jsonPath("$.[0].carrierBookingRequestReference")
         .isEqualTo(uuid.toString());
   }
 }

@@ -51,7 +51,7 @@ class ShipmentCutOffTimeTOTest {
     Set<ConstraintViolation<ShipmentCutOffTimeTO>> violations =
         validator.validate(shipmentCutOffTimeTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "Cut Off Date Time is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "CutOffDateTime is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -62,7 +62,7 @@ class ShipmentCutOffTimeTOTest {
         validator.validate(shipmentCutOffTimeTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Cut Off Date Time Code is required.".equals(v.getMessage())));
+            .anyMatch(v -> "CutOffDateTimeCode is required.".equals(v.getMessage())));
   }
 
   @Test

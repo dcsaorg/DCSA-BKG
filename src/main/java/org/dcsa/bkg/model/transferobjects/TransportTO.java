@@ -5,11 +5,11 @@ import lombok.Data;
 import org.dcsa.bkg.model.enums.TransportPlanStage;
 import org.dcsa.core.events.model.Location;
 import org.dcsa.core.events.model.enums.DCSATransportType;
+import org.dcsa.core.validator.ValidVesselIMONumber;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 
 @Data
 public class TransportTO {
@@ -25,7 +25,7 @@ public class TransportTO {
   @NotNull(message = "DischargeLocation is required.")
   private Location dischargeLocation;
 
-  @NotNull(message = "PlannedDeparture Date is required.")
+  @NotNull(message = "PlannedDepartureDate is required.")
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   private LocalDate plannedDepartureDate;
 
@@ -39,12 +39,11 @@ public class TransportTO {
   @Size(max = 35, message = "VesselName has a max size of 35.")
   private String vesselName;
 
-  @NotNull(message = "VesselIMONumber is required.")
-  @Size(max = 7, message = "VesselIMONumber has a max size of 7.")
+  @ValidVesselIMONumber(allowNull = true, message = "VesselIMONumber is invalid.")
   private String vesselIMONumber;
 
   @NotNull(message = "CarrierVoyageNumber is required.")
-  @Size(max = 50, message = "CarrieVoyageNumber has a max size of 50.")
+  @Size(max = 50, message = "CarrierVoyageNumber has a max size of 50.")
   private String carrierVoyageNumber;
 
   private Boolean isUnderShippersResponsibility;

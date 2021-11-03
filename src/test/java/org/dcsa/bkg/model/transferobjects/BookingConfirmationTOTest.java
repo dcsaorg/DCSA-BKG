@@ -25,7 +25,7 @@ class BookingConfirmationTOTest {
     validator = factory.getValidator();
 
     bookingConfirmationTO = new BookingConfirmationTO();
-    bookingConfirmationTO.setCarrierBookingReferenceID("x".repeat(35));
+    bookingConfirmationTO.setCarrierBookingReference("x".repeat(35));
     bookingConfirmationTO.setTermsAndConditions("x".repeat(50));
     bookingConfirmationTO.setPlaceOfIssue(new Location());
     bookingConfirmationTO.setBooking(new Booking());
@@ -46,24 +46,24 @@ class BookingConfirmationTOTest {
   }
 
   @Test
-  @DisplayName("BookingConfirmationTO should throw error if PlannedDepartureDate is not set.")
-  void testToVerifyCarrierBookingReferenceIDIsRequired() {
-    bookingConfirmationTO.setCarrierBookingReferenceID(null);
+  @DisplayName("BookingConfirmationTO should throw error if carrierBookingReference is not set.")
+  void testToVerifyCarrierBookingReferenceIsRequired() {
+    bookingConfirmationTO.setCarrierBookingReference(null);
     Set<ConstraintViolation<BookingConfirmationTO>> violations =
         validator.validate(bookingConfirmationTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Carrier Booking Reference ID is required.".equals(v.getMessage())));
+            .anyMatch(v -> "CarrierBookingReference is required.".equals(v.getMessage())));
   }
 
   @Test
-  @DisplayName("BookingConfirmationTO should throw error if PlannedDepartureDate is not set.")
+  @DisplayName("BookingConfirmationTO should throw error if carrierBookingReference length exceeds max size of 35.")
   void testToVerifyCarrierBookingReferenceIDIsNotAllowedToExceed35() {
-    bookingConfirmationTO.setCarrierBookingReferenceID("x".repeat(36));
+    bookingConfirmationTO.setCarrierBookingReference("x".repeat(36));
     Set<ConstraintViolation<BookingConfirmationTO>> violations =
         validator.validate(bookingConfirmationTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Carrier Booking Reference ID has a max size of 35.".equals(v.getMessage())));
+            .anyMatch(v -> "CarrierBookingReference has a max size of 35.".equals(v.getMessage())));
   }
 }

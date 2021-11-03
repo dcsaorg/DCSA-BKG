@@ -40,12 +40,12 @@ class ChargeTOTest {
   }
 
   @Test
-  @DisplayName("ChargeTO should throw error if unit price is not set.")
+  @DisplayName("ChargeTO should throw error if unitPrice is not set.")
   void testToVerifyUnitPriceIsRequired() {
     chargeTO.setUnitPrice(null);
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "Unit Price is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "UnitPrice is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -63,7 +63,7 @@ class ChargeTOTest {
     chargeTO.setCurrencyAmount(null);
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "Currency Amount is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "CurrencyAmount is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -73,66 +73,66 @@ class ChargeTOTest {
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Is Under Shippers Responsibility is required.".equals(v.getMessage())));
+            .anyMatch(v -> "IsUnderShippersResponsibility is required.".equals(v.getMessage())));
   }
 
   @Test
-  @DisplayName("ChargeTO should throw error if charge type is not set.")
+  @DisplayName("ChargeTO should throw error if chargeType is not set.")
   void testToVerifyChargeTypeIsRequired() {
     chargeTO.setChargeType(null);
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "Charge Type is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "ChargeType is required.".equals(v.getMessage())));
   }
 
   @Test
-  @DisplayName("ChargeTO should throw error if currency code is not set.")
+  @DisplayName("ChargeTO should throw error if currencyCode is not set.")
   void testToVerifyCurrencyCodeIsRequired() {
     chargeTO.setCurrencyCode(null);
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "Currency Code is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "CurrencyCode is required.".equals(v.getMessage())));
   }
 
   @Test
-  @DisplayName("ChargeTO should throw error if calculation basis is not set.")
+  @DisplayName("ChargeTO should throw error if calculationBasis is not set.")
   void testToVerifyCalculationBasisIsRequired() {
     chargeTO.setCalculationBasis(null);
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "Calculation Basis is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "CalculationBasis is required.".equals(v.getMessage())));
   }
 
   @Test
   @DisplayName(
-      "ShipmentLocationTO should throw error if displayedName length exceeds max size of 250.")
+      "ChargeTO should throw error if chargeType length exceeds max size of 20.")
   void testToChargeTypeIsNotAllowedToExceed20() {
     chargeTO.setChargeType("x".repeat(21));
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Charge Type has a max size of 20.".equals(v.getMessage())));
+            .anyMatch(v -> "ChargeType has a max size of 20.".equals(v.getMessage())));
   }
 
   @Test
   @DisplayName(
-      "ShipmentLocationTO should throw error if displayedName length exceeds max size of 250.")
+      "ChargeTO should throw error if currencyCode length exceeds max size of 3.")
   void testToCurrencyCodeIsNotAllowedToExceed3() {
     chargeTO.setCurrencyCode("x".repeat(4));
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Currency Code has a max size of 3.".equals(v.getMessage())));
+            .anyMatch(v -> "CurrencyCode has a max size of 3.".equals(v.getMessage())));
   }
 
   @Test
   @DisplayName(
-      "ShipmentLocationTO should throw error if displayedName length exceeds max size of 250.")
+      "ChargeTO should throw error if calculationBasis length exceeds max size of 50.")
   void testToCalculationBasisIsNotAllowedToExceed50() {
     chargeTO.setCalculationBasis("x".repeat(51));
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Calculation Basis has a max size of 50.".equals(v.getMessage())));
+            .anyMatch(v -> "CalculationBasis has a max size of 50.".equals(v.getMessage())));
   }
 }

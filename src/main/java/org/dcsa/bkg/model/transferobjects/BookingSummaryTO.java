@@ -6,12 +6,11 @@ import org.dcsa.core.events.model.enums.*;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Data
 public class BookingSummaryTO {
 
-  private UUID bookingAcknowledgementID;
+  private String carrierBookingRequestReference;
 
   private ReceiptDeliveryType receiptTypeAtOrigin;
 

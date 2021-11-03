@@ -40,7 +40,6 @@ class TransportTOTest {
     transportTO.setPlannedDepartureDate(LocalDate.now());
     transportTO.setPlannedArrivalDate(LocalDate.now().plusDays(2));
     transportTO.setVesselName("x".repeat(35));
-    transportTO.setVesselIMONumber("x".repeat(7));
     transportTO.setCarrierVoyageNumber("x".repeat(50));
     transportTO.setIsUnderShippersResponsibility(true);
   }
@@ -59,7 +58,7 @@ class TransportTOTest {
     Set<ConstraintViolation<TransportTO>> violations = validator.validate(transportTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Transport Plan Stage is required.".equals(v.getMessage())));
+            .anyMatch(v -> "TransportPlanStage is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -69,7 +68,7 @@ class TransportTOTest {
     Set<ConstraintViolation<TransportTO>> violations = validator.validate(transportTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Planned Departure Date is required.".equals(v.getMessage())));
+            .anyMatch(v -> "PlannedDepartureDate is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -79,7 +78,7 @@ class TransportTOTest {
     Set<ConstraintViolation<TransportTO>> violations = validator.validate(transportTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Planned Arrival Date is required.".equals(v.getMessage())));
+            .anyMatch(v -> "PlannedArrivalDate is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -89,17 +88,16 @@ class TransportTOTest {
     Set<ConstraintViolation<TransportTO>> violations = validator.validate(transportTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Vessel Name has a max size of 35.".equals(v.getMessage())));
+            .anyMatch(v -> "VesselName has a max size of 35.".equals(v.getMessage())));
   }
 
   @Test
-  @DisplayName("TransportTO should throw error if VesselIMONumber length exceeds max size of 7.")
-  void testToVerifyVesselIMONumberIsNotAllowedToExceed7() {
-    transportTO.setVesselIMONumber("x".repeat(8));
+  @DisplayName("BookingTO should throw error if vesselIMONumber is invalid.")
+  void testToVerifyVesselIMONumberIsInvalid() {
+    transportTO.setVesselIMONumber("123456");
     Set<ConstraintViolation<TransportTO>> violations = validator.validate(transportTO);
     Assertions.assertTrue(
-        violations.stream()
-            .anyMatch(v -> "Vessel IMO Number has a max size of 7.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "VesselIMONumber is invalid.".equals(v.getMessage())));
   }
 
   @Test
@@ -110,7 +108,7 @@ class TransportTOTest {
     Set<ConstraintViolation<TransportTO>> violations = validator.validate(transportTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "Carrier Voyage Number has a max size of 50.".equals(v.getMessage())));
+            .anyMatch(v -> "CarrierVoyageNumber has a max size of 50.".equals(v.getMessage())));
   }
 
   @Test
