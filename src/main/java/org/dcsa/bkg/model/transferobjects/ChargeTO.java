@@ -20,8 +20,8 @@ public class ChargeTO {
   @Size(max = 3, message = "CurrencyCode has a max size of 3.")
   private String currencyCode;
 
-  @NotNull(message = "IsUnderShippersResponsibility is required.")
-  private PaymentTerm isUnderShippersResponsibility;
+  @NotNull(message = "PaymentTermCode is required.")
+  private PaymentTerm paymentTermCode;
 
   @NotNull(message = "CalculationBasis is required.")
   @Size(max = 50, message = "CalculationBasis has a max size of 50.")

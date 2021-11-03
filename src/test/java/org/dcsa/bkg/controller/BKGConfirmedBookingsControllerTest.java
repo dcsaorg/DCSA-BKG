@@ -90,7 +90,7 @@ class BKGConfirmedBookingsControllerTest {
     charge.setCurrencyAmount(12.12);
     charge.setCurrencyCode("ABC");
     charge.setQuantity(12.12);
-    charge.setIsUnderShippersResponsibility(PaymentTerm.PRE);
+    charge.setPaymentTermCode(PaymentTerm.PRE);
     charge.setUnitPrice(12.12);
 
     CarrierClauseTO carrierClause = new CarrierClauseTO();
@@ -247,7 +247,7 @@ class BKGConfirmedBookingsControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.charges.[0].quantity")
                   .hasJsonPath()
-                  .jsonPath("$.charges.[0].isUnderShippersResponsibility")
+                  .jsonPath("$.charges.[0].paymentTermCode")
                   .hasJsonPath()
                   .jsonPath("$.charges.[0].unitPrice")
                   .hasJsonPath();

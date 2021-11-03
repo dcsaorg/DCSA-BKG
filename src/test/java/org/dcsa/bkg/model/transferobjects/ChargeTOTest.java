@@ -23,7 +23,7 @@ class ChargeTOTest {
     validator = factory.getValidator();
 
     chargeTO = new ChargeTO();
-    chargeTO.setIsUnderShippersResponsibility(PaymentTerm.PRE);
+    chargeTO.setPaymentTermCode(PaymentTerm.PRE);
     chargeTO.setChargeType("x".repeat(20));
     chargeTO.setUnitPrice(20.20);
     chargeTO.setQuantity(20.20);
@@ -67,13 +67,13 @@ class ChargeTOTest {
   }
 
   @Test
-  @DisplayName("ChargeTO should throw error if is under shippers responsibility is not set.")
+  @DisplayName("ChargeTO should throw error if paymentTermCode is not set.")
   void testToVerifyIsUnderShippersResponsibilityIsRequired() {
-    chargeTO.setIsUnderShippersResponsibility(null);
+    chargeTO.setPaymentTermCode(null);
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "IsUnderShippersResponsibility is required.".equals(v.getMessage())));
+            .anyMatch(v -> "PaymentTermCode is required.".equals(v.getMessage())));
   }
 
   @Test
