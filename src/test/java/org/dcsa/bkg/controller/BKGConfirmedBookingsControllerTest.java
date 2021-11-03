@@ -1,12 +1,12 @@
 package org.dcsa.bkg.controller;
 
 import org.dcsa.bkg.model.enums.CutOffDateTimeCode;
-import org.dcsa.bkg.model.enums.LocationType;
 import org.dcsa.bkg.model.enums.TransportPlanStage;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.Location;
 import org.dcsa.core.events.model.enums.DCSATransportType;
+import org.dcsa.core.events.model.enums.LocationType;
 import org.dcsa.core.events.model.enums.PaymentTerm;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
@@ -86,11 +86,11 @@ class BKGConfirmedBookingsControllerTest {
     ChargeTO charge = new ChargeTO();
     charge.setChargeType("ChargeType");
     charge.setCalculationBasis("CalculationBasis");
-    charge.setCurrencyAmount(12);
+    charge.setCurrencyAmount(12.12);
     charge.setCurrencyCode("ABC");
-    charge.setQuantity(12);
+    charge.setQuantity(12.12);
     charge.setIsUnderShippersResponsibility(PaymentTerm.PRE);
-    charge.setUnitPrice(12);
+    charge.setUnitPrice(12.12);
 
     CarrierClauseTO carrierClause = new CarrierClauseTO();
     carrierClause.setClauseContent("ClauseContent");
@@ -113,13 +113,18 @@ class BKGConfirmedBookingsControllerTest {
   private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus204 =
       (exchange) -> exchange.expectStatus().isNoContent();
 
+  private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus400 =
+      (exchange) -> exchange.expectStatus().isBadRequest();
+
   @Test
   @DisplayName(
       "Get confirmed bookings should return valid list of booking request summaries for valid request.")
   void confirmedBookingsShouldReturnListOfBookingConfirmation() {
 
-    Mockito.when(bookingService.getBooking(bookingConfirmationTO.getCarrierBookingReferenceID()))
-            .thenReturn(Mono.just(bookingConfirmationTO));
+    Mockito.when(
+            bookingService.getBookingByCarrierBookingReference(
+                bookingConfirmationTO.getCarrierBookingReferenceID()))
+        .thenReturn(Mono.just(bookingConfirmationTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
@@ -151,6 +156,20 @@ class BKGConfirmedBookingsControllerTest {
             .exchange();
 
     checkStatus204.apply(exchange);
+  }
+
+  @Test
+  @DisplayName("POST booking should return 400 for invalid request.")
+  void postBookingsShouldReturn400ForInValidBookingRequest() {
+
+    WebTestClient.ResponseSpec exchange =
+        webTestClient
+            .get()
+            .uri(CONFIRMED_BOOKING_ENDPOINT + "/" + "y".repeat(36))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange();
+
+    checkStatus400.apply(exchange);
   }
 
   @Test

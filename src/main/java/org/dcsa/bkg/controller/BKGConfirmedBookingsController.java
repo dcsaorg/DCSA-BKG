@@ -1,9 +1,7 @@
 package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.NotImplementedException;
 import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
-import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
 import org.dcsa.bkg.service.BookingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,7 +25,7 @@ public class BKGConfirmedBookingsController {
   public Mono<BookingConfirmationTO> getBookingReference(
       @PathVariable @Size(max = 35) String carrierBookingReference) {
     // ToDo: adjust this when the IM is ready for booking
-    return bookingService.getBooking(carrierBookingReference);
+    return bookingService.getBookingByCarrierBookingReference(carrierBookingReference);
   }
 
   // To avoid spelling confusion we just accept both spellings
@@ -44,6 +42,6 @@ public class BKGConfirmedBookingsController {
   public Mono<Void> bookingCancellation(
       @PathVariable @Size(max = 35) String carrierBookingReference) {
     // ToDo: adjust this when the IM is ready for booking
-    return bookingService.cancelBooking(carrierBookingReference);
+    return bookingService.cancelBookingByCarrierBookingReference(carrierBookingReference);
   }
 }

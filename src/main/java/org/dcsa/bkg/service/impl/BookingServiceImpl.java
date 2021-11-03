@@ -16,12 +16,12 @@ public class BookingServiceImpl implements BookingService {
   }
 
   @Override
-  public Mono<BookingConfirmationTO> getBooking(String carrierBookingReference) {
+  public Mono<BookingConfirmationTO> getBookingByCarrierBookingReference(String carrierBookingReference) {
     return Mono.empty();
   }
 
   @Override
-  public Mono<Void> cancelBooking(String carrierBookingReference) {
+  public Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference) {
     return Mono.empty();
   }
 }

@@ -2,10 +2,8 @@ package org.dcsa.bkg.model.transferobjects;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import org.dcsa.bkg.model.enums.LocationType;
-import org.dcsa.bkg.model.enums.TransportPlanStage;
 import org.dcsa.core.events.model.Location;
-import org.dcsa.core.events.model.ModeOfTransport;
+import org.dcsa.core.events.model.enums.LocationType;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -19,9 +17,8 @@ public class ShipmentLocationTO {
   @Size(max = 250)
   private String displayedName;
 
-  @NotNull
-  private LocationType locationType;
+  @NotNull private LocationType locationType;
 
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private OffsetDateTime eventDateTime;
 }

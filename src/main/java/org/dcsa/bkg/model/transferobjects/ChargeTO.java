@@ -17,7 +17,7 @@ public class ChargeTO {
   private String chargeType;
 
   @NotNull(message = "Currency Amount is required.")
-  private Number currencyAmount;
+  private Double currencyAmount;
 
   @NotNull(message = "Currency Code is required.")
   @Size(max = 3, message = "Currency Code has a max size of 3.")
@@ -31,8 +31,8 @@ public class ChargeTO {
   private String calculationBasis;
 
   @NotNull(message = "Unit Price is required.")
-  private Number unitPrice;
+  private Double unitPrice;
 
   @NotNull(message = "Quantity is required.")
-  private Number quantity;
+  private Double quantity;
 }

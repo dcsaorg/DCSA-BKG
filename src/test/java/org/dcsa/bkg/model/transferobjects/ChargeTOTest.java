@@ -25,10 +25,10 @@ class ChargeTOTest {
     chargeTO = new ChargeTO();
     chargeTO.setIsUnderShippersResponsibility(PaymentTerm.PRE);
     chargeTO.setChargeType("x".repeat(20));
-    chargeTO.setUnitPrice(20);
-    chargeTO.setQuantity(20);
+    chargeTO.setUnitPrice(20.20);
+    chargeTO.setQuantity(20.20);
     chargeTO.setCurrencyCode("x".repeat(3));
-    chargeTO.setCurrencyAmount(20);
+    chargeTO.setCurrencyAmount(20.20);
     chargeTO.setCalculationBasis("x".repeat(50));
   }
 

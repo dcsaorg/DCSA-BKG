@@ -14,6 +14,6 @@ public class ShipmentCutOffTimeTO {
   private CutOffDateTimeCode cutOffDateTimeCode;
 
   @NotNull(message = "Cut Off Date Time is required.")
-  @JsonFormat(pattern = "yyyy-MM-dd")
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private OffsetDateTime cutOffDateTime;
 }
