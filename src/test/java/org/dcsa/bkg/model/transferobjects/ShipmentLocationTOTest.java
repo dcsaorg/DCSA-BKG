@@ -17,7 +17,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Set;
 
 @DisplayName("Tests for ShipmentLocationTOTest")
@@ -43,7 +43,7 @@ class ShipmentLocationTOTest {
     shipmentLocationTO.setLocation(new LocationTO());
     shipmentLocationTO.setLocationType(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
-    shipmentLocationTO.setEventDateTime(LocalDate.now());
+    shipmentLocationTO.setEventDateTime(OffsetDateTime.now());
   }
 
   @Test

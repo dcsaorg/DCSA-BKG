@@ -1,7 +1,7 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import org.dcsa.core.events.model.Booking;
-import org.dcsa.core.events.model.Location;
+import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,7 +27,7 @@ class BookingConfirmationTOTest {
     bookingConfirmationTO = new BookingConfirmationTO();
     bookingConfirmationTO.setCarrierBookingReference("x".repeat(35));
     bookingConfirmationTO.setTermsAndConditions("x".repeat(50));
-    bookingConfirmationTO.setPlaceOfIssue(new Location());
+    bookingConfirmationTO.setPlaceOfIssue(new LocationTO());
     bookingConfirmationTO.setBooking(new Booking());
     bookingConfirmationTO.setTransports(List.of(new TransportTO()));
     bookingConfirmationTO.setShipmentLocations(List.of(new ShipmentLocationTO()));
@@ -57,7 +57,8 @@ class BookingConfirmationTOTest {
   }
 
   @Test
-  @DisplayName("BookingConfirmationTO should throw error if carrierBookingReference length exceeds max size of 35.")
+  @DisplayName(
+      "BookingConfirmationTO should throw error if carrierBookingReference length exceeds max size of 35.")
   void testToVerifyCarrierBookingReferenceIDIsNotAllowedToExceed35() {
     bookingConfirmationTO.setCarrierBookingReference("x".repeat(36));
     Set<ConstraintViolation<BookingConfirmationTO>> violations =

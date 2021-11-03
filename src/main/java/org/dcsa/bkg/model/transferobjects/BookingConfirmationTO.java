@@ -2,7 +2,7 @@ package org.dcsa.bkg.model.transferobjects;
 
 import lombok.Data;
 import org.dcsa.core.events.model.Booking;
-import org.dcsa.core.events.model.Location;
+import org.dcsa.core.events.model.transferobjects.LocationTO;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -17,7 +17,7 @@ public class BookingConfirmationTO {
 
   private String termsAndConditions;
 
-  private Location placeOfIssue;
+  private LocationTO placeOfIssue;
 
   private Booking booking;
 
