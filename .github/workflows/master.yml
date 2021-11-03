@@ -24,7 +24,7 @@ jobs:
         path: DCSA-BKG
         submodules: recursive
     - name: Build Booking API
-      run: cd DCSA-BKG && mvn package -DskipTests -X #Need to skip the tests as they depend on a running DB
+      run: cd DCSA-BKG && mvn package -X #Need to skip the tests as they depend on a running DB
     - name: Build and run the microservices
       run: cd DCSA-BKG && docker-compose -f docker-compose.yml up -d -V
 
