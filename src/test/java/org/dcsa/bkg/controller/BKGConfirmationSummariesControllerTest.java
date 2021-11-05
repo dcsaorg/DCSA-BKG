@@ -89,7 +89,7 @@ class BKGConfirmationSummariesControllerTest {
 
     BookingConfirmationSummaryTO bookingConfirmationSummaryTO = new BookingConfirmationSummaryTO();
     bookingConfirmationSummaryTO.setCarrierBookingReferenceID(carrierBookingReferenceID);
-    bookingConfirmationSummaryTO.setBookingRequestDateTime(dateTimeOffset);
+    bookingConfirmationSummaryTO.setConfirmationDateTime(dateTimeOffset);
     bookingConfirmationSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
     bookingConfirmationSummaryTO.setPlaceOfIssue(location);
 
