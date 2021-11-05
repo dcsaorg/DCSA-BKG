@@ -75,23 +75,12 @@ class BKGConfirmationSummariesControllerTest {
 
     String carrierBookingReferenceID = UUID.randomUUID().toString().substring(0, 33);
     OffsetDateTime dateTimeOffset = OffsetDateTime.now();
-    UUID addressID = UUID.randomUUID();
-    UUID facilityID = UUID.randomUUID();
     String termsAndConditions = "TERMS AND CONDITIONS!";
-
-    Location location = new Location();
-    location.setLocationName("Islands Brygge");
-    location.setAddressID(addressID);
-    location.setUnLocationCode("DK CPH");
-    location.setFacilityID(facilityID);
-    location.setLatitude("55.6675569");
-    location.setLongitude("12.57705349");
 
     BookingConfirmationSummaryTO bookingConfirmationSummaryTO = new BookingConfirmationSummaryTO();
     bookingConfirmationSummaryTO.setCarrierBookingReferenceID(carrierBookingReferenceID);
     bookingConfirmationSummaryTO.setConfirmationDateTime(dateTimeOffset);
     bookingConfirmationSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
-    bookingConfirmationSummaryTO.setPlaceOfIssue(location);
 
     Mockito.when(bookingService.getBookingConfirmationSummaries())
         .thenReturn(Flux.just(bookingConfirmationSummaryTO));
@@ -109,14 +98,6 @@ class BKGConfirmationSummariesControllerTest {
         .isArray()
         .jsonPath("$.[0].carrierBookingReferenceID")
         .isEqualTo(carrierBookingReferenceID)
-        .jsonPath("$.[0].placeOfIssue.locationName")
-        .isEqualTo(location.getLocationName())
-        .jsonPath("$.[0].placeOfIssue.UNLocationCode")
-        .isEqualTo(location.getUnLocationCode())
-        .jsonPath("$.[0].placeOfIssue.latitude")
-        .isEqualTo(location.getLatitude())
-        .jsonPath("$.[0].placeOfIssue.longitude")
-        .isEqualTo(location.getLongitude())
         .jsonPath("$.[0].termsAndConditions")
         .isEqualTo(termsAndConditions)
     ;

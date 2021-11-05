@@ -24,15 +24,6 @@ public class BookingConfirmationSummaryTO {
   @Column("terms_and_conditions")
   private String termsAndConditions;
 
-  @JsonIgnore
-  @Size(max = 100)
-  @Column("place_of_issue")
-  private String placeOfIssueID;
-
-  @Transient
-  @ForeignKey(fromFieldName = "placeOfIssueID", foreignFieldName = "id", joinType = Join.JoinType.JOIN)
-  private Location placeOfIssue;
-
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   @Column("confirmation_datetime")
   private OffsetDateTime confirmationDateTime;
