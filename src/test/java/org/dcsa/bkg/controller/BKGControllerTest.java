@@ -12,6 +12,7 @@ import org.dcsa.core.security.SecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -27,7 +28,9 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.function.Function;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @DisplayName("Tests for BKGController")
@@ -48,20 +51,24 @@ class BKGControllerTest {
   void init() {
     // populate DTO with relevant objects to verify json schema returned
     bookingTO = new BookingTO();
+    bookingTO.setCarrierBookingRequestReference(UUID.randomUUID().toString());
+    bookingTO.setDocumentStatus(DocumentStatus.PENA);
+    bookingTO.setBookingRequestDateTime(OffsetDateTime.now());
     bookingTO.setReceiptDeliveryTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingTO.setDeliveryTypeAtDestination(ReceiptDeliveryType.SD);
     bookingTO.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
     bookingTO.setCargoMovementTypeAtDestination(CargoMovementType.LCL);
     bookingTO.setServiceContractReference("x".repeat(30));
-    bookingTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
     bookingTO.setCommunicationChannel(CommunicationChannel.AO);
     bookingTO.setSubmissionDateTime(OffsetDateTime.now());
     bookingTO.setExpectedDepartureDate(OffsetDateTime.now());
+    bookingTO.setInvoicePayableAt(new LocationTO());
 
     CommodityTO commodityTO = new CommodityTO();
     commodityTO.setCommodityType("x".repeat(20));
     commodityTO.setHsCode("x".repeat(10));
-    commodityTO.setCargoGrossWeight(CargoGrossWeight.KGM);
+    commodityTO.setCargoGrossWeight(12.12);
+    commodityTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
     bookingTO.setCommodities(Collections.singletonList(commodityTO));
 
     ValueAddedServiceRequestTO valueAddedServiceRequestTO = new ValueAddedServiceRequestTO();
@@ -102,6 +109,8 @@ class BKGControllerTest {
   @DisplayName("POST booking should return 202 and valid booking json schema.")
   void postBookingsShouldReturn202ForValidBookingRequest() {
 
+    ArgumentCaptor<BookingTO> argument = ArgumentCaptor.forClass(BookingTO.class);
+
     // mock service method call
     when(bookingService.createBooking(any())).thenReturn(Mono.just(bookingTO));
 
@@ -112,6 +121,12 @@ class BKGControllerTest {
             .contentType(MediaType.APPLICATION_JSON)
             .body(BodyInserters.fromValue(bookingTO))
             .exchange();
+
+    // these values are only allowed in response and not to be set via request body
+    verify(bookingService).createBooking(argument.capture());
+    assertNull(argument.getValue().getCarrierBookingRequestReference());
+    assertNull(argument.getValue().getDocumentStatus());
+    assertNull(argument.getValue().getBookingRequestDateTime());
 
     checkStatus202.andThen(checkBookingResponseJsonSchema).apply(exchange);
   }
@@ -138,6 +153,8 @@ class BKGControllerTest {
       "PUT booking should return 202 and valid booking json schema for given carrierBookingRequestReference.")
   void putBookingsShouldReturn202ForValidBookingRequest() {
 
+    ArgumentCaptor<BookingTO> argument = ArgumentCaptor.forClass(BookingTO.class);
+
     // mock service method call
     when(bookingService.updateBookingByReferenceCarrierBookingRequestReference(any(), any()))
         .thenReturn(Mono.just(bookingTO));
@@ -149,6 +166,12 @@ class BKGControllerTest {
             .contentType(MediaType.APPLICATION_JSON)
             .body(BodyInserters.fromValue(bookingTO))
             .exchange();
+
+    // these values are only allowed in response and not to be set via request body
+    verify(bookingService).updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
+    assertNull(argument.getValue().getCarrierBookingRequestReference());
+    assertNull(argument.getValue().getDocumentStatus());
+    assertNull(argument.getValue().getBookingRequestDateTime());
 
     checkStatus202.andThen(checkBookingResponseJsonSchema).apply(exchange);
   }
@@ -206,6 +229,10 @@ class BKGControllerTest {
                   .consumeWith(System.out::println)
                   .jsonPath("$.carrierBookingRequestReference")
                   .hasJsonPath()
+                  .jsonPath("$.documentStatus")
+                  .hasJsonPath()
+                  .jsonPath("$.bookingRequestDateTime")
+                  .hasJsonPath()
                   .jsonPath("$.receiptDeliveryTypeAtOrigin")
                   .hasJsonPath()
                   .jsonPath("$.deliveryTypeAtDestination")
@@ -217,8 +244,6 @@ class BKGControllerTest {
                   .jsonPath("$.serviceContractReference")
                   .hasJsonPath()
                   .jsonPath("$.paymentTerm")
-                  .hasJsonPath()
-                  .jsonPath("$.cargoGrossWeightUnit")
                   .hasJsonPath()
                   .jsonPath("$.isPartialLoadAllowed")
                   .hasJsonPath()
@@ -248,6 +273,8 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.incoTerms")
                   .hasJsonPath()
+                  .jsonPath("$.invoicePayableAt")
+                  .hasJsonPath()
                   .jsonPath("$.communicationChannel")
                   .hasJsonPath()
                   .jsonPath("$.isEquipmentSubstitutionAllowed")
@@ -265,6 +292,8 @@ class BKGControllerTest {
                   .jsonPath("$.commodities[0].HSCode")
                   .hasJsonPath()
                   .jsonPath("$.commodities[0].cargoGrossWeight")
+                  .hasJsonPath()
+                  .jsonPath("$.commodities[0].cargoGrossWeightUnit")
                   .hasJsonPath()
                   .jsonPath("$.commodities[0].exportLicenseIssueDate")
                   .hasJsonPath()

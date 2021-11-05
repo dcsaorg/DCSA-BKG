@@ -46,12 +46,12 @@ class BookingTOTest {
     validBookingTO.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
     validBookingTO.setCargoMovementTypeAtDestination(CargoMovementType.LCL);
     validBookingTO.setServiceContractReference("x".repeat(30));
-    validBookingTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
     validBookingTO.setCommunicationChannel(CommunicationChannel.AO);
     CommodityTO commodityTO = new CommodityTO();
     commodityTO.setCommodityType("x".repeat(20));
     commodityTO.setHsCode("x".repeat(10));
-    commodityTO.setCargoGrossWeight(CargoGrossWeight.KGM);
+    commodityTO.setCargoGrossWeight(12.12);
+    commodityTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
     validBookingTO.setCommodities(Collections.singletonList(commodityTO));
   }
 
@@ -122,16 +122,6 @@ class BookingTOTest {
         violations.stream()
             .anyMatch(
                 v -> "ServiceContractReference has a max size of 30.".equals(v.getMessage())));
-  }
-
-  @Test
-  @DisplayName("BookingTO should throw error if CargoGrossWeightUnit is not set.")
-  void testToVerifyCargoGrossWeightUnitIsRequired() {
-    validBookingTO.setCargoGrossWeightUnit(null);
-    Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
-    Assertions.assertTrue(
-        violations.stream()
-            .anyMatch(v -> "CargoGrossWeightUnit is required.".equals(v.getMessage())));
   }
 
   @Test

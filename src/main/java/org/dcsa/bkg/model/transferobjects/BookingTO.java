@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.dcsa.core.events.model.enums.*;
+import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.validator.ValidVesselIMONumber;
 
 import javax.validation.Valid;
@@ -17,7 +18,15 @@ import java.util.List;
 @Data
 public class BookingTO {
 
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String carrierBookingRequestReference;
+
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  private DocumentStatus documentStatus;
+
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  private OffsetDateTime bookingRequestDateTime;
 
   @NotNull(message = "ReceiptDeliveryTypeAtOrigin is required.")
   private ReceiptDeliveryType receiptDeliveryTypeAtOrigin;
@@ -36,9 +45,6 @@ public class BookingTO {
   private String serviceContractReference;
 
   private PaymentTerm paymentTerm;
-
-  @NotNull(message = "CargoGrossWeightUnit is required.")
-  private CargoGrossWeight cargoGrossWeightUnit;
 
   @JsonProperty("isPartialLoadAllowed")
   private boolean isPartialLoadAllowed;
@@ -78,6 +84,8 @@ public class BookingTO {
   private String bookingChannelReference;
 
   private IncoTerms incoTerms;
+
+  private LocationTO invoicePayableAt;
 
   @NotNull(message = "CommunicationChannel is required.")
   private CommunicationChannel communicationChannel;

@@ -42,7 +42,8 @@ class CommodityTOTest {
     validCommodityTO = new CommodityTO();
     validCommodityTO.setCommodityType("x".repeat(20));
     validCommodityTO.setHsCode("x".repeat(10));
-    validCommodityTO.setCargoGrossWeight(CargoGrossWeight.KGM);
+    validCommodityTO.setCargoGrossWeight(12.12);
+    validCommodityTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
     validCommodityTO.setExportLicenseIssueDate(LocalDate.now());
     validCommodityTO.setExportLicenseExpiryDate(LocalDate.now());
   }
@@ -60,7 +61,7 @@ class CommodityTOTest {
     validCommodityTO.setCommodityType(null);
     Set<ConstraintViolation<CommodityTO>> violations = validator.validate(validCommodityTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "Commodity Type is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "CommodityType is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -71,7 +72,7 @@ class CommodityTOTest {
     Assertions.assertTrue(
         violations.stream()
             .anyMatch(
-                v -> "A max length of 20 is permitted for commodityType.".equals(v.getMessage())));
+                v -> "CommodityType has a max size of 20.".equals(v.getMessage())));
   }
 
   @Test
@@ -81,7 +82,17 @@ class CommodityTOTest {
     Set<ConstraintViolation<CommodityTO>> violations = validator.validate(validCommodityTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "cargoGrossWeight cannot be empty!".equals(v.getMessage())));
+            .anyMatch(v -> "CargoGrossWeight is required.".equals(v.getMessage())));
+  }
+
+  @Test
+  @DisplayName("CommodityTO should throw error if cargoGrossWeight is not set.")
+  void testToVerifyCargoGrossWeightUnitIsRequired() {
+    validCommodityTO.setCargoGrossWeightUnit(null);
+    Set<ConstraintViolation<CommodityTO>> violations = validator.validate(validCommodityTO);
+    Assertions.assertTrue(
+            violations.stream()
+                    .anyMatch(v -> "CargoGrossWeightUnit is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -91,7 +102,7 @@ class CommodityTOTest {
     Set<ConstraintViolation<CommodityTO>> violations = validator.validate(validCommodityTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "A max length of 10 is permitted for HSCode.".equals(v.getMessage())));
+            .anyMatch(v -> "HSCode has a max size of 10.".equals(v.getMessage())));
   }
 
   @Test

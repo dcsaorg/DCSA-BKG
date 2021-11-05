@@ -5,24 +5,25 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.dcsa.core.events.model.enums.CargoGrossWeight;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
 
 @Data
 public class CommodityTO {
 
-  @NotBlank(message = "Commodity Type is required.")
-  @Size(max = 20, message = "A max length of 20 is permitted for commodityType.")
+  @NotBlank(message = "CommodityType is required.")
+  @Size(max = 20, message = "CommodityType has a max size of 20.")
   private String commodityType;
 
-  @Size(max = 10, message = "A max length of 10 is permitted for HSCode.")
+  @Size(max = 10, message = "HSCode has a max size of 10.")
   @JsonProperty("HSCode")
   private String hsCode;
 
-  @NotNull(message = "cargoGrossWeight cannot be empty!")
-  private CargoGrossWeight cargoGrossWeight;
+  @NotNull(message = "CargoGrossWeight is required.")
+  private Double cargoGrossWeight;
+
+  @NotNull(message = "CargoGrossWeightUnit is required.")
+  private CargoGrossWeight cargoGrossWeightUnit;
 
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   private LocalDate exportLicenseIssueDate;
