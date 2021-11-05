@@ -4,10 +4,10 @@ import org.dcsa.bkg.model.enums.CutOffDateTimeCode;
 import org.dcsa.bkg.model.enums.TransportPlanStage;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
-import org.dcsa.core.events.model.Location;
 import org.dcsa.core.events.model.enums.DCSATransportType;
 import org.dcsa.core.events.model.enums.LocationType;
 import org.dcsa.core.events.model.enums.PaymentTerm;
+import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +51,7 @@ class BKGConfirmedBookingsControllerTest {
     UUID facilityID = UUID.randomUUID();
     String termsAndConditions = "TERMS AND CONDITIONS!";
 
-    Location location = new Location();
+    LocationTO location = new LocationTO();
     location.setLocationName("Islands Brygge");
     location.setAddressID(addressID);
     location.setUnLocationCode("DK CPH");
