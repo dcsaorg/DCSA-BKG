@@ -1,6 +1,7 @@
 package org.dcsa.bkg.service.impl;
 
 import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
+import org.dcsa.bkg.model.transferobjects.BookingTO;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.service.impl.BaseServiceImpl;
@@ -21,40 +22,21 @@ public class BookingServiceImpl extends BaseServiceImpl<BookingSummaryTO, UUID> 
   }
 
   @Override
-  public Flux<BookingSummaryTO> findAll() {
-    return Flux.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
+  public Mono<BookingTO> createBooking(BookingTO bookingRequest) {
+    return Mono.empty();
   }
 
   @Override
-  public Mono<BookingSummaryTO> findById(UUID id) {
-    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
+  public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(String carrierBookingRequestReference, BookingTO bookingRequest) {
+    return Mono.empty();
   }
 
   @Override
-  public Mono<BookingSummaryTO> create(BookingSummaryTO bookingSummaryTO) {
-    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
+  public Mono<BookingTO> getBookingByCarrierBookingRequestReference(String carrierBookingRequestReference) {
+    return Mono.empty();
   }
 
   @Override
-  public Mono<BookingSummaryTO> update(BookingSummaryTO bookingSummaryTO) {
-    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
-  }
-
-  @Override
-  public Mono<Void> deleteById(UUID id) {
-    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
-  }
-
-  @Override
-  public Mono<Void> delete(BookingSummaryTO bookingSummaryTO) {
-    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN));
-  }
-
-  @Override
-  public UUID getIdOfEntity(BookingSummaryTO entity) {
-    return null;
-  }
-  
   public Mono<BookingConfirmationTO> getBookingByCarrierBookingReference(String carrierBookingReference) {
     return Mono.empty();
   }
@@ -63,4 +45,5 @@ public class BookingServiceImpl extends BaseServiceImpl<BookingSummaryTO, UUID> 
   public Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference) {
     return Mono.empty();
   }
+
 }

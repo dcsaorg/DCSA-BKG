@@ -3,8 +3,8 @@ package org.dcsa.bkg.model.transferobjects;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.dcsa.bkg.model.enums.TransportPlanStage;
-import org.dcsa.core.events.model.Location;
 import org.dcsa.core.events.model.enums.DCSATransportType;
+import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.validator.ValidVesselIMONumber;
 
 import javax.validation.constraints.NotNull;
@@ -20,10 +20,10 @@ public class TransportTO {
   private int transportPlanStageSequenceNumber;
 
   @NotNull(message = "LoadLocation is required.")
-  private Location loadLocation;
+  private LocationTO loadLocation;
 
   @NotNull(message = "DischargeLocation is required.")
-  private Location dischargeLocation;
+  private LocationTO dischargeLocation;
 
   @NotNull(message = "PlannedDepartureDate is required.")
   @JsonFormat(shape = JsonFormat.Shape.STRING)
