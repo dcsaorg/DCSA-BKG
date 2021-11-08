@@ -1,8 +1,9 @@
 package org.dcsa.bkg.service;
 
+import org.dcsa.bkg.model.transferobjects.BookingConfirmationSummaryTO;
 import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
-import org.dcsa.bkg.model.transferobjects.BookingTO;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
+import org.dcsa.bkg.model.transferobjects.BookingTO;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -19,4 +20,6 @@ public interface BookingService {
   Mono<BookingConfirmationTO> getBookingByCarrierBookingReference(String carrierBookingReference);
 
   Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference);
+
+  Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries();
 }

@@ -2,7 +2,7 @@ package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.dcsa.bkg.model.transferobjects.BookingConfirmationSummaryTO;
-import org.dcsa.bkg.service.BookingConfirmationService;
+import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -22,7 +22,7 @@ import javax.validation.constraints.Min;
     produces = {MediaType.APPLICATION_JSON_VALUE})
 public class BKGConfirmationSummariesController {
 
-  private final BookingConfirmationService bookingConfirmationService;
+  private final BookingService bookingService;
 
   @GetMapping
   public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
@@ -31,6 +31,6 @@ public class BKGConfirmationSummariesController {
       @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
       @RequestParam(value = "limit", defaultValue = "100") @Min(1) int limit) {
     // ToDo: adjust this when the IM is ready for booking
-    return bookingConfirmationService.getBookingConfirmationSummaries();
+    return bookingService.getBookingConfirmationSummaries();
   }
 }

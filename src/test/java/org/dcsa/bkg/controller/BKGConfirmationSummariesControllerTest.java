@@ -1,8 +1,7 @@
 package org.dcsa.bkg.controller;
 
 import org.dcsa.bkg.model.transferobjects.BookingConfirmationSummaryTO;
-import org.dcsa.bkg.service.BookingConfirmationService;
-import org.dcsa.core.events.model.Location;
+import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +27,7 @@ class BKGConfirmationSummariesControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
-  @MockBean BookingConfirmationService bookingService;
+  @MockBean BookingService bookingService;
 
   private final String BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT = "/booking-confirmation-summaries";
 
