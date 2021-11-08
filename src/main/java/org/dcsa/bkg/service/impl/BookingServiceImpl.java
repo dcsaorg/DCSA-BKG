@@ -8,9 +8,10 @@ import org.dcsa.bkg.model.transferobjects.BookingTO;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.Shipment;
 import org.dcsa.core.events.model.enums.DocumentStatus;
-import org.dcsa.core.events.repository.ShipmentRepository;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.r2dbc.core.ReactiveSelectOperation;
+import org.springframework.data.relational.core.query.Criteria;
+import org.springframework.data.relational.core.query.Query;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,28 +28,39 @@ public class BookingServiceImpl implements BookingService {
   public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
       String carrierBookingReferenceID, DocumentStatus documentStatus, int limit) {
 
-    ReactiveSelectOperation.ReactiveSelect<Shipment> result = template.select(Shipment.class);
-    ReactiveSelectOperation.TerminatingSelect<Shipment> splat = result;
+    ReactiveSelectOperation.ReactiveSelect<Shipment> selectResults =
+        template.select(Shipment.class);
+    ReactiveSelectOperation.TerminatingSelect<Shipment> results = selectResults;
+
+    Criteria criteria = null;
 
     if (carrierBookingReferenceID != null) {
-      splat =
-          result.matching(query(where("carrierBookingReferenceID").is(carrierBookingReferenceID)));
+      criteria = where("documentStatus").is(documentStatus);
     }
 
     if (documentStatus != null) {
-      splat = result.matching(query(where("documentStatus").is(documentStatus)));
+      if (criteria == null) {
+        criteria = where("documentStatus").is(documentStatus);
+      } else {
+        criteria.and(where("documentStatus").is(documentStatus));
+      }
     }
 
-    return splat
-        .all()  // Seemingly no way to only take a certain amount?
-        .take(limit)
+    if (criteria != null) {
+      results = selectResults.matching(query(criteria).limit(limit));
+    } else {
+      results = selectResults.matching(Query.empty().limit(limit));
+    }
+
+    return results
+        .all()
         .map(
             x -> {
-              BookingConfirmationSummaryTO result2 = new BookingConfirmationSummaryTO();
-              result2.setCarrierBookingReferenceID(x.getCarrierBookingReferenceID());
-              result2.setConfirmationDateTime(x.getConfirmationDateTime());
-              result2.setTermsAndConditions(x.getTermsAndConditions());
-              return result2;
+              BookingConfirmationSummaryTO result = new BookingConfirmationSummaryTO();
+              result.setCarrierBookingReferenceID(x.getCarrierBookingReferenceID());
+              result.setConfirmationDateTime(x.getConfirmationDateTime());
+              result.setTermsAndConditions(x.getTermsAndConditions());
+              return result;
             });
   }
 
