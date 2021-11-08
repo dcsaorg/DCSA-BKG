@@ -22,17 +22,20 @@ public class BookingServiceImpl implements BookingService {
   }
 
   @Override
-  public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(String carrierBookingRequestReference, BookingTO bookingRequest) {
+  public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
+      String carrierBookingRequestReference, BookingTO bookingRequest) {
     return Mono.empty();
   }
 
   @Override
-  public Mono<BookingTO> getBookingByCarrierBookingRequestReference(String carrierBookingRequestReference) {
+  public Mono<BookingTO> getBookingByCarrierBookingRequestReference(
+      String carrierBookingRequestReference) {
     return Mono.empty();
   }
 
   @Override
-  public Mono<BookingConfirmationTO> getBookingByCarrierBookingReference(String carrierBookingReference) {
+  public Mono<BookingConfirmationTO> getBookingByCarrierBookingReference(
+      String carrierBookingReference) {
     return Mono.empty();
   }
 
@@ -40,5 +43,4 @@ public class BookingServiceImpl implements BookingService {
   public Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference) {
     return Mono.empty();
   }
-
 }
