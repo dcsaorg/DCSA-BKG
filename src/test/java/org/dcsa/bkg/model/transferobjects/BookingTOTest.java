@@ -16,6 +16,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Set;
@@ -167,19 +168,13 @@ class BookingTOTest {
                 v -> "ContractQuotationReference has a max size of 35.".equals(v.getMessage())));
   }
 
-  // Disabled as simple date format only supports upto millisecond resolution, That means up to 3
-  // digits of a decimal fraction of second.
-  // Need to find another way to test the format, as of now its assumed to return
-  // yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZZ by default.
-  @Disabled
   @Test
-  @DisplayName(
-      "BookingTO should return yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZZ date format for expectedDepartureDate.")
+  @DisplayName("BookingTO should return yyyy-MM-dd date format for expectedDepartureDate.")
   void testToCheckISODateFormatForExpectedDepartureDate() throws JsonProcessingException {
-    validBookingTO.setExpectedDepartureDate(OffsetDateTime.now());
+    validBookingTO.setExpectedDepartureDate(LocalDate.now());
     JsonNode object = objectMapper.readTree(objectMapper.writeValueAsString(validBookingTO));
     String expectedDepartureDate = object.get("expectedDepartureDate").asText();
-    SimpleDateFormat sdfrmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZZ");
+    SimpleDateFormat sdfrmt = new SimpleDateFormat("yyyy-MM-dd");
     sdfrmt.setLenient(false);
     Assertions.assertDoesNotThrow(
         () -> {

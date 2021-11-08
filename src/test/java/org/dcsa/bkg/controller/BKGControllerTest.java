@@ -23,6 +23,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.UUID;
@@ -61,7 +62,7 @@ class BKGControllerTest {
     bookingTO.setServiceContractReference("x".repeat(30));
     bookingTO.setCommunicationChannel(CommunicationChannel.AO);
     bookingTO.setSubmissionDateTime(OffsetDateTime.now());
-    bookingTO.setExpectedDepartureDate(OffsetDateTime.now());
+    bookingTO.setExpectedDepartureDate(LocalDate.now());
     bookingTO.setInvoicePayableAt(new LocationTO());
 
     CommodityTO commodityTO = new CommodityTO();
