@@ -5,6 +5,8 @@ import org.dcsa.bkg.model.transferobjects.BookingConfirmationSummaryTO;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +33,6 @@ public class BKGConfirmationSummariesController {
       @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
       @RequestParam(value = "limit", defaultValue = "100") @Min(1) int limit) {
     // ToDo: adjust this when the IM is ready for booking
-    return bookingService.getBookingConfirmationSummaries();
+    return bookingService.getBookingConfirmationSummaries(carrierBookingReferenceID, documentStatus, limit);
   }
 }

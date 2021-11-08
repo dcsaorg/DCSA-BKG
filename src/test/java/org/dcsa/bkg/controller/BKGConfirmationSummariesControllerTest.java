@@ -6,12 +6,17 @@ import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.http.server.reactive.MockServerHttpResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
@@ -28,6 +33,9 @@ class BKGConfirmationSummariesControllerTest {
   @Autowired WebTestClient webTestClient;
 
   @MockBean BookingService bookingService;
+
+  MockServerHttpResponse serverHttpResponse;
+  MockServerHttpRequest serverHttpRequest;
 
   private final String BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT = "/booking-confirmation-summaries";
 
@@ -81,7 +89,7 @@ class BKGConfirmationSummariesControllerTest {
     bookingConfirmationSummaryTO.setConfirmationDateTime(dateTimeOffset);
     bookingConfirmationSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
 
-    Mockito.when(bookingService.getBookingConfirmationSummaries())
+    Mockito.when(bookingService.getBookingConfirmationSummaries(null, null, 100))
         .thenReturn(Flux.just(bookingConfirmationSummaryTO));
 
     webTestClient

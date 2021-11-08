@@ -4,6 +4,9 @@ import org.dcsa.bkg.model.transferobjects.BookingConfirmationSummaryTO;
 import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
 import org.dcsa.bkg.model.transferobjects.BookingTO;
+import org.dcsa.core.events.model.enums.DocumentStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -21,5 +24,5 @@ public interface BookingService {
 
   Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference);
 
-  Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries();
+  Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(String carrierBookingReferenceID, DocumentStatus documentStatus, int limit);
 }
