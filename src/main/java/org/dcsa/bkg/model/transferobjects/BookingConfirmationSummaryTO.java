@@ -14,7 +14,6 @@ import javax.validation.constraints.Size;
 import java.time.OffsetDateTime;
 
 @Data
-@Table("shipment")
 public class BookingConfirmationSummaryTO {
 
   @Size(max = 35)
