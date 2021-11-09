@@ -30,12 +30,12 @@ public class BookingServiceImpl implements BookingService {
 
     ReactiveSelectOperation.ReactiveSelect<Shipment> selectResults =
         template.select(Shipment.class);
-    ReactiveSelectOperation.TerminatingSelect<Shipment> results = selectResults;
+    ReactiveSelectOperation.TerminatingSelect<Shipment> results;
 
     Criteria criteria = null;
 
     if (carrierBookingReferenceID != null) {
-      criteria = where("documentStatus").is(documentStatus);
+      criteria = where("carrierBookingReferenceID").is(carrierBookingReferenceID);
     }
 
     if (documentStatus != null) {
