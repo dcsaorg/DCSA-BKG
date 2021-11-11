@@ -36,7 +36,7 @@
 		<dependency>
 			<groupId>org.dcsa</groupId>
 			<artifactId>dcsa_event_core</artifactId>
-			<version>0.0.38-dev-bkg-SNAPSHOT</version>
+			<version>${dcsa.events.version}${dcsa.event.tag}${dcsa.artifacttype}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jacoco</groupId>
