@@ -26,7 +26,7 @@ public class BookingServiceImpl implements BookingService {
   private final R2dbcEntityTemplate template;
 
   public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
-      String carrierBookingReferenceID, DocumentStatus documentStatus, int limit) {
+      String carrierBookingReferenceID, DocumentStatus documentStatus, int limit, String cursor) {
 
     ReactiveSelectOperation.ReactiveSelect<Shipment> selectResults =
         template.select(Shipment.class);

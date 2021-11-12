@@ -24,5 +24,5 @@ public interface BookingService {
 
   Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference);
 
-  Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(String carrierBookingReferenceID, DocumentStatus documentStatus, int limit);
+  Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(String carrierBookingReferenceID, DocumentStatus documentStatus, int limit, String cursor);
 }

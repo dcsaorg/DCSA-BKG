@@ -31,8 +31,9 @@ public class BKGConfirmationSummariesController {
       @RequestParam(value = "carrierBookingReferenceID", required = false)
           String carrierBookingReferenceID,
       @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
-      @RequestParam(value = "limit", defaultValue = "100") @Min(1) int limit) {
+      @RequestParam(value = "limit", defaultValue = "100") @Min(1) int limit,
+      @RequestParam(value = "cursor", required = false) String cursor) {
     // ToDo: adjust this when the IM is ready for booking
-    return bookingService.getBookingConfirmationSummaries(carrierBookingReferenceID, documentStatus, limit);
+    return bookingService.getBookingConfirmationSummaries(carrierBookingReferenceID, documentStatus, limit, cursor);
   }
 }
