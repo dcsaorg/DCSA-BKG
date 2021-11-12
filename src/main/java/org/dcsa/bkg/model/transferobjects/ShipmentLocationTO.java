@@ -43,17 +43,16 @@ public class ShipmentLocationTO {
       viaJoinAlias = "location",
       joinType = Join.JoinType.LEFT_OUTER_JOIN)
   @Column("location_id")
-  private UUID LocationID;
+  private String LocationID;
 
-  @NotNull(message = "Location is required.")
   @Transient
+  @NotNull(message = "Location is required.")
   private LocationTO location;
 
   @Size(max = 250, message = "DisplayName has a max size of 250.")
   @Column("displayed_name")
   private String displayedName;
 
-  @Size(max = 3)
   @NotNull(message = "LocationType is required.")
   @Column("shipment_location_type_code")
   private LocationType locationType;

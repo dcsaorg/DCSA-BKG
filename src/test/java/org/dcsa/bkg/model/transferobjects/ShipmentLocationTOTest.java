@@ -19,6 +19,7 @@ import javax.validation.ValidatorFactory;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @DisplayName("Tests for ShipmentLocationTOTest")
 class ShipmentLocationTOTest {
@@ -39,8 +40,14 @@ class ShipmentLocationTOTest {
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
+    LocationTO location = new LocationTO();
+    location.setId("x".repeat(100));
+
     shipmentLocationTO = new ShipmentLocationTO();
-    shipmentLocationTO.setLocation(new LocationTO());
+    shipmentLocationTO.setBookingID(UUID.randomUUID());
+    shipmentLocationTO.setShipmentID(UUID.randomUUID());
+    shipmentLocationTO.setLocation(location);
+    shipmentLocationTO.setLocationID(shipmentLocationTO.getLocation().getId());
     shipmentLocationTO.setLocationType(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     shipmentLocationTO.setEventDateTime(OffsetDateTime.now());
