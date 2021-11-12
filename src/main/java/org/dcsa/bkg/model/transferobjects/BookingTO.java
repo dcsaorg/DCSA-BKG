@@ -6,6 +6,8 @@ import lombok.Data;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.validator.ValidVesselIMONumber;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -14,6 +16,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class BookingTO {

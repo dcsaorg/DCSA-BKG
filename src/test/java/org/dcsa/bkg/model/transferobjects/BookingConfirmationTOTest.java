@@ -29,7 +29,7 @@ class BookingConfirmationTOTest {
     bookingConfirmationTO.setTermsAndConditions("x".repeat(50));
     bookingConfirmationTO.setPlaceOfIssue(new LocationTO());
     bookingConfirmationTO.setBooking(new Booking());
-    bookingConfirmationTO.setTransports(List.of(new TransportTO()));
+//    bookingConfirmationTO.setTransports(List.of(new TransportTO()));
     bookingConfirmationTO.setShipmentLocations(List.of(new ShipmentLocationTO()));
     bookingConfirmationTO.setShipmentCutOffTimes(List.of(new ShipmentCutOffTimeTO()));
     bookingConfirmationTO.setConfirmedEquipments(List.of(new ConfirmedEquipmentTO()));

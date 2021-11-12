@@ -100,7 +100,7 @@ class BKGConfirmedBookingsControllerTest {
     bookingConfirmationTO.setCarrierBookingReference(carrierBookingReferenceID);
     bookingConfirmationTO.setTermsAndConditions(termsAndConditions);
     bookingConfirmationTO.setPlaceOfIssue(location);
-    bookingConfirmationTO.setTransports(List.of(transport));
+//    bookingConfirmationTO.setTransports(List.of(transport));
     bookingConfirmationTO.setShipmentCutOffTimes(List.of(shipmentCutOffTime));
     bookingConfirmationTO.setShipmentLocations(List.of(shipmentLocation));
     bookingConfirmationTO.setConfirmedEquipments(List.of(confirmedEquipment));

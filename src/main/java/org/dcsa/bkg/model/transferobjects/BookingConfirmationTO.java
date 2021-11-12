@@ -2,6 +2,7 @@ package org.dcsa.bkg.model.transferobjects;
 
 import lombok.Data;
 import org.dcsa.core.events.model.Booking;
+import org.dcsa.core.events.model.Transport;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 
 import javax.validation.constraints.NotNull;
@@ -21,12 +22,13 @@ public class BookingConfirmationTO {
 
   private Booking booking;
 
-  private List<TransportTO> transports;
+  private List<Transport> transports;
 
   private List<ShipmentCutOffTimeTO> shipmentCutOffTimes;
 
   private List<ShipmentLocationTO> shipmentLocations;
 
+  // requested equipment > confirmed fields
   private List<ConfirmedEquipmentTO> confirmedEquipments;
 
   private List<ChargeTO> charges;

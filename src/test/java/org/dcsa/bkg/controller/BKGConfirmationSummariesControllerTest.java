@@ -34,9 +34,6 @@ class BKGConfirmationSummariesControllerTest {
 
   @MockBean BookingService bookingService;
 
-  MockServerHttpResponse serverHttpResponse;
-  MockServerHttpRequest serverHttpRequest;
-
   private final String BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT = "/booking-confirmation-summaries";
 
   @Test
