@@ -32,18 +32,18 @@ public class ShipmentLocationServiceImpl
 
   @Override
   public Flux<ShipmentLocationTO> findAllByShipmentID(UUID shipmentID) {
-    ExtendedRequest<ShipmentLocationTO> extendedRequest = newExtendedRequest();
-    Map<String, List<String>> params = new HashMap<>();
-    params.put("shipmentID", Collections.singletonList(shipmentID.toString()));
-    extendedRequest.parseParameter(params);
-    return shipmentLocationRepository.findAllExtended(extendedRequest);
+    return findAllBySomeID(shipmentID, "shipmentID");
   }
 
   @Override
   public Flux<ShipmentLocationTO> findAllByBookingID(UUID bookingID) {
+    return findAllBySomeID(bookingID, "bookingID");
+  }
+
+  private Flux<ShipmentLocationTO> findAllBySomeID(UUID someID, String paramName) {
     ExtendedRequest<ShipmentLocationTO> extendedRequest = newExtendedRequest();
     Map<String, List<String>> params = new HashMap<>();
-    params.put("bookingID", Collections.singletonList(bookingID.toString()));
+    params.put(paramName, Collections.singletonList(someID.toString()));
     extendedRequest.parseParameter(params);
     return shipmentLocationRepository.findAllExtended(extendedRequest);
   }

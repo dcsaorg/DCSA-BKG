@@ -34,7 +34,6 @@ public class ShipmentLocationTO {
   @Column("booking_id")
   private UUID bookingID;
 
-  @NotNull
   @JsonIgnore
   @Transient
   @ForeignKey(

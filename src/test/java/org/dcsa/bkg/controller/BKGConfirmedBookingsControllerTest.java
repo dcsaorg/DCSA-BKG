@@ -123,7 +123,7 @@ class BKGConfirmedBookingsControllerTest {
   void confirmedBookingsShouldReturnListOfBookingConfirmation() {
 
     Mockito.when(
-            bookingService.getBookingByCarrierBookingReference(
+            bookingService.getBookingConfirmationByCarrierBookingReference(
                 bookingConfirmationTO.getCarrierBookingReference()))
         .thenReturn(Mono.just(bookingConfirmationTO));
 

@@ -16,7 +16,7 @@ public interface BookingService {
 
   Mono<BookingTO> getBookingByCarrierBookingRequestReference(String carrierBookingRequestReference);
 
-  Mono<BookingConfirmationTO> getBookingByCarrierBookingReference(String carrierBookingReference);
+  Mono<BookingConfirmationTO> getBookingConfirmationByCarrierBookingReference(String carrierBookingReference);
 
   Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference);
 }

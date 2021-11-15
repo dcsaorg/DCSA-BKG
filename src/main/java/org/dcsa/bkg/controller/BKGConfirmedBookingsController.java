@@ -25,7 +25,7 @@ public class BKGConfirmedBookingsController {
   public Mono<BookingConfirmationTO> getBookingReference(
       @PathVariable @Size(max = 35) String carrierBookingReference) {
     // ToDo: adjust this when the IM is ready for booking
-    return bookingService.getBookingByCarrierBookingReference(carrierBookingReference);
+    return bookingService.getBookingConfirmationByCarrierBookingReference(carrierBookingReference);
   }
 
   // To avoid spelling confusion we just accept both spellings
