@@ -49,13 +49,9 @@ public class BookingServiceImpl implements BookingService {
         .findByCarrierBookingReference(carrierBookingReference)
         .flatMapMany(
             x -> {
-              Shipment shipment = new Shipment();
-              shipment.setShipmentID(x.getShipmentID());
-              shipment.setCarrierID(x.getCarrierID());
-              shipment.setBookingID(x.getBookingID());
               bookingConfirmationTO.setCarrierBookingReference(x.getCarrierBookingReference());
               bookingConfirmationTO.setTermsAndConditions(x.getTermsAndConditions());
-              return shipmentLocationService.findAllByBookingID(shipment.getBookingID());
+              return shipmentLocationService.findAllByBookingID(x.getBookingID());
             })
         .collectList()
         .doOnNext(bookingConfirmationTO::setShipmentLocations)
