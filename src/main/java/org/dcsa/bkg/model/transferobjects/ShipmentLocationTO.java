@@ -26,11 +26,11 @@ public class ShipmentLocationTO {
   @Column("id")
   private UUID id;
 
-  @NotNull
+  @NotNull(message = "ShipmentID is required.")
   @Column("shipment_id")
   private UUID shipmentID;
 
-  @NotNull
+  @NotNull(message = "BookingID is required.")
   @Column("booking_id")
   private UUID bookingID;
 
