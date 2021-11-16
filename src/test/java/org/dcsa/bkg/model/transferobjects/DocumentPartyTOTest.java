@@ -2,6 +2,7 @@ package org.dcsa.bkg.model.transferobjects;
 
 import org.dcsa.core.events.model.enums.PartyFunction;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
+import org.dcsa.core.exception.InvalidParameterException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +12,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import java.util.Collections;
 import java.util.Set;
 
 @DisplayName("Tests for DocumentPartyTO")
@@ -27,8 +29,9 @@ class DocumentPartyTOTest {
     validDocumentPartyTO = new DocumentPartyTO();
     validDocumentPartyTO.setParty(new PartyTO());
     validDocumentPartyTO.setPartyFunction(PartyFunction.N1);
-    validDocumentPartyTO.setDisplayedAddress("x".repeat(250));
-    validDocumentPartyTO.setPartyContactDetails(new PartyContactDetailsTO());
+    validDocumentPartyTO.setDisplayedAddress(Collections.singletonList("x".repeat(250)));
+    validDocumentPartyTO.setPartyContactDetails(
+        Collections.singletonList(new PartyContactDetailsTO()));
     validDocumentPartyTO.setToBeNotified(true);
   }
 
@@ -52,11 +55,14 @@ class DocumentPartyTOTest {
   @DisplayName(
       "DocumentPartyTO should throw error if displayedAddress length exceeds max size of 250.")
   void testToVerifyDisplayedAddressIsNotAllowedToExceed250() {
-    validDocumentPartyTO.setDisplayedAddress("x".repeat(251));
-    Set<ConstraintViolation<DocumentPartyTO>> violations = validator.validate(validDocumentPartyTO);
-    Assertions.assertTrue(
-        violations.stream()
-            .anyMatch(v -> "DisplayedAddress has a max size of 250.".equals(v.getMessage())));
+    Exception exception =
+        Assertions.assertThrows(
+            InvalidParameterException.class,
+            () ->
+                validDocumentPartyTO.setDisplayedAddress(
+                    Collections.singletonList("x".repeat(251))));
+    Assertions.assertEquals(
+        "A single displayedAddress has a max size of 250.", exception.getMessage());
   }
 
   @Test

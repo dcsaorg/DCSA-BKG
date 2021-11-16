@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.dcsa.core.events.model.enums.PartyFunction;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
+import org.dcsa.core.exception.InvalidParameterException;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import java.util.List;
 
 @Data
 public class DocumentPartyTO {
@@ -16,12 +18,21 @@ public class DocumentPartyTO {
   @NotNull(message = "PartyFunction is required.")
   private PartyFunction partyFunction;
 
-  @Size(max = 250, message = "DisplayedAddress has a max size of 250.")
-  private String displayedAddress;
+  private List<String> displayedAddress;
 
   @NotNull(message = "PartyContactDetails is required.")
-  private PartyContactDetailsTO partyContactDetails;
+  @NotEmpty(message = "PartyContactDetails is required.")
+  private List<PartyContactDetailsTO> partyContactDetails;
 
   @JsonProperty("isToBeNotified")
   private boolean isToBeNotified;
+
+  public void setDisplayedAddress(List<String> displayedAddress) {
+    for (String da : displayedAddress) {
+      if (da.length() > 250) {
+        throw new InvalidParameterException("A single displayedAddress has a max size of 250.");
+      }
+    }
+    this.displayedAddress = displayedAddress;
+  }
 }
