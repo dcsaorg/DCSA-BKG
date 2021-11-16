@@ -7,5 +7,6 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface BookingMapper {
   @Mapping(source = "invoicePayableAt", target = "invoicePayableAt.id")
+  @Mapping(source = "placeOfIssueID", target = "placeOfIssue.id")
   BookingTO bookingToDTO(Booking booking);
 }
