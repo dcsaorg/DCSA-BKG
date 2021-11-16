@@ -11,6 +11,5 @@ public interface BookingSummaryMapper {
 
 
     @Mapping(target = "expectedDepartureDate", ignore = true)
-    @Mapping(target = "invoicePayableAt", ignore = true)
     BookingSummaryTO bookingSummaryTOFromBooking(Booking booking);
 }
