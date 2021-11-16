@@ -1,6 +1,6 @@
 package org.dcsa.bkg.service;
 
-import org.dcsa.bkg.model.mappers.BookingSummaryMapping;
+import org.dcsa.bkg.model.mappers.BookingSummaryMapper;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
 import org.dcsa.bkg.service.impl.BookingServiceImpl;
 import org.dcsa.core.events.model.Booking;
@@ -46,7 +46,7 @@ public class BookingServiceTest {
     VesselRepository vesselRepository;
 
     @Spy
-    BookingSummaryMapping bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapping.class);
+    BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
 
     private Booking initializeBookingTestInstance(UUID carrierBookingRequestReference, DocumentStatus documentStatus, UUID vesselId) {
         Booking booking = new Booking();

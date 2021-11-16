@@ -9,6 +9,7 @@ import org.dcsa.core.events.model.enums.CargoGrossWeight;
 import org.dcsa.core.events.model.enums.CargoMovementType;
 import org.dcsa.core.events.model.enums.CommunicationChannel;
 import org.dcsa.core.events.model.enums.ReceiptDeliveryType;
+import org.dcsa.core.exception.InvalidParameterException;
 import org.junit.jupiter.api.*;
 
 import javax.validation.ConstraintViolation;
@@ -314,14 +315,24 @@ class BookingTOTest {
   @DisplayName(
       "BookingTO should throw error if documentParties list contains invalid documentParty.")
   void testToVerifyDocumentPartiesCannotHaveInvalidDocumentParty() {
+    // TODO: Create custom validator for length of strings in a list
+    // maybe create a custom validation annotation for checking length of strings in a list
+    // so that the spring validator can be invoked
     DocumentPartyTO documentPartyTO = new DocumentPartyTO();
-    documentPartyTO.setDisplayedAddress("x".repeat(251));
-    validBookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
-    Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
-    Assertions.assertTrue(
-        violations.size() > 0
-            && violations.stream()
-                .anyMatch(v -> v.getPropertyPath().toString().contains("documentParties")));
+    Exception exception =
+            Assertions.assertThrows(
+                    InvalidParameterException.class,
+                    () ->
+                            documentPartyTO.setDisplayedAddress(
+                                    Collections.singletonList("x".repeat(251))));
+    Assertions.assertEquals(
+            "A single displayedAddress has a max size of 250.", exception.getMessage());
+//    validBookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
+//    Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
+//    Assertions.assertTrue(
+//        violations.size() > 0
+//            && violations.stream()
+//                .anyMatch(v -> v.getPropertyPath().toString().contains("documentParties")));
   }
 
   @Test

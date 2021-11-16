@@ -83,14 +83,14 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setBookingRequestDateTime(OffsetDateTime.now());
     bookingSummaryTo.setServiceContractReference("234ase3q4");
     bookingSummaryTo.setPaymentTerm(PaymentTerm.PRE);
-    bookingSummaryTo.setPartialLoadAllowed(true);
-    bookingSummaryTo.setExportDeclarationRequired(true);
+    bookingSummaryTo.setIsPartialLoadAllowed(true);
+    bookingSummaryTo.setIsExportDeclarationRequired(true);
     bookingSummaryTo.setExportDeclarationReference("ABC123123");
-    bookingSummaryTo.setImportLicenseRequired(true);
+    bookingSummaryTo.setIsImportLicenseRequired(true);
     bookingSummaryTo.setImportLicenseReference("ABC123123");
     bookingSummaryTo.setSubmissionDateTime(OffsetDateTime.now());
-    bookingSummaryTo.setAMSACIFilingRequired(true);
-    bookingSummaryTo.setDestinationFilingRequired(true);
+    bookingSummaryTo.setIsAMSACIFilingRequired(true);
+    bookingSummaryTo.setIsDestinationFilingRequired(true);
     bookingSummaryTo.setContractQuotationReference("DKK");
     bookingSummaryTo.setExpectedDepartureDate(LocalDate.now());
     bookingSummaryTo.setTransportDocumentType(TransportDocumentTypeCode.BOL);
@@ -98,7 +98,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setBookingChannelReference("ABC12313");
     bookingSummaryTo.setIncoTerms(IncoTerms.FCA);
     bookingSummaryTo.setCommunicationChannel(CommunicationChannel.AO);
-    bookingSummaryTo.setEquipmentSubstitutionAllowed(true);
+    bookingSummaryTo.setIsEquipmentSubstitutionAllowed(true);
 
     Mockito.when(bookingService.getBookingRequestSummaries(null, null, PageRequest.of(0, 100))).thenReturn(Flux.just(bookingSummaryTo));
 

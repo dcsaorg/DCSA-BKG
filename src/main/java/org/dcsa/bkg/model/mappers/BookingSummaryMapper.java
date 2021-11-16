@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
-public interface BookingSummaryMapping {
+public interface BookingSummaryMapper {
 
 
     @Mapping(target = "expectedDepartureDate", ignore = true)
