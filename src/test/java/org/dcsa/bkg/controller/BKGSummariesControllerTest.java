@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -99,7 +100,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setCommunicationChannel(CommunicationChannel.AO);
     bookingSummaryTo.setEquipmentSubstitutionAllowed(true);
 
-    Mockito.when(bookingService.getBookingRequestSummaries()).thenReturn(Flux.just(bookingSummaryTo));
+    Mockito.when(bookingService.getBookingRequestSummaries(null, null, PageRequest.of(0, 100))).thenReturn(Flux.just(bookingSummaryTo));
 
     webTestClient
         .get()
