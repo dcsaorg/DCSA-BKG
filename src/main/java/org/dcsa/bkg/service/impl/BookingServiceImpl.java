@@ -7,13 +7,11 @@ import org.dcsa.bkg.model.transferobjects.BookingTO;
 import org.dcsa.bkg.repositories.BookingConfirmationRepository;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.bkg.service.ShipmentLocationService;
-import org.dcsa.core.events.model.Shipment;
 import org.dcsa.bkg.model.mappers.BookingMapper;
 import org.dcsa.bkg.model.mappers.CommodityMapper;
 import org.dcsa.bkg.model.mappers.LocationMapper;
 import org.dcsa.bkg.model.mappers.PartyMapper;
 import org.dcsa.bkg.model.transferobjects.*;
-import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.Address;
 import org.dcsa.core.events.model.DisplayedAddress;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
@@ -28,15 +26,16 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-@RequiredArgsConstructor
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
+  // services
   private final ShipmentLocationService shipmentLocationService;
-  private final BookingConfirmationRepository bookingConfirmationRepository;
+
   // repositories
   private final BookingRepository bookingRepository;
+  private final BookingConfirmationRepository bookingConfirmationRepository;
   private final LocationRepository locationRepository;
   private final AddressRepository addressRepository;
   private final FacilityRepository facilityRepository;
