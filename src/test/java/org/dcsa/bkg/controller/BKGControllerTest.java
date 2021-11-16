@@ -1,6 +1,6 @@
 package org.dcsa.bkg.controller;
 
-import org.dcsa.bkg.model.enums.ValueAddedServiceCode;
+import org.dcsa.core.events.model.enums.ValueAddedServiceCode;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.Address;
@@ -94,8 +94,8 @@ class BKGControllerTest {
     partyTO.setAddress(new Address());
     documentPartyTO.setParty(partyTO);
     documentPartyTO.setPartyFunction(PartyFunction.N1);
-    documentPartyTO.setDisplayedAddress("x".repeat(250));
-    documentPartyTO.setPartyContactDetails(new PartyContactDetailsTO());
+    documentPartyTO.setDisplayedAddress(Collections.singletonList("x".repeat(250)));
+    documentPartyTO.setPartyContactDetails(Collections.singletonList(new PartyContactDetailsTO()));
     documentPartyTO.setToBeNotified(true);
     bookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
 
@@ -360,11 +360,11 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.documentParties[0].partyContactDetails")
                   .hasJsonPath()
-                  .jsonPath("$.documentParties[0].partyContactDetails.name")
+                  .jsonPath("$.documentParties[0].partyContactDetails[0].name")
                   .hasJsonPath()
-                  .jsonPath("$.documentParties[0].partyContactDetails.phone")
+                  .jsonPath("$.documentParties[0].partyContactDetails[0].phone")
                   .hasJsonPath()
-                  .jsonPath("$.documentParties[0].partyContactDetails.email")
+                  .jsonPath("$.documentParties[0].partyContactDetails[0].email")
                   .hasJsonPath()
                   .jsonPath("$.documentParties[0].isToBeNotified")
                   .hasJsonPath()

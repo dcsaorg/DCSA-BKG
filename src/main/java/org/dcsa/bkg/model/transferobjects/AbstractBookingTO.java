@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.dcsa.core.events.model.enums.*;
-import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.validator.ValidVesselIMONumber;
 
 import javax.validation.constraints.NotBlank;
@@ -44,16 +43,13 @@ public abstract class AbstractBookingTO {
 
   protected PaymentTerm paymentTerm;
 
-  @JsonProperty("isPartialLoadAllowed")
-  protected boolean isPartialLoadAllowed;
+  protected Boolean isPartialLoadAllowed;
 
-  @JsonProperty("isExportDeclarationRequired")
-  protected boolean isExportDeclarationRequired;
+  protected Boolean isExportDeclarationRequired;
 
   protected String exportDeclarationReference;
 
-  @JsonProperty("isImportLicenseRequired")
-  protected boolean isImportLicenseRequired;
+  protected Boolean isImportLicenseRequired;
 
   @Size(max = 35, message = "ImportLicenseReference has a max size of 35.")
   protected String importLicenseReference;
@@ -61,11 +57,9 @@ public abstract class AbstractBookingTO {
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   protected OffsetDateTime submissionDateTime;
 
-  @JsonProperty("isAMSACIFilingRequired")
-  protected boolean isAMSACIFilingRequired;
+  protected Boolean isAMSACIFilingRequired;
 
-  @JsonProperty("isDestinationFilingRequired")
-  protected boolean isDestinationFilingRequired;
+  protected Boolean isDestinationFilingRequired;
 
   @Size(max = 35, message = "ContractQuotationReference has a max size of 35.")
   protected String contractQuotationReference;
@@ -83,13 +77,10 @@ public abstract class AbstractBookingTO {
 
   protected IncoTerms incoTerms;
 
-  protected LocationTO invoicePayableAt;
-
   @NotNull(message = "CommunicationChannel is required.")
   protected CommunicationChannel communicationChannel;
 
-  @JsonProperty("isEquipmentSubstitutionAllowed")
-  protected boolean isEquipmentSubstitutionAllowed;
+  protected Boolean isEquipmentSubstitutionAllowed;
 
   @Size(max = 35, message = "VesselName has a max size of 35.")
   protected String vesselName;
