@@ -618,7 +618,7 @@ class BookingServiceImplTest {
   }
 
   @Nested
-    @DisplayName("Tests for BKG Summaries Service")
+  @DisplayName("Tests for BKG Summaries Service")
   class BookingServiceTest {
 
       private Booking initializeBookingTestInstance(UUID carrierBookingRequestReference, DocumentStatus documentStatus, UUID vesselId) {
@@ -688,8 +688,11 @@ class BookingServiceImplTest {
 
           StepVerifier
                   .create(bookingToResponse)
-                  .expectNextMatches(bookingSummaryTO ->
-                          bookingSummaryTO.getCarrierBookingRequestReference().equals(carrierBookingRequestReference.toString()) && bookingSummaryTO.getDocumentStatus().equals(DocumentStatus.APPR) && bookingSummaryTO.getVesselIMONumber().equals("ABC12313"))
+                  .assertNext(bookingSummaryTO -> {
+                      Assertions.assertEquals(carrierBookingRequestReference.toString(), bookingSummaryTO.getCarrierBookingRequestReference());
+                      Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                      Assertions.assertEquals("ABC12313", bookingSummaryTO.getVesselIMONumber());
+                  })
                   .expectComplete()
                   .verify();
 
@@ -722,8 +725,10 @@ class BookingServiceImplTest {
 
           StepVerifier
                   .create(bookingToResponse)
-                  .expectNextMatches(bookingSummaryTO ->
-                          bookingSummaryTO.getCarrierBookingRequestReference().equals(carrierBookingRequestReference.toString()) && bookingSummaryTO.getDocumentStatus().equals(DocumentStatus.APPR))
+                  .assertNext(bookingSummaryTO -> {
+                      Assertions.assertEquals(carrierBookingRequestReference.toString(), bookingSummaryTO.getCarrierBookingRequestReference());
+                      Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                  })
                   .expectComplete()
                   .verify();
 
@@ -756,8 +761,10 @@ class BookingServiceImplTest {
 
           StepVerifier
                   .create(bookingToResponse)
-                  .expectNextMatches(bookingSummaryTO ->
-                          bookingSummaryTO.getCarrierBookingRequestReference().equals(carrierBookingRequestReference.toString()) && bookingSummaryTO.getDocumentStatus().equals(DocumentStatus.APPR))
+                  .assertNext(bookingSummaryTO -> {
+                      Assertions.assertEquals(carrierBookingRequestReference.toString(), bookingSummaryTO.getCarrierBookingRequestReference());
+                      Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                  })
                   .expectComplete()
                   .verify();
 
@@ -787,7 +794,9 @@ class BookingServiceImplTest {
 
           StepVerifier
                   .create(bookingToResponse)
-                  .expectNextMatches(bookingSummaryTO -> bookingSummaryTO.getCarrierBookingRequestReference().equals(carrierBookingRequestReference.toString()))
+                  .assertNext(bookingSummaryTO -> {
+                      Assertions.assertEquals(carrierBookingRequestReference.toString(), bookingSummaryTO.getCarrierBookingRequestReference());
+                  })
                   .expectComplete()
                   .verify();
 
@@ -818,7 +827,10 @@ class BookingServiceImplTest {
 
           StepVerifier
                   .create(bookingToResponse)
-                  .expectNextMatches(bookingSummaryTO -> bookingSummaryTO.getCarrierBookingRequestReference().equals(carrierBookingRequestReference.toString()) && bookingSummaryTO.getDocumentStatus().equals(DocumentStatus.APPR))
+                  .assertNext(bookingSummaryTO -> {
+                      Assertions.assertEquals(carrierBookingRequestReference.toString(), bookingSummaryTO.getCarrierBookingRequestReference());
+                      Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                  })
                   .expectComplete()
                   .verify();
 
@@ -846,7 +858,9 @@ class BookingServiceImplTest {
 
           StepVerifier
                   .create(bookingToResponse)
-                  .expectNextMatches(bookingSummaryTO -> bookingSummaryTO.getCarrierBookingRequestReference().equals(carrierBookingRequestReference.toString()))
+                  .assertNext(bookingSummaryTO -> {
+                      Assertions.assertEquals(carrierBookingRequestReference.toString(), bookingSummaryTO.getCarrierBookingRequestReference());
+                  })
                   .expectComplete()
                   .verify();
 
