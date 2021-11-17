@@ -159,14 +159,6 @@ public class BookingServiceImpl implements BookingService {
             });
   }
 
-  private Mono<Optional<LocationTO>> fetchLocationByBooking(BookingTO bookingTO) {
-    if (Objects.isNull(id)) {
-      return Mono.just(Optional.empty());
-    }
-
-    return fetchLocationByID(bookingTO.getInvoicePayableAt().getId());
-  }
-
   private Mono<Optional<LocationTO>> fetchLocationByID(String id) {
 
     return locationRepository
