@@ -89,7 +89,7 @@ class BKGConfirmationSummariesControllerTest {
     bookingConfirmationSummaryTO.setConfirmationDateTime(dateTimeOffset);
     bookingConfirmationSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
 
-    Mockito.when(bookingService.getBookingConfirmationSummaries(null, null, 100, null))
+    Mockito.when(bookingService.getBookingConfirmationSummaries(null, null, null))
         .thenReturn(Flux.just(bookingConfirmationSummaryTO));
 
     webTestClient

@@ -1,17 +1,6 @@
 package org.dcsa.bkg.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.dcsa.bkg.model.transferobjects.BookingConfirmationSummaryTO;
-import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
-import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
-import org.dcsa.bkg.model.transferobjects.BookingTO;
-import org.dcsa.bkg.service.BookingService;
-import org.dcsa.core.events.model.Shipment;
-import org.dcsa.core.events.model.enums.DocumentStatus;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import org.springframework.data.r2dbc.core.ReactiveSelectOperation;
-import org.springframework.data.relational.core.query.Criteria;
-import org.springframework.data.relational.core.query.Query;
 import org.dcsa.bkg.model.mappers.BookingMapper;
 import org.dcsa.bkg.model.mappers.CommodityMapper;
 import org.dcsa.bkg.model.mappers.LocationMapper;
@@ -20,9 +9,13 @@ import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.Address;
 import org.dcsa.core.events.model.DisplayedAddress;
+import org.dcsa.core.events.model.Shipment;
+import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,54 +26,28 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.springframework.data.relational.core.query.Criteria.where;
-import static org.springframework.data.relational.core.query.Query.query;
-
-@RequiredArgsConstructor
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
-  private final R2dbcEntityTemplate template;
-
+  @Override
   public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
-      String carrierBookingReferenceID, DocumentStatus documentStatus, int limit, String cursor) {
+      String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
 
-    ReactiveSelectOperation.ReactiveSelect<Shipment> selectResults =
-        template.select(Shipment.class);
-    ReactiveSelectOperation.TerminatingSelect<Shipment> results;
+    BookingConfirmationSummaryTO bookingSummaryTO = new BookingConfirmationSummaryTO();
+    Flux<Shipment> queryResponse =
+        shipmentRepository.findAllByCarrierBookingReference(
+            Example.of(carrierBookingReference), pageable);
 
-    Criteria criteria = null;
-
-    if (carrierBookingReferenceID != null) {
-      criteria = where("carrierBookingReferenceID").is(carrierBookingReferenceID);
-    }
-
-    if (documentStatus != null) {
-      if (criteria == null) {
-        criteria = where("documentStatus").is(documentStatus);
-      } else {
-        criteria.and(where("documentStatus").is(documentStatus));
-      }
-    }
-
-    if (criteria != null) {
-      results = selectResults.matching(query(criteria).limit(limit));
-    } else {
-      results = selectResults.matching(Query.empty().limit(limit));
-    }
-
-    return results
-        .all()
-        .map(
-            x -> {
-              BookingConfirmationSummaryTO result = new BookingConfirmationSummaryTO();
-              result.setCarrierBookingReferenceID(x.getCarrierBookingReferenceID());
-              result.setConfirmationDateTime(x.getConfirmationDateTime());
-              result.setTermsAndConditions(x.getTermsAndConditions());
-              return result;
-            });
+    return queryResponse.map(
+        shipment -> {
+          bookingSummaryTO.setCarrierBookingReferenceID(shipment.getCarrierBookingReference());
+          bookingSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
+          bookingSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+          return bookingSummaryTO;
+        });
   }
+
   // repositories
   private final BookingRepository bookingRepository;
   private final LocationRepository locationRepository;
@@ -96,6 +63,7 @@ public class BookingServiceImpl implements BookingService {
   private final PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   private final ShipmentLocationRepository shipmentLocationRepository;
   private final DisplayedAddressRepository displayedAddressRepository;
+  private final ShipmentRepository shipmentRepository;
 
   // mappers
   private final BookingMapper bookingMapper;

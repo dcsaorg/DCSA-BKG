@@ -5,6 +5,7 @@ import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
 import org.dcsa.bkg.model.transferobjects.BookingTO;
 import org.dcsa.core.events.model.enums.DocumentStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import reactor.core.publisher.Flux;
@@ -24,5 +25,5 @@ public interface BookingService {
 
   Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference);
 
-  Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(String carrierBookingReferenceID, DocumentStatus documentStatus, int limit, String cursor);
+  Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable);
 }
