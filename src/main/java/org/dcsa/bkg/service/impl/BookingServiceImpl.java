@@ -149,10 +149,14 @@ public class BookingServiceImpl implements BookingService {
                       fetchShipmentLocationsByBookingID(t.getT1().getBookingID()))
                   .flatMap(
                       deepObjs -> {
-                        Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt = deepObjs.getT1();
-                        Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt = deepObjs.getT2();
-                        shipmentCutOffTimeTOpt.ifPresent(bookingConfirmationTO::setShipmentCutOffTimes);
-                        shipmentLocationsToOpt.ifPresent(bookingConfirmationTO::setShipmentLocations);
+                        Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt =
+                            deepObjs.getT1();
+                        Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt =
+                            deepObjs.getT2();
+                        shipmentCutOffTimeTOpt.ifPresent(
+                            bookingConfirmationTO::setShipmentCutOffTimes);
+                        shipmentLocationsToOpt.ifPresent(
+                            bookingConfirmationTO::setShipmentLocations);
                         return Mono.just(bookingConfirmationTO);
                       })
                   .thenReturn(bookingConfirmationTO);
@@ -339,7 +343,8 @@ public class BookingServiceImpl implements BookingService {
                           ShipmentLocationTO shipmentLocationTO = new ShipmentLocationTO();
                           lopt.ifPresent(shipmentLocationTO::setLocation);
                           shipmentLocationTO.setDisplayedName(sl.getDisplayedName());
-                          shipmentLocationTO.setShipmentLocationTypeCode(sl.getShipmentLocationTypeCode());
+                          shipmentLocationTO.setShipmentLocationTypeCode(
+                              sl.getShipmentLocationTypeCode());
                           shipmentLocationTO.setEventDateTime(sl.getEventDateTime());
                           return Mono.just(shipmentLocationTO);
                         }))
