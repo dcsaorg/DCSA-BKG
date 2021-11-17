@@ -1,17 +1,11 @@
 package org.dcsa.bkg.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
-import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
-import org.dcsa.bkg.model.transferobjects.BookingTO;
-import org.dcsa.bkg.repositories.BookingConfirmationRepository;
-import org.dcsa.bkg.service.BookingService;
-import org.dcsa.bkg.service.ShipmentLocationService;
-import org.dcsa.bkg.model.mappers.BookingMapper;
-import org.dcsa.bkg.model.mappers.CommodityMapper;
-import org.dcsa.bkg.model.mappers.LocationMapper;
-import org.dcsa.bkg.model.mappers.PartyMapper;
+import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
+import org.dcsa.bkg.repositories.BookingConfirmationRepository;
+import org.dcsa.bkg.repositories.ShipmentCutOffTimeRepository;
+import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.Address;
 import org.dcsa.core.events.model.DisplayedAddress;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
@@ -21,6 +15,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,9 +24,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
-
-  // services
-  private final ShipmentLocationService shipmentLocationService;
 
   // repositories
   private final BookingRepository bookingRepository;
@@ -49,12 +41,14 @@ public class BookingServiceImpl implements BookingService {
   private final PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   private final ShipmentLocationRepository shipmentLocationRepository;
   private final DisplayedAddressRepository displayedAddressRepository;
+  private final ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
 
   // mappers
   private final BookingMapper bookingMapper;
   private final LocationMapper locationMapper;
   private final CommodityMapper commodityMapper;
   private final PartyMapper partyMapper;
+  private final ShipmentMapper bookingConfirmationMapper;
 
   @Override
   public Flux<BookingSummaryTO> getBookingRequestSummaries() {
@@ -123,14 +117,43 @@ public class BookingServiceImpl implements BookingService {
             });
   }
 
+  @Override
+  public Mono<BookingConfirmationTO> getBookingConfirmationByCarrierBookingReference(
+      String carrierBookingRequestReference) {
+    return bookingConfirmationRepository
+        .findByCarrierBookingReference(carrierBookingRequestReference)
+        .map(b -> Tuples.of(b, bookingConfirmationMapper.shipmentToDTO(b)))
+        .flatMap(
+            t -> {
+              BookingConfirmationTO bookingConfirmationTO = t.getT2();
+              return Mono.zip(
+                      fetchShipmentCutOffTimeByBookingID(t.getT1().getBookingID()),
+                      fetchShipmentLocationsByBookingID(t.getT1().getBookingID()))
+                  .flatMap(
+                      deepObjs -> {
+                        Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt = deepObjs.getT1();
+                        Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt = deepObjs.getT2();
+                        shipmentCutOffTimeTOpt.ifPresent(bookingConfirmationTO::setShipmentCutOffTimes);
+                        shipmentLocationsToOpt.ifPresent(bookingConfirmationTO::setShipmentLocations);
+                        return Mono.just(bookingConfirmationTO);
+                      })
+                  .thenReturn(bookingConfirmationTO);
+            });
+  }
+
   private Mono<Optional<LocationTO>> fetchLocationByBooking(BookingTO bookingTO) {
 
     if (Objects.isNull(bookingTO.getInvoicePayableAt())) {
       return Mono.just(Optional.empty());
     }
 
+    return fetchLocationByID(bookingTO.getInvoicePayableAt().getId());
+  }
+
+  private Mono<Optional<LocationTO>> fetchLocationByID(String id) {
+
     return locationRepository
-        .findById(bookingTO.getInvoicePayableAt().getId())
+        .findById(id)
         .flatMap(
             location ->
                 Mono.zip(
@@ -156,6 +179,14 @@ public class BookingServiceImpl implements BookingService {
     return commodityRepository
         .findByBookingID(bookingID)
         .map(commodityMapper::commodityToDTO)
+        .collectList()
+        .map(Optional::of);
+  }
+
+  private Mono<Optional<List<ShipmentCutOffTimeTO>>> fetchShipmentCutOffTimeByBookingID(
+      UUID bookingID) {
+    return shipmentCutOffTimeRepository
+        .findAllByBookingID(bookingID)
         .collectList()
         .map(Optional::of);
   }
@@ -293,39 +324,18 @@ public class BookingServiceImpl implements BookingService {
         .findByBookingID(bookingID)
         .flatMap(
             sl ->
-                locationRepository
-                    .findById(sl.getLocationID())
-                    .map(Optional::of)
-                    .defaultIfEmpty(Optional.empty())
+                fetchLocationByID(sl.getLocationID())
                     .flatMap(
                         lopt -> {
                           ShipmentLocationTO shipmentLocationTO = new ShipmentLocationTO();
-                          lopt.ifPresent(
-                              l -> shipmentLocationTO.setLocation(locationMapper.locationToDTO(l)));
+                          lopt.ifPresent(shipmentLocationTO::setLocation);
                           shipmentLocationTO.setDisplayedName(sl.getDisplayedName());
-                          shipmentLocationTO.setLocationType(sl.getShipmentLocationTypeCode());
+                          shipmentLocationTO.setShipmentLocationTypeCode(sl.getShipmentLocationTypeCode());
                           shipmentLocationTO.setEventDateTime(sl.getEventDateTime());
                           return Mono.just(shipmentLocationTO);
                         }))
         .collectList()
         .map(Optional::of);
-  }
-
-  @Override
-  public Mono<BookingConfirmationTO> getBookingConfirmationByCarrierBookingReference(
-      String carrierBookingReference) {
-    BookingConfirmationTO bookingConfirmationTO = new BookingConfirmationTO();
-    return bookingConfirmationRepository
-        .findByCarrierBookingReference(carrierBookingReference)
-        .flatMapMany(
-            x -> {
-              bookingConfirmationTO.setCarrierBookingReference(x.getCarrierBookingReference());
-              bookingConfirmationTO.setTermsAndConditions(x.getTermsAndConditions());
-              return shipmentLocationService.findAllByBookingID(x.getBookingID());
-            })
-        .collectList()
-        .doOnNext(bookingConfirmationTO::setShipmentLocations)
-        .thenReturn(bookingConfirmationTO);
   }
 
   @Override

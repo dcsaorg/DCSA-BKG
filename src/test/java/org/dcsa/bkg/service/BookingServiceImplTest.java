@@ -6,7 +6,7 @@ import org.dcsa.bkg.model.mappers.LocationMapper;
 import org.dcsa.bkg.model.mappers.PartyMapper;
 import org.dcsa.bkg.service.impl.BookingServiceImpl;
 import org.dcsa.core.events.PartyContactDetails;
-import org.dcsa.core.events.ShipmentLocation;
+import org.dcsa.core.events.model.ShipmentLocation;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.repository.*;
@@ -606,7 +606,7 @@ class BookingServiceImplTest {
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
                     b.getShipmentLocations().get(0).getLocation().getId());
                 Assertions.assertEquals(
-                    LocationType.FCD, b.getShipmentLocations().get(0).getLocationType());
+                    LocationType.FCD, b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
                 Assertions.assertEquals(
                     "Singapore", b.getShipmentLocations().get(0).getDisplayedName());
               })

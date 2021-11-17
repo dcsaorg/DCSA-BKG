@@ -1,11 +1,11 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import lombok.Data;
-import org.dcsa.core.events.model.Booking;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -17,10 +17,13 @@ public class BookingConfirmationTO {
 
   private String termsAndConditions;
 
-  private LocationTO placeOfIssue;
+  @NotNull(message = "ConfirmedDateTime is required.")
+  private OffsetDateTime confirmationDateTime;
 
-  private Booking booking;
+  private BookingTO booking;
 
+  // Not implemented yet
+  //@NotNull
   private List<TransportTO> transports;
 
   private List<ShipmentCutOffTimeTO> shipmentCutOffTimes;

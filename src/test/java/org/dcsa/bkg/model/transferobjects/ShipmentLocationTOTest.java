@@ -48,7 +48,7 @@ class ShipmentLocationTOTest {
     shipmentLocationTO.setShipmentID(UUID.randomUUID());
     shipmentLocationTO.setLocation(location);
     shipmentLocationTO.setLocationID(shipmentLocationTO.getLocation().getId());
-    shipmentLocationTO.setLocationType(LocationType.DRL);
+    shipmentLocationTO.setShipmentLocationTypeCode(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     shipmentLocationTO.setEventDateTime(OffsetDateTime.now());
   }
@@ -86,7 +86,7 @@ class ShipmentLocationTOTest {
   @Test
   @DisplayName("ShipmentLocationTO should throw error if locationType is not set.")
   void testToVerifyLocationTypeIsRequired() {
-    shipmentLocationTO.setLocationType(null);
+    shipmentLocationTO.setShipmentLocationTypeCode(null);
     Set<ConstraintViolation<ShipmentLocationTO>> violations =
         validator.validate(shipmentLocationTO);
     Assertions.assertTrue(

@@ -76,7 +76,7 @@ class BKGConfirmedBookingsControllerTest {
 
     ShipmentLocationTO shipmentLocation = new ShipmentLocationTO();
     shipmentLocation.setLocation(location);
-    shipmentLocation.setLocationType(LocationType.PRE);
+    shipmentLocation.setShipmentLocationTypeCode(LocationType.PRE);
     shipmentLocation.setDisplayedName("DisplayedName");
     shipmentLocation.setEventDateTime(dateTimeOffset);
 
@@ -99,7 +99,6 @@ class BKGConfirmedBookingsControllerTest {
     bookingConfirmationTO = new BookingConfirmationTO();
     bookingConfirmationTO.setCarrierBookingReference(carrierBookingReferenceID);
     bookingConfirmationTO.setTermsAndConditions(termsAndConditions);
-    bookingConfirmationTO.setPlaceOfIssue(location);
     bookingConfirmationTO.setTransports(List.of(transport));
     bookingConfirmationTO.setShipmentCutOffTimes(List.of(shipmentCutOffTime));
     bookingConfirmationTO.setShipmentLocations(List.of(shipmentLocation));
@@ -199,14 +198,6 @@ class BKGConfirmedBookingsControllerTest {
                   .consumeWith(System.out::println)
                   .jsonPath("$.carrierBookingReference")
                   .hasJsonPath()
-                  .jsonPath("$.placeOfIssue.locationName")
-                  .hasJsonPath()
-                  .jsonPath("$.placeOfIssue.UNLocationCode")
-                  .hasJsonPath()
-                  .jsonPath("$.placeOfIssue.latitude")
-                  .hasJsonPath()
-                  .jsonPath("$.placeOfIssue.longitude")
-                  .hasJsonPath()
                   .jsonPath("$.termsAndConditions")
                   .hasJsonPath()
                   .jsonPath("$.carrierClauses.[0].clauseContent")
@@ -229,7 +220,7 @@ class BKGConfirmedBookingsControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.shipmentLocations.[0].location")
                   .hasJsonPath()
-                  .jsonPath("$.shipmentLocations.[0].locationType")
+                  .jsonPath("$.shipmentLocations.[0].shipmentLocationTypeCode")
                   .hasJsonPath()
                   .jsonPath("$.shipmentLocations.[0].displayedName")
                   .hasJsonPath()
