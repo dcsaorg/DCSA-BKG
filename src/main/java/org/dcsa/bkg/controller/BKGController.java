@@ -42,7 +42,6 @@ public class BKGController {
   @ResponseStatus(HttpStatus.OK)
   public Mono<BookingTO> getBookingByReference(
       @PathVariable String carrierBookingRequestReference) {
-    // ToDo: adjust this when the IM is ready for booking
     return bookingService.getBookingByCarrierBookingRequestReference(
         carrierBookingRequestReference);
   }

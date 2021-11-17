@@ -77,14 +77,30 @@ public class BookingServiceImpl implements BookingService {
               // the mapper creates a new instance of location even if value of invoicePayableAt is
               // null in booking
               // hence we set it to null if its a null object
-              if (t.getT2().getInvoicePayableAt().getId() == null)
+              if (t.getT2().getInvoicePayableAt().getId() == null) {
                 t.getT2().setInvoicePayableAt(null);
+              }
+              if (t.getT2().getPlaceOfIssue().getId() == null) {
+                t.getT2().setPlaceOfIssue(null);
+              }
             })
         .flatMap(
             t -> {
               BookingTO bookingTO = t.getT2();
+
+              String invoicePayableAtLocID =
+                  Objects.isNull(bookingTO.getInvoicePayableAt())
+                      ? null
+                      : bookingTO.getInvoicePayableAt().getId();
+
+              String placeOfIssueLocID =
+                  Objects.isNull(bookingTO.getPlaceOfIssue())
+                      ? null
+                      : bookingTO.getPlaceOfIssue().getId();
+
               return Mono.zip(
-                      fetchLocationByBooking(bookingTO),
+                      fetchLocationByID(invoicePayableAtLocID),
+                      fetchLocationByID(placeOfIssueLocID),
                       fetchCommoditiesByBookingID(t.getT1()),
                       fetchValueAddedServiceRequestsByBookingID(t.getT1()),
                       fetchReferencesByBookingID(t.getT1()),
@@ -93,18 +109,20 @@ public class BookingServiceImpl implements BookingService {
                       fetchShipmentLocationsByBookingID(t.getT1()))
                   .doOnSuccess(
                       deepObjs -> {
-                        Optional<LocationTO> locationToOpt = deepObjs.getT1();
-                        Optional<List<CommodityTO>> commoditiesToOpt = deepObjs.getT2();
+                        Optional<LocationTO> locationToOpt1 = deepObjs.getT1();
+                        Optional<LocationTO> locationToOpt2 = deepObjs.getT2();
+                        Optional<List<CommodityTO>> commoditiesToOpt = deepObjs.getT3();
                         Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsToOpt =
-                            deepObjs.getT3();
-                        Optional<List<ReferenceTO>> referenceTOsOpt = deepObjs.getT4();
+                            deepObjs.getT4();
+                        Optional<List<ReferenceTO>> referenceTOsOpt = deepObjs.getT5();
                         Optional<List<RequestedEquipmentTO>> requestedEquipmentsToOpt =
-                            deepObjs.getT5();
-                        Optional<List<DocumentPartyTO>> documentPartiesToOpt = deepObjs.getT6();
+                            deepObjs.getT6();
+                        Optional<List<DocumentPartyTO>> documentPartiesToOpt = deepObjs.getT7();
                         Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt =
-                            deepObjs.getT7();
+                            deepObjs.getT8();
 
-                        locationToOpt.ifPresent(bookingTO::setInvoicePayableAt);
+                        locationToOpt1.ifPresent(bookingTO::setInvoicePayableAt);
+                        locationToOpt2.ifPresent(bookingTO::setPlaceOfIssue);
                         commoditiesToOpt.ifPresent(bookingTO::setCommodities);
                         valueAddedServiceRequestsToOpt.ifPresent(
                             bookingTO::setValueAddedServiceRequests);
@@ -142,8 +160,7 @@ public class BookingServiceImpl implements BookingService {
   }
 
   private Mono<Optional<LocationTO>> fetchLocationByBooking(BookingTO bookingTO) {
-
-    if (Objects.isNull(bookingTO.getInvoicePayableAt())) {
+    if (Objects.isNull(id)) {
       return Mono.just(Optional.empty());
     }
 
@@ -167,10 +184,10 @@ public class BookingServiceImpl implements BookingService {
                             .defaultIfEmpty(Optional.empty()))
                     .flatMap(
                         t2 -> {
-                          LocationTO locationTO = locationMapper.locationToDTO(location);
-                          t2.getT1().ifPresent(locationTO::setAddress);
-                          t2.getT2().ifPresent(locationTO::setFacility);
-                          return Mono.just(locationTO);
+                          LocationTO locTO = locationMapper.locationToDTO(location);
+                          t2.getT1().ifPresent(locTO::setAddress);
+                          t2.getT2().ifPresent(locTO::setFacility);
+                          return Mono.just(locTO);
                         }))
         .map(Optional::of);
   }

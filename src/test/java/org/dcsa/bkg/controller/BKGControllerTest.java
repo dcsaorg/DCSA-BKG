@@ -175,7 +175,8 @@ class BKGControllerTest {
             .exchange();
 
     // these values are only allowed in response and not to be set via request body
-    verify(bookingService).updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
+    verify(bookingService)
+        .updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
     assertNull(argument.getValue().getCarrierBookingRequestReference());
     assertNull(argument.getValue().getDocumentStatus());
     assertNull(argument.getValue().getBookingRequestDateTime());
@@ -281,6 +282,8 @@ class BKGControllerTest {
                   .jsonPath("$.incoTerms")
                   .hasJsonPath()
                   .jsonPath("$.invoicePayableAt")
+                  .hasJsonPath()
+                  .jsonPath("$.placeOfIssue")
                   .hasJsonPath()
                   .jsonPath("$.communicationChannel")
                   .hasJsonPath()
