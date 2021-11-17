@@ -2,7 +2,6 @@ package org.dcsa.bkg.service;
 
 import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.service.impl.BookingServiceImpl;
-import org.dcsa.core.events.PartyContactDetails;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.repository.*;
