@@ -75,22 +75,21 @@ class BKGSummariesControllerTest {
 
     BookingSummaryTO bookingSummaryTo = new BookingSummaryTO();
     bookingSummaryTo.setCarrierBookingRequestReference(uuid.toString());
-    bookingSummaryTo.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
+    bookingSummaryTo.setReceiptDeliveryTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingSummaryTo.setDeliveryTypeAtDestination(ReceiptDeliveryType.CY);
     bookingSummaryTo.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
     bookingSummaryTo.setCargoMovementTypeAtDestination(CargoMovementType.FCL);
     bookingSummaryTo.setBookingRequestDateTime(OffsetDateTime.now());
     bookingSummaryTo.setServiceContractReference("234ase3q4");
     bookingSummaryTo.setPaymentTerm(PaymentTerm.PRE);
-    bookingSummaryTo.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
-    bookingSummaryTo.setPartialLoadAllowed(true);
-    bookingSummaryTo.setExportDeclarationRequired(true);
+    bookingSummaryTo.setIsPartialLoadAllowed(true);
+    bookingSummaryTo.setIsExportDeclarationRequired(true);
     bookingSummaryTo.setExportDeclarationReference("ABC123123");
-    bookingSummaryTo.setImportLicenseRequired(true);
+    bookingSummaryTo.setIsImportLicenseRequired(true);
     bookingSummaryTo.setImportLicenseReference("ABC123123");
     bookingSummaryTo.setSubmissionDateTime(OffsetDateTime.now());
-    bookingSummaryTo.setAMSACIFilingRequired(true);
-    bookingSummaryTo.setDestinationFilingRequired(true);
+    bookingSummaryTo.setIsAMSACIFilingRequired(true);
+    bookingSummaryTo.setIsDestinationFilingRequired(true);
     bookingSummaryTo.setContractQuotationReference("DKK");
     bookingSummaryTo.setExpectedDepartureDate(LocalDate.now());
     bookingSummaryTo.setTransportDocumentType(TransportDocumentTypeCode.BOL);
@@ -98,7 +97,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setBookingChannelReference("ABC12313");
     bookingSummaryTo.setIncoTerms(IncoTerms.FCA);
     bookingSummaryTo.setCommunicationChannel(CommunicationChannel.AO);
-    bookingSummaryTo.setEquipmentSubstitutionAllowed(true);
+    bookingSummaryTo.setIsEquipmentSubstitutionAllowed(true);
 
     Mockito.when(bookingService.getBookingRequestSummaries()).thenReturn(Flux.just(bookingSummaryTo));
 
