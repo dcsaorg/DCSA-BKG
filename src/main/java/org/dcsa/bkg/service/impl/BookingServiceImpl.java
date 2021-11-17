@@ -48,7 +48,7 @@ public class BookingServiceImpl implements BookingService {
   private final LocationMapper locationMapper;
   private final CommodityMapper commodityMapper;
   private final PartyMapper partyMapper;
-  private final ShipmentMapper bookingConfirmationMapper;
+  private final ShipmentMapper shipmentMapper;
 
   @Override
   public Flux<BookingSummaryTO> getBookingRequestSummaries() {
@@ -140,7 +140,7 @@ public class BookingServiceImpl implements BookingService {
       String carrierBookingRequestReference) {
     return bookingConfirmationRepository
         .findByCarrierBookingReference(carrierBookingRequestReference)
-        .map(b -> Tuples.of(b, bookingConfirmationMapper.shipmentToDTO(b)))
+        .map(b -> Tuples.of(b, shipmentMapper.shipmentToDTO(b)))
         .flatMap(
             t -> {
               BookingConfirmationTO bookingConfirmationTO = t.getT2();
@@ -164,7 +164,7 @@ public class BookingServiceImpl implements BookingService {
   }
 
   private Mono<Optional<LocationTO>> fetchLocationByID(String id) {
-
+    if (id == null) return Mono.just(Optional.empty());
     return locationRepository
         .findById(id)
         .flatMap(
@@ -340,12 +340,9 @@ public class BookingServiceImpl implements BookingService {
                 fetchLocationByID(sl.getLocationID())
                     .flatMap(
                         lopt -> {
-                          ShipmentLocationTO shipmentLocationTO = new ShipmentLocationTO();
+                          ShipmentLocationTO shipmentLocationTO =
+                              shipmentMapper.shipmentLocationToDTO(sl);
                           lopt.ifPresent(shipmentLocationTO::setLocation);
-                          shipmentLocationTO.setDisplayedName(sl.getDisplayedName());
-                          shipmentLocationTO.setShipmentLocationTypeCode(
-                              sl.getShipmentLocationTypeCode());
-                          shipmentLocationTO.setEventDateTime(sl.getEventDateTime());
                           return Mono.just(shipmentLocationTO);
                         }))
         .collectList()

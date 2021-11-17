@@ -1,12 +1,8 @@
 package org.dcsa.bkg.service;
 
-import org.dcsa.bkg.model.mappers.BookingMapper;
-import org.dcsa.bkg.model.mappers.CommodityMapper;
-import org.dcsa.bkg.model.mappers.LocationMapper;
-import org.dcsa.bkg.model.mappers.PartyMapper;
+import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.service.impl.BookingServiceImpl;
-import org.dcsa.core.events.model.PartyContactDetails;
-import org.dcsa.core.events.model.ShipmentLocation;
+import org.dcsa.core.events.PartyContactDetails;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.repository.*;
@@ -52,6 +48,7 @@ class BookingServiceImplTest {
   @Spy LocationMapper locationMapper = Mappers.getMapper(LocationMapper.class);
   @Spy CommodityMapper commodityMapper = Mappers.getMapper(CommodityMapper.class);
   @Spy PartyMapper partyMapper = Mappers.getMapper(PartyMapper.class);
+  @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
 
   Booking booking;
   Location location1;
@@ -80,10 +77,14 @@ class BookingServiceImplTest {
     location1 = new Location();
     location1.setId("c703277f-84ca-4816-9ccf-fad8e202d3b6");
     location1.setLocationName("Hamburg");
+    location1.setAddressID(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
+    location1.setFacilityID(UUID.fromString("74dcf8e6-4ed4-439e-a935-ec183df73013"));
 
     location2 = new Location();
     location2.setId("7bf6f428-58f0-4347-9ce8-d6be2f5d5745");
     location2.setLocationName("Singapore");
+    location2.setAddressID(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
+    location2.setFacilityID(UUID.fromString("74dcf8e6-4ed4-439e-a935-ec183df73013"));
 
     address = new Address();
     address.setId(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
@@ -654,7 +655,8 @@ class BookingServiceImplTest {
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
                     b.getShipmentLocations().get(0).getLocation().getId());
                 Assertions.assertEquals(
-                    LocationType.FCD, b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
+                    LocationType.FCD,
+                    b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
                 Assertions.assertEquals(
                     "Singapore", b.getShipmentLocations().get(0).getDisplayedName());
               })
