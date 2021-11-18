@@ -35,17 +35,15 @@ public class BookingServiceImpl implements BookingService {
       String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
 
     BookingConfirmationSummaryTO bookingSummaryTO = new BookingConfirmationSummaryTO();
-    Flux<Shipment> queryResponse =
-        shipmentRepository.findAllByCarrierBookingReference(
-            Example.of(carrierBookingReference), pageable);
-
-    return queryResponse.map(
-        shipment -> {
-          bookingSummaryTO.setCarrierBookingReferenceID(shipment.getCarrierBookingReference());
-          bookingSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
-          bookingSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
-          return bookingSummaryTO;
-        });
+    return shipmentRepository
+        .findShipmentsByBookingIDNotNull(pageable)
+        .map(
+            shipment -> {
+              bookingSummaryTO.setCarrierBookingReferenceID(shipment.getCarrierBookingReference());
+              bookingSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
+              bookingSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+              return bookingSummaryTO;
+            });
   }
 
   // repositories
