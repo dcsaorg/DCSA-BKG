@@ -7,4 +7,6 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface LocationMapper {
   LocationTO locationToDTO(Location location);
+
+  Location dtoToLocation(LocationTO locationTO);
 }
