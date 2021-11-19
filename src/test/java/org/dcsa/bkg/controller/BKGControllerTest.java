@@ -55,7 +55,7 @@ class BKGControllerTest {
     bookingTO.setCarrierBookingRequestReference(UUID.randomUUID().toString());
     bookingTO.setDocumentStatus(DocumentStatus.PENA);
     bookingTO.setBookingRequestDateTime(OffsetDateTime.now());
-    bookingTO.setReceiptDeliveryTypeAtOrigin(ReceiptDeliveryType.CY);
+    bookingTO.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingTO.setDeliveryTypeAtDestination(ReceiptDeliveryType.SD);
     bookingTO.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
     bookingTO.setCargoMovementTypeAtDestination(CargoMovementType.LCL);
@@ -235,7 +235,7 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.bookingRequestDateTime")
                   .hasJsonPath()
-                  .jsonPath("$.receiptDeliveryTypeAtOrigin")
+                  .jsonPath("$.receiptTypeAtOrigin")
                   .hasJsonPath()
                   .jsonPath("$.deliveryTypeAtDestination")
                   .hasJsonPath()
@@ -245,7 +245,7 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.serviceContractReference")
                   .hasJsonPath()
-                  .jsonPath("$.paymentTerm")
+                  .jsonPath("$.paymentTermCode")
                   .hasJsonPath()
                   .jsonPath("$.isPartialLoadAllowed")
                   .hasJsonPath()
@@ -267,7 +267,7 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.expectedDepartureDate")
                   .hasJsonPath()
-                  .jsonPath("$.transportDocumentType")
+                  .jsonPath("$.transportDocumentTypeCode")
                   .hasJsonPath()
                   .jsonPath("$.transportDocumentReference")
                   .hasJsonPath()
