@@ -75,23 +75,6 @@ public class BookingServiceImpl implements BookingService {
                 .defaultIfEmpty(bookingSummaryMapper.bookingSummaryTOFromBooking(booking)));
   }
 
-  protected Criteria getCriteriaHasCarrierBookingRequestReference(
-      String carrierBookingRequestReference) {
-    Criteria criteria = Criteria.empty();
-    if (carrierBookingRequestReference != null) {
-      criteria = where("carrier_booking_request_reference").is(carrierBookingRequestReference);
-    }
-    return criteria;
-  }
-
-  protected Criteria getCriteriaHasDocumentStatus(DocumentStatus documentStatus) {
-    Criteria criteria = Criteria.empty();
-    if (documentStatus != null) {
-      criteria = where("document_status").is(documentStatus);
-    }
-    return criteria;
-  }
-
   @Override
   @Transactional
   public Mono<BookingTO> createBooking(final BookingTO bookingRequest) {
