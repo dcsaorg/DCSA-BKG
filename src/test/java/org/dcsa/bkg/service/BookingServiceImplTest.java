@@ -758,6 +758,7 @@ class BookingServiceImplTest {
                     b.getShipmentLocations().get(0).getEventDateTime());
                 Assertions.assertEquals(location1.getId(), b.getShipmentLocations().get(0).getLocation().getId());
                 Assertions.assertEquals(address.getId(), b.getShipmentLocations().get(0).getLocation().getAddress().getId());
+                Assertions.assertEquals(facility.getFacilityID(), b.getShipmentLocations().get(0).getLocation().getFacility().getFacilityID());
               })
           .verifyComplete();
     }
