@@ -1,9 +1,10 @@
 package org.dcsa.bkg.controller;
 
-import org.dcsa.bkg.model.enums.CutOffDateTimeCode;
 import org.dcsa.bkg.model.enums.TransportPlanStage;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
+import org.dcsa.core.events.model.CarrierClause;
+import org.dcsa.core.events.model.enums.CutOffDateTimeCode;
 import org.dcsa.core.events.model.enums.DCSATransportType;
 import org.dcsa.core.events.model.enums.LocationType;
 import org.dcsa.core.events.model.enums.PaymentTerm;
@@ -93,7 +94,7 @@ class BKGConfirmedBookingsControllerTest {
     charge.setPaymentTermCode(PaymentTerm.PRE);
     charge.setUnitPrice(12.12);
 
-    CarrierClauseTO carrierClause = new CarrierClauseTO();
+    CarrierClause carrierClause = new CarrierClause();
     carrierClause.setClauseContent("ClauseContent");
 
     bookingConfirmationTO = new BookingConfirmationTO();

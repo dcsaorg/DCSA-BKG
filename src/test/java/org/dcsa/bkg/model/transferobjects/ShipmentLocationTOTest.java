@@ -47,7 +47,6 @@ class ShipmentLocationTOTest {
     shipmentLocationTO.setBookingID(UUID.randomUUID());
     shipmentLocationTO.setShipmentID(UUID.randomUUID());
     shipmentLocationTO.setLocation(location);
-    shipmentLocationTO.setLocationID(shipmentLocationTO.getLocation().getId());
     shipmentLocationTO.setShipmentLocationTypeCode(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     shipmentLocationTO.setEventDateTime(OffsetDateTime.now());

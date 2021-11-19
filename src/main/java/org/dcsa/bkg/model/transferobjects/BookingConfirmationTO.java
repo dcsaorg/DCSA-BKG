@@ -1,7 +1,7 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import lombok.Data;
-import org.dcsa.core.events.model.transferobjects.LocationTO;
+import org.dcsa.core.events.model.CarrierClause;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -23,7 +23,7 @@ public class BookingConfirmationTO {
   private BookingTO booking;
 
   // Not implemented yet
-  //@NotNull
+  // @NotNull
   private List<TransportTO> transports;
 
   private List<ShipmentCutOffTimeTO> shipmentCutOffTimes;
@@ -34,5 +34,5 @@ public class BookingConfirmationTO {
 
   private List<ChargeTO> charges;
 
-  private List<CarrierClauseTO> carrierClauses;
+  private List<CarrierClause> carrierClauses;
 }

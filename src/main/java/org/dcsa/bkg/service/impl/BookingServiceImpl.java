@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.repositories.BookingConfirmationRepository;
-import org.dcsa.bkg.repositories.ShipmentCutOffTimeRepository;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.Address;
 import org.dcsa.core.events.model.DisplayedAddress;
@@ -27,7 +26,7 @@ public class BookingServiceImpl implements BookingService {
 
   // repositories
   private final BookingRepository bookingRepository;
-  private final BookingConfirmationRepository bookingConfirmationRepository;
+  private final ShipmentRepository bookingConfirmationRepository;
   private final LocationRepository locationRepository;
   private final AddressRepository addressRepository;
   private final FacilityRepository facilityRepository;
@@ -145,7 +144,7 @@ public class BookingServiceImpl implements BookingService {
             t -> {
               BookingConfirmationTO bookingConfirmationTO = t.getT2();
               return Mono.zip(
-                      fetchShipmentCutOffTimeByBookingID(t.getT1().getBookingID()),
+                      fetchShipmentCutOffTimeByBookingID(t.getT1().getShipmentID()),
                       fetchShipmentLocationsByBookingID(t.getT1().getBookingID()))
                   .flatMap(
                       deepObjs -> {
@@ -197,9 +196,10 @@ public class BookingServiceImpl implements BookingService {
   }
 
   private Mono<Optional<List<ShipmentCutOffTimeTO>>> fetchShipmentCutOffTimeByBookingID(
-      UUID bookingID) {
+      UUID shipmentID) {
     return shipmentCutOffTimeRepository
-        .findAllByBookingID(bookingID)
+        .findAllByShipmentID(shipmentID)
+        .map(shipmentMapper::shipmentCutOffTimeToDTO)
         .collectList()
         .map(Optional::of);
   }

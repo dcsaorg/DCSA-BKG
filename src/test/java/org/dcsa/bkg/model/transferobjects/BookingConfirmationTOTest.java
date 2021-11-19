@@ -1,5 +1,6 @@
 package org.dcsa.bkg.model.transferobjects;
 
+import org.dcsa.core.events.model.CarrierClause;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +33,7 @@ class BookingConfirmationTOTest {
     bookingConfirmationTO.setShipmentCutOffTimes(List.of(new ShipmentCutOffTimeTO()));
     bookingConfirmationTO.setConfirmedEquipments(List.of(new ConfirmedEquipmentTO()));
     bookingConfirmationTO.setCharges(List.of(new ChargeTO()));
-    bookingConfirmationTO.setCarrierClauses(List.of(new CarrierClauseTO()));
+    bookingConfirmationTO.setCarrierClauses(List.of(new CarrierClause()));
     bookingConfirmationTO.setConfirmationDateTime(OffsetDateTime.now());
   }
 
