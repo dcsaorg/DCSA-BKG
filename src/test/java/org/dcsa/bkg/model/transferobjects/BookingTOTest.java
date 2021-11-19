@@ -43,7 +43,7 @@ class BookingTOTest {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     validBookingTO = new BookingTO();
-    validBookingTO.setReceiptDeliveryTypeAtOrigin(ReceiptDeliveryType.CY);
+    validBookingTO.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
     validBookingTO.setDeliveryTypeAtDestination(ReceiptDeliveryType.SD);
     validBookingTO.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
     validBookingTO.setCargoMovementTypeAtDestination(CargoMovementType.LCL);
@@ -65,13 +65,13 @@ class BookingTOTest {
   }
 
   @Test
-  @DisplayName("BookingTO should throw error if receiptDeliveryTypeAtOrigin is not set.")
+  @DisplayName("BookingTO should throw error if receiptTypeAtOrigin is not set.")
   void testToVerifyReceiptDeliveryTypeAtOriginIsRequired() {
-    validBookingTO.setReceiptDeliveryTypeAtOrigin(null);
+    validBookingTO.setReceiptTypeAtOrigin(null);
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "ReceiptDeliveryTypeAtOrigin is required.".equals(v.getMessage())));
+            .anyMatch(v -> "ReceiptTypeAtOrigin is required.".equals(v.getMessage())));
   }
 
   @Test

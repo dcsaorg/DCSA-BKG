@@ -1,9 +1,10 @@
 package org.dcsa.bkg.service.impl;
 
 import org.dcsa.bkg.model.mappers.*;
-import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
+import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.*;
+import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.repository.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,19 +13,17 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import org.springframework.data.relational.core.query.Criteria;
-import org.springframework.data.relational.core.query.Query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.data.relational.core.query.Criteria.where;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for BookingService Implementation.")
@@ -58,7 +57,8 @@ class BookingServiceImplTest {
   @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
 
   Booking booking;
-  Location location;
+  Location location1;
+  Location location2;
   Address address;
   Facility facility;
   Commodity commodity;
@@ -78,10 +78,15 @@ class BookingServiceImplTest {
     booking.setId(UUID.randomUUID());
     booking.setCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11");
     booking.setInvoicePayableAt("c703277f-84ca-4816-9ccf-fad8e202d3b6");
+    booking.setPlaceOfIssueID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745");
 
-    location = new Location();
-    location.setId("c703277f-84ca-4816-9ccf-fad8e202d3b6");
-    location.setLocationName("Hamburg");
+    location1 = new Location();
+    location1.setId("c703277f-84ca-4816-9ccf-fad8e202d3b6");
+    location1.setLocationName("Hamburg");
+
+    location2 = new Location();
+    location2.setId("7bf6f428-58f0-4347-9ce8-d6be2f5d5745");
+    location2.setLocationName("Singapore");
 
     address = new Address();
     address.setId(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
@@ -143,10 +148,294 @@ class BookingServiceImplTest {
     partyContactDetails.setEmail("peanut@jeff-fa-fa.com");
 
     shipmentLocation = new ShipmentLocation();
-    shipmentLocation.setLocationID(location.getId());
+    shipmentLocation.setLocationID(location1.getId());
     shipmentLocation.setBookingID(booking.getId());
     shipmentLocation.setShipmentLocationTypeCode(LocationType.FCD);
     shipmentLocation.setDisplayedName("Singapore");
+  }
+
+  @Nested
+  @DisplayName("Tests for the method createBooking(#BookingTO)")
+  class CreateBookingTest {
+
+    BookingTO bookingTO;
+    LocationTO invoicePayableAt;
+    LocationTO placeOfIssue;
+    CommodityTO commodityTO;
+    ReferenceTO referenceTO;
+    ValueAddedServiceRequestTO valueAddedServiceRequestTO;
+    RequestedEquipmentTO requestedEquipmentTO;
+
+    @BeforeEach
+    void init() {
+      bookingTO = new BookingTO();
+
+      invoicePayableAt = new LocationTO();
+      invoicePayableAt.setLocationName(location1.getLocationName());
+
+      bookingTO.setInvoicePayableAt(invoicePayableAt);
+
+      placeOfIssue = new LocationTO();
+      placeOfIssue.setLocationName(location2.getLocationName());
+
+      bookingTO.setPlaceOfIssue(placeOfIssue);
+
+      commodityTO = new CommodityTO();
+      commodityTO.setCommodityType(commodity.getCommodityType());
+
+      bookingTO.setCommodities(Collections.singletonList(commodityTO));
+
+      referenceTO = new ReferenceTO();
+      referenceTO.setReferenceValue(reference.getReferenceValue());
+      referenceTO.setReferenceType(reference.getReferenceType());
+
+      bookingTO.setReferences(Collections.singletonList(referenceTO));
+
+      valueAddedServiceRequestTO = new ValueAddedServiceRequestTO();
+      valueAddedServiceRequestTO.setValueAddedServiceCode(
+          valueAddedServiceRequest.getValueAddedServiceCode());
+
+      bookingTO.setValueAddedServiceRequests(Collections.singletonList(valueAddedServiceRequestTO));
+
+      requestedEquipmentTO = new RequestedEquipmentTO();
+      requestedEquipmentTO.setRequestedEquipmentSizeType(
+          requestedEquipment.getRequestedEquipmentType());
+      requestedEquipmentTO.setRequestedEquipmentUnits(
+          requestedEquipment.getRequestedEquipmentUnits());
+
+      bookingTO.setRequestedEquipments(Collections.singletonList(requestedEquipmentTO));
+    }
+
+    @Test
+    @DisplayName("Method should save and return shallow booking for given booking request")
+    void testCreateBookingShallow() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertNull(b.getInvoicePayableAt());
+                Assertions.assertNull(b.getPlaceOfIssue());
+                Assertions.assertEquals(0, b.getCommodities().size());
+                Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Method should save and return booking with location for given booking request")
+    void testCreateBookingWithLocation() {
+
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
+          .thenReturn(Mono.just(location2));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(0, b.getCommodities().size());
+                Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should save and return booking with location and commodities for given booking request")
+    void testCreateBookingWithLocationAndCommodities() {
+
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
+          .thenReturn(Mono.just(location2));
+      when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(
+                    "Mobile phones", b.getCommodities().get(0).getCommodityType());
+                Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should save and return booking with location, commodities and valueAddedServiceRequests for given booking request")
+    void testCreateBookingWithLocationAndCommoditiesAndValAddSerReq() {
+
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
+          .thenReturn(Mono.just(location2));
+      when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(valueAddedServiceRequest));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(
+                    "Mobile phones", b.getCommodities().get(0).getCommodityType());
+                Assertions.assertEquals(
+                    ValueAddedServiceCode.CDECL,
+                    b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should save and return booking with location, commodities, valueAddedServiceRequests and references for given booking request")
+    void testCreateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferences() {
+
+      bookingTO.setRequestedEquipments(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
+          .thenReturn(Mono.just(location2));
+      when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(
+                    "Mobile phones", b.getCommodities().get(0).getCommodityType());
+                Assertions.assertEquals(
+                    ValueAddedServiceCode.CDECL,
+                    b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                Assertions.assertEquals(
+                    ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should save and return booking with location, commodities, valueAddedServiceRequests, references and requestedEquipments for given booking request")
+    void testCreateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferencesAndReqEquip() {
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
+          .thenReturn(Mono.just(location2));
+      when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(requestedEquipment));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(
+                    "Mobile phones", b.getCommodities().get(0).getCommodityType());
+                Assertions.assertEquals(
+                    ValueAddedServiceCode.CDECL,
+                    b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                Assertions.assertEquals(
+                    ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
+                Assertions.assertEquals(
+                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizeType());
+              })
+          .verifyComplete();
+    }
   }
 
   @Nested
@@ -157,6 +446,7 @@ class BookingServiceImplTest {
     void testGETBookingShallow() {
 
       booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
 
       when(bookingRepository.findByCarrierBookingRequestReference(any()))
           .thenReturn(Mono.just(booking));
@@ -176,6 +466,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 Assertions.assertNull(b.getInvoicePayableAt());
+                Assertions.assertNull(b.getInvoicePayableAt());
                 Assertions.assertEquals(0, b.getCommodities().size());
                 Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
                 Assertions.assertEquals(0, b.getReferences().size());
@@ -194,7 +485,10 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationRepository.findById(any(String.class))).thenReturn(Mono.just(location));
+      when(locationRepository.findById("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.findById("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+          .thenReturn(Mono.just(location2));
       when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.empty());
       when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.empty());
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -213,6 +507,8 @@ class BookingServiceImplTest {
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
                 Assertions.assertEquals(0, b.getCommodities().size());
                 Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
                 Assertions.assertEquals(0, b.getReferences().size());
@@ -231,7 +527,10 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationRepository.findById(any(String.class))).thenReturn(Mono.just(location));
+      when(locationRepository.findById("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.findById("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+          .thenReturn(Mono.just(location2));
       when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
       when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -250,6 +549,8 @@ class BookingServiceImplTest {
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
                 Assertions.assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -274,7 +575,10 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationRepository.findById(any(String.class))).thenReturn(Mono.just(location));
+      when(locationRepository.findById("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.findById("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+          .thenReturn(Mono.just(location2));
       when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
       when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
@@ -293,6 +597,8 @@ class BookingServiceImplTest {
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
                 Assertions.assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -318,7 +624,10 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationRepository.findById(any(String.class))).thenReturn(Mono.just(location));
+      when(locationRepository.findById("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.findById("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+          .thenReturn(Mono.just(location2));
       when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
       when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
@@ -338,6 +647,8 @@ class BookingServiceImplTest {
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
                 Assertions.assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -366,7 +677,10 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationRepository.findById(any(String.class))).thenReturn(Mono.just(location));
+      when(locationRepository.findById("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.findById("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+          .thenReturn(Mono.just(location2));
       when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
       when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
@@ -386,6 +700,8 @@ class BookingServiceImplTest {
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
                 Assertions.assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -415,7 +731,10 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationRepository.findById(any(String.class))).thenReturn(Mono.just(location));
+      when(locationRepository.findById("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.findById("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+          .thenReturn(Mono.just(location2));
       when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
       when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
@@ -436,6 +755,8 @@ class BookingServiceImplTest {
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
                 Assertions.assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -467,7 +788,10 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationRepository.findById(any(String.class))).thenReturn(Mono.just(location));
+      when(locationRepository.findById("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.findById("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+          .thenReturn(Mono.just(location2));
       when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
       when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
@@ -495,6 +819,8 @@ class BookingServiceImplTest {
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
                 Assertions.assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -544,7 +870,10 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationRepository.findById(any(String.class))).thenReturn(Mono.just(location));
+      when(locationRepository.findById("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.findById("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+          .thenReturn(Mono.just(location2));
       when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
       when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
@@ -573,6 +902,8 @@ class BookingServiceImplTest {
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
                 Assertions.assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -780,7 +1111,8 @@ class BookingServiceImplTest {
       UUID vesselId = UUID.randomUUID();
       PageRequest pageRequest = PageRequest.of(0, 100);
 
-      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(carrierBookingRequestReference.toString(), null, pageRequest))
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              carrierBookingRequestReference.toString(), null, pageRequest))
           .thenReturn(
               Flux.just(
                   initializeBookingTestInstance(carrierBookingRequestReference, null, vesselId)));
@@ -813,7 +1145,8 @@ class BookingServiceImplTest {
       DocumentStatus documentStatus = DocumentStatus.APPR;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
-      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(null, documentStatus, pageRequest))
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              null, documentStatus, pageRequest))
           .thenReturn(
               Flux.just(
                   initializeBookingTestInstance(
@@ -846,7 +1179,8 @@ class BookingServiceImplTest {
       DocumentStatus documentStatus = DocumentStatus.APPR;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
-      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(null, null, pageRequest))
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              null, null, pageRequest))
           .thenReturn(
               Flux.just(
                   initializeBookingTestInstance(
@@ -877,7 +1211,8 @@ class BookingServiceImplTest {
       UUID carrierBookingRequestReference = UUID.randomUUID();
       PageRequest pageRequest = PageRequest.of(0, 100);
 
-      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(carrierBookingRequestReference.toString(), null, pageRequest))
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              carrierBookingRequestReference.toString(), null, pageRequest))
           .thenReturn(Flux.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =

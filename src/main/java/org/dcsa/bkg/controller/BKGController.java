@@ -24,7 +24,6 @@ public class BKGController {
   @PostMapping
   @ResponseStatus(HttpStatus.ACCEPTED)
   public Mono<BookingTO> createBooking(@Valid @RequestBody BookingTO bookingRequest) {
-    // ToDo: adjust this when the IM is ready for booking
     return bookingService.createBooking(bookingRequest);
   }
 
@@ -42,7 +41,6 @@ public class BKGController {
   @ResponseStatus(HttpStatus.OK)
   public Mono<BookingTO> getBookingByReference(
       @PathVariable String carrierBookingRequestReference) {
-    // ToDo: adjust this when the IM is ready for booking
     return bookingService.getBookingByCarrierBookingRequestReference(
         carrierBookingRequestReference);
   }
