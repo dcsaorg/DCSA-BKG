@@ -22,6 +22,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+
 @DisplayName("Tests for BKG Summaries Controller")
 @ActiveProfiles("test")
 @WebFluxTest(controllers = {BKGSummariesController.class})
@@ -100,7 +102,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setCommunicationChannel(CommunicationChannel.AO);
     bookingSummaryTo.setIsEquipmentSubstitutionAllowed(true);
 
-    Mockito.when(bookingService.getBookingRequestSummaries(null, null, PageRequest.of(0, 100))).thenReturn(Flux.just(bookingSummaryTo));
+    Mockito.when(bookingService.getBookingRequestSummaries(any(), any(), any())).thenReturn(Flux.just(bookingSummaryTo));
 
     webTestClient
         .get()

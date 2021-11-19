@@ -1,35 +1,31 @@
 package org.dcsa.bkg.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.dcsa.bkg.model.mappers.BookingSummaryMapper;
-import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
-import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
-import org.dcsa.bkg.model.transferobjects.BookingTO;
-import org.dcsa.bkg.service.BookingService;
-import org.dcsa.core.events.model.Booking;
-import org.dcsa.core.events.model.enums.DocumentStatus;
-import org.dcsa.core.events.repository.BookingRepository;
-import org.dcsa.core.events.repository.VesselRepository;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Pageable;
-import org.dcsa.bkg.model.mappers.BookingMapper;
-import org.dcsa.bkg.model.mappers.CommodityMapper;
-import org.dcsa.bkg.model.mappers.LocationMapper;
-import org.dcsa.bkg.model.mappers.PartyMapper;
+import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
+import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.Address;
+import org.dcsa.core.events.model.Booking;
 import org.dcsa.core.events.model.DisplayedAddress;
+import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+
+import static org.springframework.data.relational.core.query.Criteria.where;
+import static org.springframework.data.relational.core.query.Query.query;
 
 @Service
 @RequiredArgsConstructor
@@ -59,16 +55,13 @@ public class BookingServiceImpl implements BookingService {
   private final CommodityMapper commodityMapper;
   private final PartyMapper partyMapper;
 
+  private final R2dbcEntityTemplate r2dbcEntityTemplate;
+
   @Override
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
       String carrierBookingRequestReference, DocumentStatus documentStatus, Pageable pageable) {
-    Booking bookingRequest = new Booking();
-    bookingRequest.setCarrierBookingRequestReference(carrierBookingRequestReference);
-    bookingRequest.setDocumentStatus(documentStatus);
 
-    Flux<Booking> queryResponse =
-        bookingRepository.findAllOrderByBookingRequestDateTime(
-            Example.of(bookingRequest), pageable);
+    Flux<Booking> queryResponse = bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(carrierBookingRequestReference, documentStatus, pageable);
 
     return queryResponse.flatMap(
         booking ->
@@ -82,6 +75,23 @@ public class BookingServiceImpl implements BookingService {
                       return bookingSummaryTO;
                     })
                 .defaultIfEmpty(bookingSummaryMapper.bookingSummaryTOFromBooking(booking)));
+  }
+
+  protected Criteria getCriteriaHasCarrierBookingRequestReference(
+      String carrierBookingRequestReference) {
+    Criteria criteria = Criteria.empty();
+    if (carrierBookingRequestReference != null) {
+      criteria = where("carrier_booking_request_reference").is(carrierBookingRequestReference);
+    }
+    return criteria;
+  }
+
+  protected Criteria getCriteriaHasDocumentStatus(DocumentStatus documentStatus) {
+    Criteria criteria = Criteria.empty();
+    if (documentStatus != null) {
+      criteria = where("document_status").is(documentStatus);
+    }
+    return criteria;
   }
 
   @Override
