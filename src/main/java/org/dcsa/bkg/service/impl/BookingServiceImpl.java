@@ -1,10 +1,7 @@
 package org.dcsa.bkg.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.dcsa.bkg.model.mappers.BookingMapper;
-import org.dcsa.bkg.model.mappers.CommodityMapper;
-import org.dcsa.bkg.model.mappers.LocationMapper;
-import org.dcsa.bkg.model.mappers.PartyMapper;
+import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.*;
@@ -12,6 +9,9 @@ import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -22,6 +22,8 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
+
+import static org.springframework.data.relational.core.query.Criteria.where;
 
 @Service
 @RequiredArgsConstructor
@@ -42,16 +44,35 @@ public class BookingServiceImpl implements BookingService {
   private final PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   private final ShipmentLocationRepository shipmentLocationRepository;
   private final DisplayedAddressRepository displayedAddressRepository;
+  private final VesselRepository vesselRepository;
 
   // mappers
   private final BookingMapper bookingMapper;
+  private final BookingSummaryMapper bookingSummaryMapper;
   private final LocationMapper locationMapper;
   private final CommodityMapper commodityMapper;
   private final PartyMapper partyMapper;
 
   @Override
-  public Flux<BookingSummaryTO> getBookingRequestSummaries() {
-    return Flux.empty();
+  public Flux<BookingSummaryTO> getBookingRequestSummaries(
+      String carrierBookingRequestReference, DocumentStatus documentStatus, Pageable pageable) {
+
+    Flux<Booking> queryResponse =
+        bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+            carrierBookingRequestReference, documentStatus, pageable);
+
+    return queryResponse.flatMap(
+        booking ->
+            vesselRepository
+                .findByIdOrEmpty(booking.getVesselId())
+                .mapNotNull(
+                    vessel -> {
+                      BookingSummaryTO bookingSummaryTO =
+                          bookingSummaryMapper.bookingSummaryTOFromBooking(booking);
+                      bookingSummaryTO.setVesselIMONumber(vessel.getVesselIMONumber());
+                      return bookingSummaryTO;
+                    })
+                .defaultIfEmpty(bookingSummaryMapper.bookingSummaryTOFromBooking(booking)));
   }
 
   @Override
