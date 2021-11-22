@@ -8,11 +8,13 @@ import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.dcsa.core.events.model.enums.DocumentStatus;
+import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface BookingService {
-  Flux<BookingSummaryTO> getBookingRequestSummaries();
+  Flux<BookingSummaryTO> getBookingRequestSummaries(String carrierBookingRequestReference, DocumentStatus documentStatus, Pageable pageable);
 
   Mono<BookingTO> createBooking(BookingTO bookingRequest);
 

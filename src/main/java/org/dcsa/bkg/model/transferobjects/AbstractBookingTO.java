@@ -25,8 +25,8 @@ public abstract class AbstractBookingTO {
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   protected OffsetDateTime bookingRequestDateTime;
 
-  @NotNull(message = "ReceiptDeliveryTypeAtOrigin is required.")
-  protected ReceiptDeliveryType receiptDeliveryTypeAtOrigin;
+  @NotNull(message = "ReceiptTypeAtOrigin is required.")
+  protected ReceiptDeliveryType receiptTypeAtOrigin;
 
   @NotNull(message = "DeliveryTypeAtDestination is required.")
   protected ReceiptDeliveryType deliveryTypeAtDestination;
@@ -41,7 +41,7 @@ public abstract class AbstractBookingTO {
   @Size(max = 30, message = "ServiceContractReference has a max size of 30.")
   protected String serviceContractReference;
 
-  protected PaymentTerm paymentTerm;
+  protected PaymentTerm paymentTermCode;
 
   protected Boolean isPartialLoadAllowed;
 
@@ -67,7 +67,7 @@ public abstract class AbstractBookingTO {
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   protected LocalDate expectedDepartureDate;
 
-  protected TransportDocumentTypeCode transportDocumentType;
+  protected TransportDocumentTypeCode transportDocumentTypeCode;
 
   @Size(max = 20, message = "TransportDocumentReference has a max size of 20.")
   protected String transportDocumentReference;

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -20,6 +21,8 @@ import reactor.core.publisher.Flux;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
 
 @DisplayName("Tests for BKG Summaries Controller")
 @ActiveProfiles("test")
@@ -75,13 +78,13 @@ class BKGSummariesControllerTest {
 
     BookingSummaryTO bookingSummaryTo = new BookingSummaryTO();
     bookingSummaryTo.setCarrierBookingRequestReference(uuid.toString());
-    bookingSummaryTo.setReceiptDeliveryTypeAtOrigin(ReceiptDeliveryType.CY);
+    bookingSummaryTo.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingSummaryTo.setDeliveryTypeAtDestination(ReceiptDeliveryType.CY);
     bookingSummaryTo.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
     bookingSummaryTo.setCargoMovementTypeAtDestination(CargoMovementType.FCL);
     bookingSummaryTo.setBookingRequestDateTime(OffsetDateTime.now());
     bookingSummaryTo.setServiceContractReference("234ase3q4");
-    bookingSummaryTo.setPaymentTerm(PaymentTerm.PRE);
+    bookingSummaryTo.setPaymentTermCode(PaymentTerm.PRE);
     bookingSummaryTo.setIsPartialLoadAllowed(true);
     bookingSummaryTo.setIsExportDeclarationRequired(true);
     bookingSummaryTo.setExportDeclarationReference("ABC123123");
@@ -92,14 +95,15 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setIsDestinationFilingRequired(true);
     bookingSummaryTo.setContractQuotationReference("DKK");
     bookingSummaryTo.setExpectedDepartureDate(LocalDate.now());
-    bookingSummaryTo.setTransportDocumentType(TransportDocumentTypeCode.BOL);
+    bookingSummaryTo.setTransportDocumentTypeCode(TransportDocumentTypeCode.BOL);
     bookingSummaryTo.setTransportDocumentReference("ASV23142ASD");
     bookingSummaryTo.setBookingChannelReference("ABC12313");
     bookingSummaryTo.setIncoTerms(IncoTerms.FCA);
     bookingSummaryTo.setCommunicationChannel(CommunicationChannel.AO);
     bookingSummaryTo.setIsEquipmentSubstitutionAllowed(true);
 
-    Mockito.when(bookingService.getBookingRequestSummaries()).thenReturn(Flux.just(bookingSummaryTo));
+    Mockito.when(bookingService.getBookingRequestSummaries(any(), any(), any()))
+        .thenReturn(Flux.just(bookingSummaryTo));
 
     webTestClient
         .get()
