@@ -24,6 +24,8 @@ import reactor.core.publisher.Flux;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+
 @DisplayName("Tests for BKG Confirmation Summaries Controller")
 @ActiveProfiles("test")
 @WebFluxTest(controllers = {BKGConfirmationSummariesController.class})
@@ -89,7 +91,7 @@ class BKGConfirmationSummariesControllerTest {
     bookingConfirmationSummaryTO.setConfirmationDateTime(dateTimeOffset);
     bookingConfirmationSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
 
-    Mockito.when(bookingService.getBookingConfirmationSummaries(null, null, null))
+    Mockito.when(bookingService.getBookingConfirmationSummaries(any(), any(), any()))
         .thenReturn(Flux.just(bookingConfirmationSummaryTO));
 
     webTestClient
