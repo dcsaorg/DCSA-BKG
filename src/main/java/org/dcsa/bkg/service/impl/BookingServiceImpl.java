@@ -4,19 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
-import org.dcsa.core.events.model.Address;
-import org.dcsa.core.events.model.DisplayedAddress;
-import org.dcsa.core.events.model.Shipment;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -27,8 +20,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
-import static org.springframework.data.relational.core.query.Criteria.where;
 
 @Service
 @RequiredArgsConstructor
@@ -81,7 +72,7 @@ public class BookingServiceImpl implements BookingService {
                 .findAllByBookingIDAndDocumentStatus(
                     shipment.getBookingID(), documentStatus, pageable)
                 .mapNotNull(
-                    x -> {
+                    ignored -> {
                       BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
                           new BookingConfirmationSummaryTO();
                       bookingConfirmationSummaryTO.setCarrierBookingReference(
@@ -189,10 +180,8 @@ public class BookingServiceImpl implements BookingService {
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
     BookingTO bookingTO = bookingMapper.bookingToDTO(booking);
-    // the mapper creates a new instance of location even if value of
-    // invoicePayableAt is
-    // null in booking
-    // hence we set it to null if its a null object
+    // the mapper creates a new instance of location even if value of invoicePayableAt is null in
+    // booking hence we set it to null if it's a null object
     bookingTO.setInvoicePayableAt(null);
     bookingTO.setPlaceOfIssue(null);
     return bookingTO;
