@@ -3,7 +3,6 @@ package org.dcsa.bkg.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
-import org.dcsa.bkg.repositories.BookingConfirmationRepository;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.DocumentStatus;
@@ -11,8 +10,6 @@ import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -23,8 +20,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
-import static org.springframework.data.relational.core.query.Criteria.where;
 
 @Service
 @RequiredArgsConstructor
