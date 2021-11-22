@@ -1,11 +1,5 @@
 package org.dcsa.bkg.service.impl;
 
-import org.dcsa.bkg.model.mappers.BookingMapper;
-import org.dcsa.bkg.model.mappers.CommodityMapper;
-import org.dcsa.bkg.model.mappers.LocationMapper;
-import org.dcsa.bkg.model.mappers.PartyMapper;
-import org.dcsa.bkg.service.impl.BookingServiceImpl;
-
 import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.core.events.model.*;
