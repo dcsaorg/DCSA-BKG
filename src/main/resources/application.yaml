@@ -22,7 +22,7 @@ pagination:
   #    # Change name of first-page header name
   #    firstPageName:
   #  # Possibility to change the default pagination size. If not specified all results will be returned as default
-  defaultPageSize: 20
+  defaultPageSize: 100
 
 spring:
   profiles:
@@ -51,7 +51,7 @@ logging:
     root: ${LOG_LEVEL:INFO}
     org:
       springframework:
-        r2dbc: ${LOG_LEVEL:INFO}
+        r2dbc: ${LOG_LEVEL:DEBUG}
 
 management:
   endpoint:

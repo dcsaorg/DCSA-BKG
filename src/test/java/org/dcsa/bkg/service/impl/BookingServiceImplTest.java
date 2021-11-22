@@ -1,8 +1,7 @@
-package org.dcsa.bkg.service;
+package org.dcsa.bkg.service.impl;
 
 import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
-import org.dcsa.bkg.service.impl.BookingServiceImpl;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
@@ -10,10 +9,10 @@ import org.dcsa.core.events.repository.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -46,6 +45,10 @@ class BookingServiceImplTest {
   @Mock PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   @Mock ShipmentLocationRepository shipmentLocationRepository;
   @Mock ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
+  @Mock VesselRepository vesselRepository;
+
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+  R2dbcEntityTemplate r2dbcEntityTemplate;
 
   @InjectMocks BookingServiceImpl bookingServiceImpl;
 
@@ -54,6 +57,7 @@ class BookingServiceImplTest {
   @Spy CommodityMapper commodityMapper = Mappers.getMapper(CommodityMapper.class);
   @Spy PartyMapper partyMapper = Mappers.getMapper(PartyMapper.class);
   @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
+  @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
 
   Booking booking;
   Location location1;
@@ -1053,6 +1057,279 @@ class BookingServiceImplTest {
                     b.getShipmentLocations().get(0).getLocation().getFacility().getFacilityID());
               })
           .verifyComplete();
+  }
+}
+
+  @DisplayName("Tests for BKG Summaries Service")
+  class BookingRequestSummariesTest {
+
+    private Booking initializeBookingTestInstance(
+        UUID carrierBookingRequestReference, DocumentStatus documentStatus, UUID vesselId) {
+      Booking booking = new Booking();
+      booking.setCarrierBookingRequestReference(carrierBookingRequestReference.toString());
+      booking.setDocumentStatus(documentStatus);
+      booking.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
+      booking.setCargoMovementTypeAtDestination(CargoMovementType.FCL);
+      booking.setBookingRequestDateTime(OffsetDateTime.now());
+      booking.setServiceContractReference("234ase3q4");
+      booking.setPaymentTermCode(PaymentTerm.PRE);
+      booking.setIsPartialLoadAllowed(true);
+      booking.setIsExportDeclarationRequired(true);
+      booking.setExportDeclarationReference("ABC123123");
+      booking.setIsImportLicenseRequired(true);
+      booking.setImportLicenseReference("ABC123123");
+      booking.setSubmissionDateTime(OffsetDateTime.now());
+      booking.setIsAMSACIFilingRequired(true);
+      booking.setIsDestinationFilingRequired(true);
+      booking.setContractQuotationReference("DKK");
+      booking.setExpectedDepartureDate(LocalDate.now());
+      booking.setTransportDocumentTypeCode(TransportDocumentTypeCode.BOL);
+      booking.setTransportDocumentReference("ASV23142ASD");
+      booking.setBookingChannelReference("ABC12313");
+      booking.setIncoTerms(IncoTerms.FCA);
+      booking.setCommunicationChannelCode(CommunicationChannel.AO);
+      booking.setIsEquipmentSubstitutionAllowed(true);
+      booking.setVesselId(vesselId);
+
+      return booking;
+    }
+
+    private Vessel initializeVesselTestInstance(UUID vesselId) {
+      Vessel vessel = new Vessel();
+      vessel.setId(vesselId);
+      vessel.setVesselIMONumber("ABC12313");
+
+      return vessel;
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking summaries with carrierBookingRequestReference and DocumentStatus should return valid list of booking request summaries.")
+    void
+        bookingSummaryRequestWithCarrierBookingRequestReferenceAndDocumentStatusShouldReturnValidBooking() {
+
+      UUID carrierBookingRequestReference = UUID.randomUUID();
+      UUID vesselId = UUID.randomUUID();
+      DocumentStatus documentStatus = DocumentStatus.APPR;
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              carrierBookingRequestReference.toString(), documentStatus, pageRequest))
+          .thenReturn(
+              Flux.just(
+                  initializeBookingTestInstance(
+                      carrierBookingRequestReference, documentStatus, vesselId)));
+
+      when(vesselRepository.findByIdOrEmpty(vesselId))
+          .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
+
+      Flux<BookingSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingRequestSummaries(
+              carrierBookingRequestReference.toString(), documentStatus, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingRequestReference.toString(),
+                    bookingSummaryTO.getCarrierBookingRequestReference());
+                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                Assertions.assertEquals("ABC12313", bookingSummaryTO.getVesselIMONumber());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking summaries with carrierBookingRequestReference and DocumentStatus should return valid list of booking request summaries when no vessel can be found.")
+    void
+        bookingSummaryRequestWithCarrierBookingRequestReferenceAndDocumentStatusNoVesselFoundShouldReturnValidBooking() {
+
+      UUID carrierBookingRequestReference = UUID.randomUUID();
+      UUID vesselId = UUID.randomUUID();
+      DocumentStatus documentStatus = DocumentStatus.APPR;
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              carrierBookingRequestReference.toString(), documentStatus, pageRequest))
+          .thenReturn(
+              Flux.just(
+                  initializeBookingTestInstance(
+                      carrierBookingRequestReference, documentStatus, vesselId)));
+
+      when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
+
+      Flux<BookingSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingRequestSummaries(
+              carrierBookingRequestReference.toString(), documentStatus, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingRequestReference.toString(),
+                    bookingSummaryTO.getCarrierBookingRequestReference());
+                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking summaries with carrierBookingRequestReference and DocumentStatus should return valid list of booking request summaries when no vesselId is present.")
+    void
+        bookingSummaryRequestWithCarrierBookingRequestReferenceAndDocumentStatusNoVesselIdShouldReturnValidBooking() {
+
+      UUID carrierBookingRequestReference = UUID.randomUUID();
+      UUID vesselId = null;
+      DocumentStatus documentStatus = DocumentStatus.APPR;
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              carrierBookingRequestReference.toString(), documentStatus, pageRequest))
+          .thenReturn(
+              Flux.just(
+                  initializeBookingTestInstance(
+                      carrierBookingRequestReference, documentStatus, vesselId)));
+
+      when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
+
+      Flux<BookingSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingRequestSummaries(
+              carrierBookingRequestReference.toString(), documentStatus, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingRequestReference.toString(),
+                    bookingSummaryTO.getCarrierBookingRequestReference());
+                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking summaries with carrierBookingRequestReference should return valid list of booking request summaries.")
+    void bookingSummaryRequestWithCarrierBookingRequestReferenceShouldReturnValidBooking() {
+
+      UUID carrierBookingRequestReference = UUID.randomUUID();
+      UUID vesselId = UUID.randomUUID();
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              carrierBookingRequestReference.toString(), null, pageRequest))
+          .thenReturn(
+              Flux.just(
+                  initializeBookingTestInstance(carrierBookingRequestReference, null, vesselId)));
+
+      Mockito.when(vesselRepository.findByIdOrEmpty(vesselId))
+          .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
+
+      Flux<BookingSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingRequestSummaries(
+              carrierBookingRequestReference.toString(), null, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingRequestReference.toString(),
+                    bookingSummaryTO.getCarrierBookingRequestReference());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking summaries with DocumentStatus should return valid list of booking request summaries.")
+    void bookingSummaryRequestWithDocumentStatusShouldReturnValidBooking() {
+
+      UUID carrierBookingRequestReference = UUID.randomUUID();
+      UUID vesselId = UUID.randomUUID();
+      DocumentStatus documentStatus = DocumentStatus.APPR;
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              null, documentStatus, pageRequest))
+          .thenReturn(
+              Flux.just(
+                  initializeBookingTestInstance(
+                      carrierBookingRequestReference, documentStatus, vesselId)));
+
+      when(vesselRepository.findByIdOrEmpty(vesselId))
+          .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
+
+      Flux<BookingSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingRequestSummaries(null, documentStatus, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingRequestReference.toString(),
+                    bookingSummaryTO.getCarrierBookingRequestReference());
+                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName("Get booking summaries should return valid list of booking request summaries.")
+    void bookingSummaryRequestShouldReturnValidBooking() {
+
+      UUID carrierBookingRequestReference = UUID.randomUUID();
+      UUID vesselId = UUID.randomUUID();
+      DocumentStatus documentStatus = DocumentStatus.APPR;
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              null, null, pageRequest))
+          .thenReturn(
+              Flux.just(
+                  initializeBookingTestInstance(
+                      carrierBookingRequestReference, documentStatus, vesselId)));
+
+      when(vesselRepository.findByIdOrEmpty(vesselId))
+          .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
+
+      Flux<BookingSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingRequestSummaries(null, null, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingRequestReference.toString(),
+                    bookingSummaryTO.getCarrierBookingRequestReference());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking summaries should return empty list of booking request summaries when no booking can be found.")
+    void bookingSummaryRequestShouldReturnEmptyWhenNoBookingsFound() {
+
+      UUID carrierBookingRequestReference = UUID.randomUUID();
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
+              carrierBookingRequestReference.toString(), null, pageRequest))
+          .thenReturn(Flux.empty());
+
+      Flux<BookingSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingRequestSummaries(
+              carrierBookingRequestReference.toString(), null, pageRequest);
+
+      StepVerifier.create(bookingToResponse).expectComplete().verify();
     }
   }
 }
