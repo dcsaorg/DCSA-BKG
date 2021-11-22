@@ -1,7 +1,6 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import lombok.Data;
-import org.dcsa.core.events.model.CarrierClause;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -34,5 +33,5 @@ public class BookingConfirmationTO {
 
   private List<ChargeTO> charges;
 
-  private List<CarrierClause> carrierClauses;
+  private List<CarrierClauseTO> carrierClauses;
 }
