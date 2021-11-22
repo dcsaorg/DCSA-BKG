@@ -1057,8 +1057,8 @@ class BookingServiceImplTest {
                     b.getShipmentLocations().get(0).getLocation().getFacility().getFacilityID());
               })
           .verifyComplete();
+    }
   }
-}
 
   @DisplayName("Tests for BKG Summaries Service")
   class BookingRequestSummariesTest {
