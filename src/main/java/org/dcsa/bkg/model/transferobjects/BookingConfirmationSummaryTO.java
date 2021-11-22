@@ -18,7 +18,7 @@ public class BookingConfirmationSummaryTO {
 
   @Size(max = 35)
   @Column("carrier_booking_reference")
-  private String carrierBookingReferenceID;
+  private String carrierBookingReference;
 
   @Column("terms_and_conditions")
   private String termsAndConditions;

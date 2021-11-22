@@ -34,22 +34,6 @@ import static org.springframework.data.relational.core.query.Criteria.where;
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
-  @Override
-  public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
-      String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
-
-    BookingConfirmationSummaryTO bookingSummaryTO = new BookingConfirmationSummaryTO();
-    return shipmentRepository
-        .findShipmentsByBookingIDNotNull(pageable)
-        .map(
-            shipment -> {
-              bookingSummaryTO.setCarrierBookingReferenceID(shipment.getCarrierBookingReference());
-              bookingSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
-              bookingSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
-              return bookingSummaryTO;
-            });
-  }
-
   // repositories
   private final BookingRepository bookingRepository;
   private final LocationRepository locationRepository;
@@ -74,6 +58,52 @@ public class BookingServiceImpl implements BookingService {
   private final LocationMapper locationMapper;
   private final CommodityMapper commodityMapper;
   private final PartyMapper partyMapper;
+
+  @Override
+  public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
+      String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
+
+    Flux<Shipment> shipmentResponse =
+        shipmentRepository.findAllByCarrierBookingReference(carrierBookingReference, pageable);
+
+    if (carrierBookingReference == null) {
+      shipmentResponse = shipmentRepository.findShipmentsByBookingIDNotNull(pageable);
+    }
+
+    return shipmentResponse.flatMap(
+        shipment -> {
+          // IF-statement is here so that we *only* make multiple queries if documentStatus is
+          // included as parameter
+          if (documentStatus != null) {
+
+            // Potential issue if booking query returns more than the set limit of results
+            return bookingRepository
+                .findAllByBookingIDAndDocumentStatus(
+                    shipment.getBookingID(), documentStatus, pageable)
+                .mapNotNull(
+                    x -> {
+                      BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
+                          new BookingConfirmationSummaryTO();
+                      bookingConfirmationSummaryTO.setCarrierBookingReference(
+                          shipment.getCarrierBookingReference());
+                      bookingConfirmationSummaryTO.setConfirmationDateTime(
+                          shipment.getConfirmationDateTime());
+                      bookingConfirmationSummaryTO.setTermsAndConditions(
+                          shipment.getTermsAndConditions());
+                      return bookingConfirmationSummaryTO;
+                    });
+          } else {
+            BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
+                new BookingConfirmationSummaryTO();
+            bookingConfirmationSummaryTO.setCarrierBookingReference(
+                shipment.getCarrierBookingReference());
+            bookingConfirmationSummaryTO.setConfirmationDateTime(
+                shipment.getConfirmationDateTime());
+            bookingConfirmationSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+            return Mono.just(bookingConfirmationSummaryTO);
+          }
+        });
+  }
 
   @Override
   public Flux<BookingSummaryTO> getBookingRequestSummaries(

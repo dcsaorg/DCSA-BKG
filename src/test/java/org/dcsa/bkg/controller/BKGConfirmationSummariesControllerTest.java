@@ -80,12 +80,12 @@ class BKGConfirmationSummariesControllerTest {
       "Get booking confirmation summaries should return valid list of booking request summaries for valid request.")
   void bookingConfirmationSummariesShouldReturnListOfBookingRequestSummaries() {
 
-    String carrierBookingReferenceID = UUID.randomUUID().toString().substring(0, 33);
+    String carrierBookingReference = UUID.randomUUID().toString().substring(0, 33);
     OffsetDateTime dateTimeOffset = OffsetDateTime.now();
     String termsAndConditions = "TERMS AND CONDITIONS!";
 
     BookingConfirmationSummaryTO bookingConfirmationSummaryTO = new BookingConfirmationSummaryTO();
-    bookingConfirmationSummaryTO.setCarrierBookingReferenceID(carrierBookingReferenceID);
+    bookingConfirmationSummaryTO.setCarrierBookingReference(carrierBookingReference);
     bookingConfirmationSummaryTO.setConfirmationDateTime(dateTimeOffset);
     bookingConfirmationSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
 
@@ -103,8 +103,8 @@ class BKGConfirmationSummariesControllerTest {
         .consumeWith(System.out::println)
         .jsonPath("$")
         .isArray()
-        .jsonPath("$.[0].carrierBookingReferenceID")
-        .isEqualTo(carrierBookingReferenceID)
+        .jsonPath("$.[0].carrierBookingReference")
+        .isEqualTo(carrierBookingReference)
         .jsonPath("$.[0].termsAndConditions")
         .isEqualTo(termsAndConditions)
     ;
