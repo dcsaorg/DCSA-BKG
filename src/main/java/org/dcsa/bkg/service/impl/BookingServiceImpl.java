@@ -51,6 +51,7 @@ public class BookingServiceImpl implements BookingService {
   private final CommodityMapper commodityMapper;
   private final PartyMapper partyMapper;
   private final ShipmentMapper shipmentMapper;
+  private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
 
   @Override
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
@@ -388,17 +389,22 @@ public class BookingServiceImpl implements BookingService {
               BookingConfirmationTO bookingConfirmationTO = t.getT2();
               return Mono.zip(
                       fetchShipmentCutOffTimeByBookingID(t.getT1().getShipmentID()),
-                      fetchShipmentLocationsByBookingID(t.getT1().getBookingID()))
+                      fetchShipmentLocationsByBookingID(t.getT1().getBookingID()),
+                      fetchConfirmedEquipmentByByBookingID(t.getT1().getBookingID()))
                   .flatMap(
                       deepObjs -> {
                         Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt =
                             deepObjs.getT1();
                         Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt =
                             deepObjs.getT2();
+                        Optional<List<ConfirmedEquipmentTO>> confirmedEquipmentTOOpt =
+                            deepObjs.getT3();
                         shipmentCutOffTimeTOpt.ifPresent(
                             bookingConfirmationTO::setShipmentCutOffTimes);
                         shipmentLocationsToOpt.ifPresent(
                             bookingConfirmationTO::setShipmentLocations);
+                        confirmedEquipmentTOOpt.ifPresent(
+                            bookingConfirmationTO::setConfirmedEquipments);
                         return Mono.just(bookingConfirmationTO);
                       })
                   .thenReturn(bookingConfirmationTO);
@@ -590,6 +596,18 @@ public class BookingServiceImpl implements BookingService {
                         }))
         .collectList()
         .map(Optional::of);
+  }
+
+  private Mono<Optional<List<ConfirmedEquipmentTO>>> fetchConfirmedEquipmentByByBookingID(
+      UUID bookingID) {
+    return requestedEquipmentRepository
+        .findByBookingID(bookingID)
+        .map(
+            requestedEquipment ->
+                confirmedEquipmentMapper.requestedEquipmentToDto(requestedEquipment))
+        .collectList()
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
   }
 
   @Override
