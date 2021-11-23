@@ -27,7 +27,6 @@ public class BookingServiceImpl implements BookingService {
 
   // repositories
   private final BookingRepository bookingRepository;
-  private final ShipmentRepository bookingConfirmationRepository;
   private final LocationRepository locationRepository;
   private final AddressRepository addressRepository;
   private final FacilityRepository facilityRepository;
@@ -426,7 +425,7 @@ public class BookingServiceImpl implements BookingService {
   @Override
   public Mono<BookingConfirmationTO> getBookingConfirmationByCarrierBookingReference(
       String carrierBookingRequestReference) {
-    return bookingConfirmationRepository
+    return shipmentRepository
         .findByCarrierBookingReference(carrierBookingRequestReference)
         .map(b -> Tuples.of(b, shipmentMapper.shipmentToDTO(b)))
         .flatMap(
