@@ -104,8 +104,6 @@ class BKGControllerTest {
 
     ShipmentLocationTO shipmentLocationTO = new ShipmentLocationTO();
     shipmentLocationTO.setLocation(location);
-    shipmentLocationTO.setShipmentID(UUID.randomUUID());
-    shipmentLocationTO.setBookingID(UUID.randomUUID());
     shipmentLocationTO.setShipmentLocationTypeCode(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));

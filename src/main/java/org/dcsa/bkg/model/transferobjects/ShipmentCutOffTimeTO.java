@@ -13,9 +13,6 @@ import java.util.UUID;
 @Data
 public class ShipmentCutOffTimeTO {
 
-  @JsonIgnore
-  private UUID shipmentID;
-
   @NotNull(message = "CutOffDateTimeCode is required.")
   private CutOffDateTimeCode cutOffDateTimeCode;
 

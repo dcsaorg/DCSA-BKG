@@ -1041,12 +1041,6 @@ class BookingServiceImplTest {
                 Assertions.assertNull(b.getBooking());
                 Assertions.assertEquals(1, b.getShipmentLocations().size());
                 Assertions.assertEquals(
-                    shipmentLocation.getShipmentID(),
-                    b.getShipmentLocations().get(0).getShipmentID());
-                Assertions.assertEquals(
-                    shipmentLocation.getBookingID(),
-                    b.getShipmentLocations().get(0).getBookingID());
-                Assertions.assertEquals(
                     shipmentLocation.getShipmentLocationTypeCode(),
                     b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
                 Assertions.assertEquals(
