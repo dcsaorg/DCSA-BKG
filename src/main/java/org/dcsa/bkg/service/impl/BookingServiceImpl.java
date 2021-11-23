@@ -43,6 +43,8 @@ public class BookingServiceImpl implements BookingService {
   private final DisplayedAddressRepository displayedAddressRepository;
   private final ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   private final VesselRepository vesselRepository;
+  private final ShipmentCarrierClausesRepository shipmentCarrierClausesRepository;
+  private final CarrierClauseRepository carrierClauseRepository;
 
   // mappers
   private final BookingMapper bookingMapper;
@@ -51,6 +53,7 @@ public class BookingServiceImpl implements BookingService {
   private final CommodityMapper commodityMapper;
   private final PartyMapper partyMapper;
   private final ShipmentMapper shipmentMapper;
+  private final CarrierClauseMapper carrierClauseMapper;
 
   @Override
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
@@ -388,17 +391,20 @@ public class BookingServiceImpl implements BookingService {
               BookingConfirmationTO bookingConfirmationTO = t.getT2();
               return Mono.zip(
                       fetchShipmentCutOffTimeByBookingID(t.getT1().getShipmentID()),
-                      fetchShipmentLocationsByBookingID(t.getT1().getBookingID()))
+                      fetchShipmentLocationsByBookingID(t.getT1().getBookingID()),
+                      fetchCarrierClausesByShipmentID(t.getT1().getShipmentID()))
                   .flatMap(
                       deepObjs -> {
                         Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt =
                             deepObjs.getT1();
                         Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt =
                             deepObjs.getT2();
+                        Optional<List<CarrierClauseTO>> carrierClauseToOpt = deepObjs.getT3();
                         shipmentCutOffTimeTOpt.ifPresent(
                             bookingConfirmationTO::setShipmentCutOffTimes);
                         shipmentLocationsToOpt.ifPresent(
                             bookingConfirmationTO::setShipmentLocations);
+                        carrierClauseToOpt.ifPresent(bookingConfirmationTO::setCarrierClauses);
                         return Mono.just(bookingConfirmationTO);
                       })
                   .thenReturn(bookingConfirmationTO);
@@ -427,6 +433,18 @@ public class BookingServiceImpl implements BookingService {
                           t2.getT2().ifPresent(locTO::setFacility);
                           return Mono.just(locTO);
                         }))
+        .map(Optional::of);
+  }
+
+  private Mono<Optional<List<CarrierClauseTO>>> fetchCarrierClausesByShipmentID(UUID shipmentID) {
+    if (shipmentID == null) return Mono.just(Optional.empty());
+    return shipmentCarrierClausesRepository
+        .findAllByShipmentID(shipmentID)
+        .flatMap(
+            shipmentCarrierClause ->
+                carrierClauseRepository.findById(shipmentCarrierClause.getCarrierClauseID()))
+        .flatMap(x -> Mono.just(carrierClauseMapper.carrierClauseToDTO(x)))
+        .collectList()
         .map(Optional::of);
   }
 
