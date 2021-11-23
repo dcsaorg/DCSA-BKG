@@ -981,10 +981,10 @@ class BookingServiceImplTest {
   }
 
   @Nested
-  @DisplayName("")
+  @DisplayName("Tests for the method getBookingConfirmationByCarrierBookingReference(#String)")
   class BookingConfirmationByCarrierBookingReferenceTest {
     @Test
-    @DisplayName("Method should return shallow booking for given carrierBookingRequestReference")
+    @DisplayName("Method should return shallow booking for given carrierBookingReference")
     void testGETBookingConfirmationShallow() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));

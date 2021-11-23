@@ -13,7 +13,6 @@ import java.util.UUID;
 @Data
 public class ShipmentCutOffTimeTO {
 
-  @Id
   @JsonIgnore
   private UUID shipmentID;
 
