@@ -226,7 +226,7 @@ class BKGConfirmedBookingsControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentUnits")
                   .hasJsonPath()
-                  .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentSizeType")
+                  .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentSizetype")
                   .hasJsonPath()
                   .jsonPath("$.charges.[0].chargeType")
                   .hasJsonPath()
