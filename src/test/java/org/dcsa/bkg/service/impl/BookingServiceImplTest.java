@@ -48,7 +48,6 @@ class BookingServiceImplTest {
   @Mock ShipmentLocationRepository shipmentLocationRepository;
   @Mock ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   @Mock VesselRepository vesselRepository;
-  @Mock ShipmentRepository shipmentRepository;
 
   @InjectMocks BookingServiceImpl bookingServiceImpl;
 
