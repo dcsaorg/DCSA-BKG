@@ -82,7 +82,7 @@ class BKGConfirmedBookingsControllerTest {
 
     ConfirmedEquipmentTO confirmedEquipment = new ConfirmedEquipmentTO();
     confirmedEquipment.setConfirmedEquipmentUnits(12);
-    confirmedEquipment.setConfirmedEquipmentSizeType("WHAT");
+    confirmedEquipment.setConfirmedEquipmentSizetype("WHAT");
 
     ChargeTO charge = new ChargeTO();
     charge.setChargeType("ChargeType");

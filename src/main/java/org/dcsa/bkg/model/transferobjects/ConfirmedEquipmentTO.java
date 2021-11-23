@@ -11,7 +11,7 @@ public class ConfirmedEquipmentTO {
 
   @NotNull(message = "ConfirmedEquipmentSizeType is required.")
   @Size(max = 4, message = "ConfirmedEquipmentSizeType has a max size of 4.")
-  private String confirmedEquipmentSizeType;
+  private String confirmedEquipmentSizetype;
 
   @PositiveOrZero(message = "ConfirmedEquipmentUnits has to be a positive value.")
   private Integer confirmedEquipmentUnits;

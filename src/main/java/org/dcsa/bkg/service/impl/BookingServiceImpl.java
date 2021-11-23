@@ -282,7 +282,7 @@ public class BookingServiceImpl implements BookingService {
                 reTo -> {
                   RequestedEquipment requestedEquipment = new RequestedEquipment();
                   requestedEquipment.setBookingID(bookingID);
-                  requestedEquipment.setRequestedEquipmentType(
+                  requestedEquipment.setRequestedEquipmentSizetype(
                       reTo.getRequestedEquipmentSizeType());
                   requestedEquipment.setRequestedEquipmentUnits(reTo.getRequestedEquipmentUnits());
                   requestedEquipment.setIsShipperOwned(reTo.isShipperOwned());
@@ -294,7 +294,7 @@ public class BookingServiceImpl implements BookingService {
         .map(
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
-              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentType());
+              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizetype());
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
               requestedEquipmentTO.setShipperOwned(re.getIsShipperOwned());
               return requestedEquipmentTO;
@@ -489,7 +489,7 @@ public class BookingServiceImpl implements BookingService {
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
-              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentType());
+              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizetype());
               return requestedEquipmentTO;
             })
         .collectList()

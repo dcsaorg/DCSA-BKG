@@ -23,7 +23,7 @@ class ConfirmedEquipmentTOTest {
 
     confirmedEquipmentTO = new ConfirmedEquipmentTO();
     confirmedEquipmentTO.setConfirmedEquipmentUnits(25);
-    confirmedEquipmentTO.setConfirmedEquipmentSizeType("x".repeat(4));
+    confirmedEquipmentTO.setConfirmedEquipmentSizetype("x".repeat(4));
   }
 
   @Test
@@ -37,7 +37,7 @@ class ConfirmedEquipmentTOTest {
   @Test
   @DisplayName("ConfirmedEquipmentTO should throw error if confirmedEquipmentSizeType is not set.")
   void testToVerifyConfirmedEquipmentSizeTypeIsRequired() {
-    confirmedEquipmentTO.setConfirmedEquipmentSizeType(null);
+    confirmedEquipmentTO.setConfirmedEquipmentSizetype(null);
     Set<ConstraintViolation<ConfirmedEquipmentTO>> violations =
         validator.validate(confirmedEquipmentTO);
     Assertions.assertTrue(
@@ -49,7 +49,7 @@ class ConfirmedEquipmentTOTest {
   @DisplayName(
       "ConfirmedEquipmentTO should throw error if confirmedEquipmentSizeType length exceeds max size of 4.")
   void testToConfirmedEquipmentSizeTypeIsNotAllowedToExceed4() {
-    confirmedEquipmentTO.setConfirmedEquipmentSizeType("x".repeat(5));
+    confirmedEquipmentTO.setConfirmedEquipmentSizetype("x".repeat(5));
     Set<ConstraintViolation<ConfirmedEquipmentTO>> violations =
         validator.validate(confirmedEquipmentTO);
     Assertions.assertTrue(

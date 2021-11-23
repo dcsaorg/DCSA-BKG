@@ -129,11 +129,11 @@ class BookingServiceImplTest {
     reference.setReferenceType(ReferenceTypeCode.FF);
 
     requestedEquipment = new RequestedEquipment();
-    requestedEquipment.setRequestedEquipmentType("22GP");
+    requestedEquipment.setRequestedEquipmentSizetype("22GP");
     requestedEquipment.setRequestedEquipmentUnits(3);
 
     confirmedEquipment = new RequestedEquipment();
-    confirmedEquipment.setConfirmedEquipmentType("22GP");
+    confirmedEquipment.setConfirmedEquipmentSizetype("22GP");
     confirmedEquipment.setConfirmedEquipmentUnits(2);
 
     documentParty = new DocumentParty();
@@ -234,7 +234,7 @@ class BookingServiceImplTest {
 
       requestedEquipmentTO = new RequestedEquipmentTO();
       requestedEquipmentTO.setRequestedEquipmentSizeType(
-          requestedEquipment.getRequestedEquipmentType());
+          requestedEquipment.getRequestedEquipmentSizetype());
       requestedEquipmentTO.setRequestedEquipmentUnits(
           requestedEquipment.getRequestedEquipmentUnits());
 
@@ -1084,7 +1084,7 @@ class BookingServiceImplTest {
               shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
             Assertions.assertNull(b.getBooking());
             Assertions.assertEquals(1, b.getConfirmedEquipments().size());
-            Assertions.assertEquals(confirmedEquipment.getConfirmedEquipmentType(), b.getConfirmedEquipments().get(0).getConfirmedEquipmentSizeType());
+            Assertions.assertEquals(confirmedEquipment.getConfirmedEquipmentSizetype(), b.getConfirmedEquipments().get(0).getConfirmedEquipmentSizetype());
           })
         .verifyComplete();
     }
