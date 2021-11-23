@@ -42,6 +42,7 @@ public class BookingServiceImpl implements BookingService {
   private final ShipmentLocationRepository shipmentLocationRepository;
   private final DisplayedAddressRepository displayedAddressRepository;
   private final ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
+  private final ShipmentRepository shipmentRepository;
   private final VesselRepository vesselRepository;
 
   // mappers
@@ -52,6 +53,52 @@ public class BookingServiceImpl implements BookingService {
   private final PartyMapper partyMapper;
   private final ShipmentMapper shipmentMapper;
   private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
+
+  @Override
+  public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
+      String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
+
+    Flux<Shipment> shipmentResponse =
+        shipmentRepository.findAllByCarrierBookingReference(carrierBookingReference, pageable);
+
+    if (carrierBookingReference == null) {
+      shipmentResponse = shipmentRepository.findShipmentsByBookingIDNotNull(pageable);
+    }
+
+    return shipmentResponse.flatMap(
+        shipment -> {
+          // IF-statement is here so that we *only* make multiple queries if documentStatus is
+          // included as parameter
+          if (documentStatus != null) {
+
+            // Potential issue if booking query returns more than the set limit of results
+            return bookingRepository
+                .findAllByBookingIDAndDocumentStatus(
+                    shipment.getBookingID(), documentStatus, pageable)
+                .mapNotNull(
+                    ignored -> {
+                      BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
+                          new BookingConfirmationSummaryTO();
+                      bookingConfirmationSummaryTO.setCarrierBookingReference(
+                          shipment.getCarrierBookingReference());
+                      bookingConfirmationSummaryTO.setConfirmationDateTime(
+                          shipment.getConfirmationDateTime());
+                      bookingConfirmationSummaryTO.setTermsAndConditions(
+                          shipment.getTermsAndConditions());
+                      return bookingConfirmationSummaryTO;
+                    });
+          } else {
+            BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
+                new BookingConfirmationSummaryTO();
+            bookingConfirmationSummaryTO.setCarrierBookingReference(
+                shipment.getCarrierBookingReference());
+            bookingConfirmationSummaryTO.setConfirmationDateTime(
+                shipment.getConfirmationDateTime());
+            bookingConfirmationSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+            return Mono.just(bookingConfirmationSummaryTO);
+          }
+        });
+  }
 
   @Override
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
@@ -137,10 +184,8 @@ public class BookingServiceImpl implements BookingService {
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
     BookingTO bookingTO = bookingMapper.bookingToDTO(booking);
-    // the mapper creates a new instance of location even if value of
-    // invoicePayableAt is
-    // null in booking
-    // hence we set it to null if its a null object
+    // the mapper creates a new instance of location even if value of invoicePayableAt is null in
+    // booking hence we set it to null if it's a null object
     bookingTO.setInvoicePayableAt(null);
     bookingTO.setPlaceOfIssue(null);
     return bookingTO;
