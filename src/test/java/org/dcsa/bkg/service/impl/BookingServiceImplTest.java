@@ -44,6 +44,7 @@ class BookingServiceImplTest {
   @Mock PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   @Mock ShipmentLocationRepository shipmentLocationRepository;
   @Mock VesselRepository vesselRepository;
+  @Mock ShipmentRepository shipmentRepository;
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS)
   R2dbcEntityTemplate r2dbcEntityTemplate;
@@ -1220,6 +1221,186 @@ class BookingServiceImplTest {
               carrierBookingRequestReference.toString(), null, pageRequest);
 
       StepVerifier.create(bookingToResponse).expectComplete().verify();
+    }
+  }
+
+  @Nested
+  @DisplayName("Tests for BKG Confirmation Summaries Service")
+  class BookingConfirmationSummariesTest {
+
+    private Booking initializeBookingTestInstance(UUID bookingId, DocumentStatus documentStatus) {
+      Booking booking = new Booking();
+      booking.setId(bookingId);
+      booking.setCarrierBookingRequestReference(UUID.randomUUID().toString());
+      booking.setDocumentStatus(documentStatus);
+      booking.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
+      booking.setCargoMovementTypeAtDestination(CargoMovementType.FCL);
+      booking.setBookingRequestDateTime(OffsetDateTime.now());
+      booking.setServiceContractReference("234ase3q4");
+      booking.setPaymentTermCode(PaymentTerm.PRE);
+      booking.setIsPartialLoadAllowed(true);
+      booking.setIsExportDeclarationRequired(true);
+      booking.setExportDeclarationReference("ABC123123");
+      booking.setIsImportLicenseRequired(true);
+      booking.setImportLicenseReference("ABC123123");
+      booking.setSubmissionDateTime(OffsetDateTime.now());
+      booking.setIsAMSACIFilingRequired(true);
+      booking.setIsDestinationFilingRequired(true);
+      booking.setContractQuotationReference("DKK");
+      booking.setExpectedDepartureDate(LocalDate.now());
+      booking.setTransportDocumentTypeCode(TransportDocumentTypeCode.BOL);
+      booking.setTransportDocumentReference("ASV23142ASD");
+      booking.setBookingChannelReference("ABC12313");
+      booking.setIncoTerms(IncoTerms.FCA);
+      booking.setCommunicationChannelCode(CommunicationChannel.AO);
+      booking.setIsEquipmentSubstitutionAllowed(true);
+
+      return booking;
+    }
+
+    private Shipment initializeShipmentTestInstance(
+        String carrierBookingReference, UUID bookingID) {
+      Shipment shipment = new Shipment();
+      shipment.setBookingID(bookingID);
+      shipment.setCarrierBookingReference(carrierBookingReference);
+      shipment.setConfirmationDateTime(OffsetDateTime.now());
+      shipment.setTermsAndConditions("x".repeat(150));
+
+      return shipment;
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking confirmation summaries with carrierBookingReference and DocumentStatus should return valid list of booking confirmation summaries.")
+    void
+        bookingConfirmationSummaryRequestWithCarrierBookingReferenceAndDocumentStatusShouldReturnValidBookingConfirmationSummary() {
+
+      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
+      UUID bookingId = UUID.randomUUID();
+      DocumentStatus documentStatus = DocumentStatus.APPR;
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByBookingIDAndDocumentStatus(
+              bookingId, documentStatus, pageRequest))
+          .thenReturn(Flux.just(initializeBookingTestInstance(bookingId, documentStatus)));
+
+      when(shipmentRepository.findAllByCarrierBookingReference(
+              carrierBookingReference, pageRequest))
+          .thenReturn(
+              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+
+      Flux<BookingConfirmationSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingConfirmationSummaries(
+              carrierBookingReference, documentStatus, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingConfirmationSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingReference,
+                    bookingConfirmationSummaryTO.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking confirmation summaries with DocumentStatus should return valid list of booking confirmation summaries.")
+    void
+        bookingConfirmationSummaryRequestWithDocumentStatusShouldReturnValidBookingConfirmationSummary() {
+
+      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
+      UUID bookingId = UUID.randomUUID();
+      DocumentStatus documentStatus = DocumentStatus.APPR;
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByBookingIDAndDocumentStatus(
+              bookingId, documentStatus, pageRequest))
+          .thenReturn(Flux.just(initializeBookingTestInstance(bookingId, documentStatus)));
+
+      when(shipmentRepository.findShipmentsByBookingIDNotNull(pageRequest))
+          .thenReturn(
+              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+
+      Flux<BookingConfirmationSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingConfirmationSummaries(
+              null, documentStatus, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingConfirmationSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingReference,
+                    bookingConfirmationSummaryTO.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking confirmation summaries with carrierBookingReference should return valid list of booking confirmation summaries.")
+    void
+        bookingConfirmationSummaryRequestWithCarrierBookingReferenceShouldReturnValidBookingConfirmationSummary() {
+
+      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
+      UUID bookingId = UUID.randomUUID();
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(shipmentRepository.findAllByCarrierBookingReference(
+              carrierBookingReference, pageRequest))
+          .thenReturn(
+              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+
+      Flux<BookingConfirmationSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingConfirmationSummaries(
+              carrierBookingReference, null, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingConfirmationSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingReference,
+                    bookingConfirmationSummaryTO.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking confirmation summaries should return valid list of booking confirmation summaries.")
+    void bookingConfirmationSummaryRequestShouldReturnValidBookingConfirmationSummary() {
+
+      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
+      UUID bookingId = UUID.randomUUID();
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(shipmentRepository.findShipmentsByBookingIDNotNull(pageRequest))
+          .thenReturn(
+              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+
+      Flux<BookingConfirmationSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingConfirmationSummaries(null, null, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingConfirmationSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingReference,
+                    bookingConfirmationSummaryTO.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+              })
+          .expectComplete()
+          .verify();
     }
   }
 }

@@ -10,8 +10,6 @@ import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -22,8 +20,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
-import static org.springframework.data.relational.core.query.Criteria.where;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +40,7 @@ public class BookingServiceImpl implements BookingService {
   private final PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   private final ShipmentLocationRepository shipmentLocationRepository;
   private final DisplayedAddressRepository displayedAddressRepository;
+  private final ShipmentRepository shipmentRepository;
   private final VesselRepository vesselRepository;
 
   // mappers
@@ -52,6 +49,52 @@ public class BookingServiceImpl implements BookingService {
   private final LocationMapper locationMapper;
   private final CommodityMapper commodityMapper;
   private final PartyMapper partyMapper;
+
+  @Override
+  public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
+      String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
+
+    Flux<Shipment> shipmentResponse =
+        shipmentRepository.findAllByCarrierBookingReference(carrierBookingReference, pageable);
+
+    if (carrierBookingReference == null) {
+      shipmentResponse = shipmentRepository.findShipmentsByBookingIDNotNull(pageable);
+    }
+
+    return shipmentResponse.flatMap(
+        shipment -> {
+          // IF-statement is here so that we *only* make multiple queries if documentStatus is
+          // included as parameter
+          if (documentStatus != null) {
+
+            // Potential issue if booking query returns more than the set limit of results
+            return bookingRepository
+                .findAllByBookingIDAndDocumentStatus(
+                    shipment.getBookingID(), documentStatus, pageable)
+                .mapNotNull(
+                    ignored -> {
+                      BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
+                          new BookingConfirmationSummaryTO();
+                      bookingConfirmationSummaryTO.setCarrierBookingReference(
+                          shipment.getCarrierBookingReference());
+                      bookingConfirmationSummaryTO.setConfirmationDateTime(
+                          shipment.getConfirmationDateTime());
+                      bookingConfirmationSummaryTO.setTermsAndConditions(
+                          shipment.getTermsAndConditions());
+                      return bookingConfirmationSummaryTO;
+                    });
+          } else {
+            BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
+                new BookingConfirmationSummaryTO();
+            bookingConfirmationSummaryTO.setCarrierBookingReference(
+                shipment.getCarrierBookingReference());
+            bookingConfirmationSummaryTO.setConfirmationDateTime(
+                shipment.getConfirmationDateTime());
+            bookingConfirmationSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+            return Mono.just(bookingConfirmationSummaryTO);
+          }
+        });
+  }
 
   @Override
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
@@ -137,10 +180,8 @@ public class BookingServiceImpl implements BookingService {
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
     BookingTO bookingTO = bookingMapper.bookingToDTO(booking);
-    // the mapper creates a new instance of location even if value of
-    // invoicePayableAt is
-    // null in booking
-    // hence we set it to null if its a null object
+    // the mapper creates a new instance of location even if value of invoicePayableAt is null in
+    // booking hence we set it to null if it's a null object
     bookingTO.setInvoicePayableAt(null);
     bookingTO.setPlaceOfIssue(null);
     return bookingTO;
