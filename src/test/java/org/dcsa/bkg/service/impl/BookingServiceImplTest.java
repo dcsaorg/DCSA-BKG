@@ -6,6 +6,8 @@ import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.repository.*;
+import org.dcsa.core.events.service.ShipmentEventService;
+import org.dcsa.core.exception.UpdateException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -25,6 +27,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +51,8 @@ class BookingServiceImplTest {
   @Mock ShipmentLocationRepository shipmentLocationRepository;
   @Mock ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   @Mock VesselRepository vesselRepository;
+
+  @Mock ShipmentEventService shipmentEventService;
 
   @InjectMocks BookingServiceImpl bookingServiceImpl;
 
@@ -233,7 +238,7 @@ class BookingServiceImplTest {
       bookingTO.setValueAddedServiceRequests(Collections.singletonList(valueAddedServiceRequestTO));
 
       requestedEquipmentTO = new RequestedEquipmentTO();
-      requestedEquipmentTO.setRequestedEquipmentSizeType(
+      requestedEquipmentTO.setRequestedEquipmentSizetype(
           requestedEquipment.getRequestedEquipmentSizetype());
       requestedEquipmentTO.setRequestedEquipmentUnits(
           requestedEquipment.getRequestedEquipmentUnits());
@@ -467,7 +472,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
                 Assertions.assertEquals(
-                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizeType());
+                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
               })
           .verifyComplete();
     }
@@ -806,7 +811,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
                 Assertions.assertEquals(
-                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizeType());
+                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
                 Assertions.assertEquals(0, b.getDocumentParties().size());
                 Assertions.assertEquals(0, b.getShipmentLocations().size());
               })
@@ -870,7 +875,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
                 Assertions.assertEquals(
-                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizeType());
+                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
                 Assertions.assertEquals(1, b.getDocumentParties().size());
                 Assertions.assertEquals(
                     "DCSA", b.getDocumentParties().get(0).getParty().getPartyName());
@@ -953,7 +958,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
                 Assertions.assertEquals(
-                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizeType());
+                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
                 Assertions.assertEquals(1, b.getDocumentParties().size());
                 Assertions.assertEquals(
                     "DCSA", b.getDocumentParties().get(0).getParty().getPartyName());
@@ -1085,6 +1090,7 @@ class BookingServiceImplTest {
 
   }
 
+  @Nested
   @DisplayName("Tests for BKG Summaries Service")
   class BookingRequestSummariesTest {
 
@@ -1359,182 +1365,107 @@ class BookingServiceImplTest {
   }
 
   @Nested
-  @DisplayName("Tests for BKG Confirmation Summaries Service")
-  class BookingConfirmationSummariesTest {
-
-    private Booking initializeBookingTestInstance(UUID bookingId, DocumentStatus documentStatus) {
-      Booking booking = new Booking();
-      booking.setId(bookingId);
-      booking.setCarrierBookingRequestReference(UUID.randomUUID().toString());
-      booking.setDocumentStatus(documentStatus);
-      booking.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
-      booking.setCargoMovementTypeAtDestination(CargoMovementType.FCL);
-      booking.setBookingRequestDateTime(OffsetDateTime.now());
-      booking.setServiceContractReference("234ase3q4");
-      booking.setPaymentTermCode(PaymentTerm.PRE);
-      booking.setIsPartialLoadAllowed(true);
-      booking.setIsExportDeclarationRequired(true);
-      booking.setExportDeclarationReference("ABC123123");
-      booking.setIsImportLicenseRequired(true);
-      booking.setImportLicenseReference("ABC123123");
-      booking.setSubmissionDateTime(OffsetDateTime.now());
-      booking.setIsAMSACIFilingRequired(true);
-      booking.setIsDestinationFilingRequired(true);
-      booking.setContractQuotationReference("DKK");
-      booking.setExpectedDepartureDate(LocalDate.now());
-      booking.setTransportDocumentTypeCode(TransportDocumentTypeCode.BOL);
-      booking.setTransportDocumentReference("ASV23142ASD");
-      booking.setBookingChannelReference("ABC12313");
-      booking.setIncoTerms(IncoTerms.FCA);
-      booking.setCommunicationChannelCode(CommunicationChannel.AO);
-      booking.setIsEquipmentSubstitutionAllowed(true);
-
-      return booking;
-    }
-
-    private Shipment initializeShipmentTestInstance(
-        String carrierBookingReference, UUID bookingID) {
-      Shipment shipment = new Shipment();
-      shipment.setBookingID(bookingID);
-      shipment.setCarrierBookingReference(carrierBookingReference);
-      shipment.setConfirmationDateTime(OffsetDateTime.now());
-      shipment.setTermsAndConditions("x".repeat(150));
-
-      return shipment;
-    }
+  @DisplayName("Tests for BKG Cancellation")
+  class BookingCancellationTests {
 
     @Test
-    @DisplayName(
-        "Get booking confirmation summaries with carrierBookingReference and DocumentStatus should return valid list of booking confirmation summaries.")
-    void
-        bookingConfirmationSummaryRequestWithCarrierBookingReferenceAndDocumentStatusShouldReturnValidBookingConfirmationSummary() {
+    @DisplayName("Cancel of a booking with document status PENA should result in an error")
+    void cancelBookingWithInvalidDocumentStatusShouldResultToError() {
 
-      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
-      UUID bookingId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.APPR;
-      PageRequest pageRequest = PageRequest.of(0, 100);
+      String carrierBookingRequestReference = UUID.randomUUID().toString();
+      Booking mockBookingResponse = new Booking();
+      mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
+      mockBookingResponse.setDocumentStatus(DocumentStatus.PENA);
 
-      when(bookingRepository.findAllByBookingIDAndDocumentStatus(
-              bookingId, documentStatus, pageRequest))
-          .thenReturn(Flux.just(initializeBookingTestInstance(bookingId, documentStatus)));
+      when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
+          .thenReturn(Mono.just(mockBookingResponse));
 
-      when(shipmentRepository.findAllByCarrierBookingReference(
-              carrierBookingReference, pageRequest))
-          .thenReturn(
-              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+      Mono<Void> cancelBookingResponse =
+          bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
 
-      Flux<BookingConfirmationSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingConfirmationSummaries(
-              carrierBookingReference, documentStatus, pageRequest);
-
-      StepVerifier.create(bookingToResponse)
-          .assertNext(
-              bookingConfirmationSummaryTO -> {
+      StepVerifier.create(cancelBookingResponse)
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof UpdateException);
                 Assertions.assertEquals(
-                    carrierBookingReference,
-                    bookingConfirmationSummaryTO.getCarrierBookingReference());
-                Assertions.assertEquals(
-                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+                    "Cannot Cancel Booking that is not in status RECE, PENU or CONF",
+                    throwable.getMessage());
               })
-          .expectComplete()
           .verify();
     }
 
     @Test
-    @DisplayName(
-        "Get booking confirmation summaries with DocumentStatus should return valid list of booking confirmation summaries.")
-    void
-        bookingConfirmationSummaryRequestWithDocumentStatusShouldReturnValidBookingConfirmationSummary() {
+    @DisplayName("Cancel of a non existent booking should result in an error")
+    void cancelNonExistentBookingShouldResultToError() {
 
-      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
-      UUID bookingId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.APPR;
-      PageRequest pageRequest = PageRequest.of(0, 100);
+      String carrierBookingRequestReference = UUID.randomUUID().toString();
 
-      when(bookingRepository.findAllByBookingIDAndDocumentStatus(
-              bookingId, documentStatus, pageRequest))
-          .thenReturn(Flux.just(initializeBookingTestInstance(bookingId, documentStatus)));
+      when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.empty());
 
-      when(shipmentRepository.findShipmentsByBookingIDNotNull(pageRequest))
-          .thenReturn(
-              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+      Mono<Void> cancelBookingResponse =
+          bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
 
-      Flux<BookingConfirmationSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingConfirmationSummaries(
-              null, documentStatus, pageRequest);
-
-      StepVerifier.create(bookingToResponse)
-          .assertNext(
-              bookingConfirmationSummaryTO -> {
+      StepVerifier.create(cancelBookingResponse)
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof UpdateException);
                 Assertions.assertEquals(
-                    carrierBookingReference,
-                    bookingConfirmationSummaryTO.getCarrierBookingReference());
-                Assertions.assertEquals(
-                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+                    "No Booking found with: ." + carrierBookingRequestReference,
+                    throwable.getMessage());
               })
-          .expectComplete()
           .verify();
     }
 
     @Test
-    @DisplayName(
-        "Get booking confirmation summaries with carrierBookingReference should return valid list of booking confirmation summaries.")
-    void
-        bookingConfirmationSummaryRequestWithCarrierBookingReferenceShouldReturnValidBookingConfirmationSummary() {
+    @DisplayName("Failure of a booking cancellation should result in an error")
+    void cancelBookingFailedShouldResultToError() {
 
-      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
-      UUID bookingId = UUID.randomUUID();
-      PageRequest pageRequest = PageRequest.of(0, 100);
+      String carrierBookingRequestReference = UUID.randomUUID().toString();
+      Booking mockBookingResponse = new Booking();
+      mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
+      mockBookingResponse.setDocumentStatus(DocumentStatus.PENU);
 
-      when(shipmentRepository.findAllByCarrierBookingReference(
-              carrierBookingReference, pageRequest))
-          .thenReturn(
-              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+      when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
+          .thenReturn(Mono.just(mockBookingResponse));
+      when(bookingRepository.updateDocumentStatusForCarrierBookingRequestReference(
+              DocumentStatus.CANC, carrierBookingRequestReference))
+          .thenReturn(Mono.just(false));
 
-      Flux<BookingConfirmationSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingConfirmationSummaries(
-              carrierBookingReference, null, pageRequest);
+      Mono<Void> cancelBookingResponse =
+          bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
 
-      StepVerifier.create(bookingToResponse)
-          .assertNext(
-              bookingConfirmationSummaryTO -> {
-                Assertions.assertEquals(
-                    carrierBookingReference,
-                    bookingConfirmationSummaryTO.getCarrierBookingReference());
-                Assertions.assertEquals(
-                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+      StepVerifier.create(cancelBookingResponse)
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof UpdateException);
+                Assertions.assertEquals("Cancellation of booking failed.", throwable.getMessage());
               })
-          .expectComplete()
           .verify();
     }
 
     @Test
-    @DisplayName(
-        "Get booking confirmation summaries should return valid list of booking confirmation summaries.")
-    void bookingConfirmationSummaryRequestShouldReturnValidBookingConfirmationSummary() {
+    @DisplayName("Cancellation of the booking should result in an updated booking")
+    void cancelBookingSuccess() {
 
-      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
-      UUID bookingId = UUID.randomUUID();
-      PageRequest pageRequest = PageRequest.of(0, 100);
+      String carrierBookingRequestReference = UUID.randomUUID().toString();
+      Booking mockBookingResponse = new Booking();
+      mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
+      mockBookingResponse.setDocumentStatus(DocumentStatus.RECE);
 
-      when(shipmentRepository.findShipmentsByBookingIDNotNull(pageRequest))
-          .thenReturn(
-              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+      when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
+          .thenReturn(Mono.just(mockBookingResponse));
+      when(bookingRepository.updateDocumentStatusForCarrierBookingRequestReference(
+              DocumentStatus.CANC, carrierBookingRequestReference))
+          .thenReturn(Mono.just(true));
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
-      Flux<BookingConfirmationSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingConfirmationSummaries(null, null, pageRequest);
+      Mono<Void> cancelBookingResponse =
+          bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
 
-      StepVerifier.create(bookingToResponse)
-          .assertNext(
-              bookingConfirmationSummaryTO -> {
-                Assertions.assertEquals(
-                    carrierBookingReference,
-                    bookingConfirmationSummaryTO.getCarrierBookingReference());
-                Assertions.assertEquals(
-                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
-              })
-          .expectComplete()
-          .verify();
+      StepVerifier.create(cancelBookingResponse).verifyComplete();
+
+      verify(shipmentEventService).create(any());
     }
   }
 }
