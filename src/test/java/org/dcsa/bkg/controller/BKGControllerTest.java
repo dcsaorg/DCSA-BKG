@@ -1,6 +1,5 @@
 package org.dcsa.bkg.controller;
 
-import org.dcsa.core.events.model.enums.ValueAddedServiceCode;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.Address;
@@ -82,7 +81,7 @@ class BKGControllerTest {
     bookingTO.setReferences(Collections.singletonList(referenceTO));
 
     RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
-    requestedEquipmentTO.setRequestedEquipmentSizeType("x".repeat(4));
+    requestedEquipmentTO.setRequestedEquipmentSizetype("x".repeat(4));
     requestedEquipmentTO.setRequestedEquipmentUnits((int) (Math.random() * 100));
     requestedEquipmentTO.setShipperOwned(true);
     bookingTO.setRequestedEquipments(Collections.singletonList(requestedEquipmentTO));
@@ -315,7 +314,7 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.requestedEquipments")
                   .hasJsonPath()
-                  .jsonPath("$.requestedEquipments[0].requestedEquipmentSizeType")
+                  .jsonPath("$.requestedEquipments[0].requestedEquipmentSizetype")
                   .hasJsonPath()
                   .jsonPath("$.requestedEquipments[0].requestedEquipmentUnits")
                   .hasJsonPath()

@@ -37,11 +37,10 @@ public class BKGConfirmedBookingsController {
     return bookingCancellation(carrierBookingReference);
   }
 
-  @PostMapping(path = "{carrierBookingReference}/cancellation")
+  @PostMapping(path = "{carrierBookingRequestReference}/cancellation")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public Mono<Void> bookingCancellation(
-      @PathVariable @Size(max = 35) String carrierBookingReference) {
-    // ToDo: adjust this when the IM is ready for booking
-    return bookingService.cancelBookingByCarrierBookingReference(carrierBookingReference);
+      @PathVariable @Size(max = 35) String carrierBookingRequestReference) {
+    return bookingService.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
   }
 }
