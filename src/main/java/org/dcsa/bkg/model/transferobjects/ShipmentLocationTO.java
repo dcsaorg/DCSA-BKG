@@ -8,6 +8,7 @@ import org.dcsa.core.events.model.transferobjects.LocationTO;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Data
 public class ShipmentLocationTO {
@@ -15,11 +16,11 @@ public class ShipmentLocationTO {
   @NotNull(message = "Location is required.")
   private LocationTO location;
 
+  @NotNull(message = "LocationType is required.")
+  private LocationType shipmentLocationTypeCode;
+
   @Size(max = 250, message = "DisplayName has a max size of 250.")
   private String displayedName;
-
-  @NotNull(message = "LocationType is required.")
-  private LocationType locationType;
 
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   private OffsetDateTime eventDateTime;

@@ -99,9 +99,12 @@ class BKGControllerTest {
     documentPartyTO.setToBeNotified(true);
     bookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
 
+    LocationTO location = new LocationTO();
+    location.setId("x".repeat(100));
+
     ShipmentLocationTO shipmentLocationTO = new ShipmentLocationTO();
-    shipmentLocationTO.setLocation(new LocationTO());
-    shipmentLocationTO.setLocationType(LocationType.DRL);
+    shipmentLocationTO.setLocation(location);
+    shipmentLocationTO.setShipmentLocationTypeCode(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
   }

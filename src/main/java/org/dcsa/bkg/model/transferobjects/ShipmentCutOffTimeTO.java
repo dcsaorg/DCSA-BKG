@@ -2,7 +2,7 @@ package org.dcsa.bkg.model.transferobjects;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import org.dcsa.bkg.model.enums.CutOffDateTimeCode;
+import org.dcsa.core.events.model.enums.CutOffDateTimeCode;
 
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;

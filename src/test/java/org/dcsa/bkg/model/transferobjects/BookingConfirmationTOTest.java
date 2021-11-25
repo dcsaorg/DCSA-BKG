@@ -1,7 +1,5 @@
 package org.dcsa.bkg.model.transferobjects;
 
-import org.dcsa.core.events.model.Booking;
-import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +9,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -27,14 +26,14 @@ class BookingConfirmationTOTest {
     bookingConfirmationTO = new BookingConfirmationTO();
     bookingConfirmationTO.setCarrierBookingReference("x".repeat(35));
     bookingConfirmationTO.setTermsAndConditions("x".repeat(50));
-    bookingConfirmationTO.setPlaceOfIssue(new LocationTO());
-    bookingConfirmationTO.setBooking(new Booking());
+    bookingConfirmationTO.setBooking(new BookingTO());
     bookingConfirmationTO.setTransports(List.of(new TransportTO()));
     bookingConfirmationTO.setShipmentLocations(List.of(new ShipmentLocationTO()));
     bookingConfirmationTO.setShipmentCutOffTimes(List.of(new ShipmentCutOffTimeTO()));
     bookingConfirmationTO.setConfirmedEquipments(List.of(new ConfirmedEquipmentTO()));
     bookingConfirmationTO.setCharges(List.of(new ChargeTO()));
     bookingConfirmationTO.setCarrierClauses(List.of(new CarrierClauseTO()));
+    bookingConfirmationTO.setConfirmationDateTime(OffsetDateTime.now());
   }
 
   @Test

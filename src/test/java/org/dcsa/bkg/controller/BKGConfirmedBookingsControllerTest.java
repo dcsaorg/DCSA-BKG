@@ -1,9 +1,9 @@
 package org.dcsa.bkg.controller;
 
-import org.dcsa.bkg.model.enums.CutOffDateTimeCode;
 import org.dcsa.bkg.model.enums.TransportPlanStage;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
+import org.dcsa.core.events.model.enums.CutOffDateTimeCode;
 import org.dcsa.core.events.model.enums.DCSATransportType;
 import org.dcsa.core.events.model.enums.LocationType;
 import org.dcsa.core.events.model.enums.PaymentTerm;
@@ -76,13 +76,13 @@ class BKGConfirmedBookingsControllerTest {
 
     ShipmentLocationTO shipmentLocation = new ShipmentLocationTO();
     shipmentLocation.setLocation(location);
-    shipmentLocation.setLocationType(LocationType.PRE);
+    shipmentLocation.setShipmentLocationTypeCode(LocationType.PRE);
     shipmentLocation.setDisplayedName("DisplayedName");
     shipmentLocation.setEventDateTime(dateTimeOffset);
 
     ConfirmedEquipmentTO confirmedEquipment = new ConfirmedEquipmentTO();
     confirmedEquipment.setConfirmedEquipmentUnits(12);
-    confirmedEquipment.setConfirmedEquipmentSizeType("WHAT");
+    confirmedEquipment.setConfirmedEquipmentSizetype("WHAT");
 
     ChargeTO charge = new ChargeTO();
     charge.setChargeType("ChargeType");
@@ -99,7 +99,6 @@ class BKGConfirmedBookingsControllerTest {
     bookingConfirmationTO = new BookingConfirmationTO();
     bookingConfirmationTO.setCarrierBookingReference(carrierBookingReferenceID);
     bookingConfirmationTO.setTermsAndConditions(termsAndConditions);
-    bookingConfirmationTO.setPlaceOfIssue(location);
     bookingConfirmationTO.setTransports(List.of(transport));
     bookingConfirmationTO.setShipmentCutOffTimes(List.of(shipmentCutOffTime));
     bookingConfirmationTO.setShipmentLocations(List.of(shipmentLocation));
@@ -123,7 +122,7 @@ class BKGConfirmedBookingsControllerTest {
   void confirmedBookingsShouldReturnListOfBookingConfirmation() {
 
     Mockito.when(
-            bookingService.getBookingByCarrierBookingReference(
+            bookingService.getBookingConfirmationByCarrierBookingReference(
                 bookingConfirmationTO.getCarrierBookingReference()))
         .thenReturn(Mono.just(bookingConfirmationTO));
 
@@ -199,14 +198,6 @@ class BKGConfirmedBookingsControllerTest {
                   .consumeWith(System.out::println)
                   .jsonPath("$.carrierBookingReference")
                   .hasJsonPath()
-                  .jsonPath("$.placeOfIssue.locationName")
-                  .hasJsonPath()
-                  .jsonPath("$.placeOfIssue.UNLocationCode")
-                  .hasJsonPath()
-                  .jsonPath("$.placeOfIssue.latitude")
-                  .hasJsonPath()
-                  .jsonPath("$.placeOfIssue.longitude")
-                  .hasJsonPath()
                   .jsonPath("$.termsAndConditions")
                   .hasJsonPath()
                   .jsonPath("$.carrierClauses.[0].clauseContent")
@@ -229,13 +220,13 @@ class BKGConfirmedBookingsControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.shipmentLocations.[0].location")
                   .hasJsonPath()
-                  .jsonPath("$.shipmentLocations.[0].locationType")
+                  .jsonPath("$.shipmentLocations.[0].shipmentLocationTypeCode")
                   .hasJsonPath()
                   .jsonPath("$.shipmentLocations.[0].displayedName")
                   .hasJsonPath()
                   .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentUnits")
                   .hasJsonPath()
-                  .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentSizeType")
+                  .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentSizetype")
                   .hasJsonPath()
                   .jsonPath("$.charges.[0].chargeType")
                   .hasJsonPath()

@@ -19,6 +19,7 @@ import javax.validation.ValidatorFactory;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @DisplayName("Tests for ShipmentLocationTOTest")
 class ShipmentLocationTOTest {
@@ -39,9 +40,12 @@ class ShipmentLocationTOTest {
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
+    LocationTO location = new LocationTO();
+    location.setId("x".repeat(100));
+
     shipmentLocationTO = new ShipmentLocationTO();
-    shipmentLocationTO.setLocation(new LocationTO());
-    shipmentLocationTO.setLocationType(LocationType.DRL);
+    shipmentLocationTO.setLocation(location);
+    shipmentLocationTO.setShipmentLocationTypeCode(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     shipmentLocationTO.setEventDateTime(OffsetDateTime.now());
   }
@@ -79,7 +83,7 @@ class ShipmentLocationTOTest {
   @Test
   @DisplayName("ShipmentLocationTO should throw error if locationType is not set.")
   void testToVerifyLocationTypeIsRequired() {
-    shipmentLocationTO.setLocationType(null);
+    shipmentLocationTO.setShipmentLocationTypeCode(null);
     Set<ConstraintViolation<ShipmentLocationTO>> violations =
         validator.validate(shipmentLocationTO);
     Assertions.assertTrue(

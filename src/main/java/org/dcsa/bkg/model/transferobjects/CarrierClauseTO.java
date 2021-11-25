@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class CarrierClauseTO {
-  private String clauseContent;
+    private String clauseContent;
 }

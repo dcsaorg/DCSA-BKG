@@ -40,6 +40,7 @@ public class BookingServiceImpl implements BookingService {
   private final PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   private final ShipmentLocationRepository shipmentLocationRepository;
   private final DisplayedAddressRepository displayedAddressRepository;
+  private final ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   private final ShipmentRepository shipmentRepository;
   private final VesselRepository vesselRepository;
 
@@ -49,6 +50,8 @@ public class BookingServiceImpl implements BookingService {
   private final LocationMapper locationMapper;
   private final CommodityMapper commodityMapper;
   private final PartyMapper partyMapper;
+  private final ShipmentMapper shipmentMapper;
+  private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
 
   @Override
   public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
@@ -323,7 +326,7 @@ public class BookingServiceImpl implements BookingService {
                 reTo -> {
                   RequestedEquipment requestedEquipment = new RequestedEquipment();
                   requestedEquipment.setBookingID(bookingID);
-                  requestedEquipment.setRequestedEquipmentType(
+                  requestedEquipment.setRequestedEquipmentSizetype(
                       reTo.getRequestedEquipmentSizeType());
                   requestedEquipment.setRequestedEquipmentUnits(reTo.getRequestedEquipmentUnits());
                   requestedEquipment.setIsShipperOwned(reTo.isShipperOwned());
@@ -335,7 +338,7 @@ public class BookingServiceImpl implements BookingService {
         .map(
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
-              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentType());
+              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizetype());
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
               requestedEquipmentTO.setShipperOwned(re.getIsShipperOwned());
               return requestedEquipmentTO;
@@ -419,12 +422,41 @@ public class BookingServiceImpl implements BookingService {
             });
   }
 
+  @Override
+  public Mono<BookingConfirmationTO> getBookingConfirmationByCarrierBookingReference(
+      String carrierBookingRequestReference) {
+    return shipmentRepository
+        .findByCarrierBookingReference(carrierBookingRequestReference)
+        .map(b -> Tuples.of(b, shipmentMapper.shipmentToDTO(b)))
+        .flatMap(
+            t -> {
+              BookingConfirmationTO bookingConfirmationTO = t.getT2();
+              return Mono.zip(
+                      fetchShipmentCutOffTimeByBookingID(t.getT1().getShipmentID()),
+                      fetchShipmentLocationsByBookingID(t.getT1().getBookingID()),
+                      fetchConfirmedEquipmentByByBookingID(t.getT1().getBookingID()))
+                  .flatMap(
+                      deepObjs -> {
+                        Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt =
+                            deepObjs.getT1();
+                        Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt =
+                            deepObjs.getT2();
+                        Optional<List<ConfirmedEquipmentTO>> confirmedEquipmentTOOpt =
+                            deepObjs.getT3();
+                        shipmentCutOffTimeTOpt.ifPresent(
+                            bookingConfirmationTO::setShipmentCutOffTimes);
+                        shipmentLocationsToOpt.ifPresent(
+                            bookingConfirmationTO::setShipmentLocations);
+                        confirmedEquipmentTOOpt.ifPresent(
+                            bookingConfirmationTO::setConfirmedEquipments);
+                        return Mono.just(bookingConfirmationTO);
+                      })
+                  .thenReturn(bookingConfirmationTO);
+            });
+  }
+
   private Mono<Optional<LocationTO>> fetchLocationByID(String id) {
-
-    if (Objects.isNull(id)) {
-      return Mono.just(Optional.empty());
-    }
-
+    if (id == null) return Mono.just(Optional.empty());
     return locationRepository
         .findById(id)
         .flatMap(
@@ -452,6 +484,15 @@ public class BookingServiceImpl implements BookingService {
     return commodityRepository
         .findByBookingID(bookingID)
         .map(commodityMapper::commodityToDTO)
+        .collectList()
+        .map(Optional::of);
+  }
+
+  private Mono<Optional<List<ShipmentCutOffTimeTO>>> fetchShipmentCutOffTimeByBookingID(
+      UUID shipmentID) {
+    return shipmentCutOffTimeRepository
+        .findAllByShipmentID(shipmentID)
+        .map(shipmentMapper::shipmentCutOffTimeToDTO)
         .collectList()
         .map(Optional::of);
   }
@@ -492,7 +533,7 @@ public class BookingServiceImpl implements BookingService {
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
-              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentType());
+              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizetype());
               return requestedEquipmentTO;
             })
         .collectList()
@@ -589,28 +630,28 @@ public class BookingServiceImpl implements BookingService {
         .findByBookingID(bookingID)
         .flatMap(
             sl ->
-                locationRepository
-                    .findById(sl.getLocationID())
-                    .map(Optional::of)
-                    .defaultIfEmpty(Optional.empty())
+                fetchLocationByID(sl.getLocationID())
                     .flatMap(
                         lopt -> {
-                          ShipmentLocationTO shipmentLocationTO = new ShipmentLocationTO();
-                          lopt.ifPresent(
-                              l -> shipmentLocationTO.setLocation(locationMapper.locationToDTO(l)));
-                          shipmentLocationTO.setDisplayedName(sl.getDisplayedName());
-                          shipmentLocationTO.setLocationType(sl.getShipmentLocationTypeCode());
-                          shipmentLocationTO.setEventDateTime(sl.getEventDateTime());
+                          ShipmentLocationTO shipmentLocationTO =
+                              shipmentMapper.shipmentLocationToDTO(sl);
+                          lopt.ifPresent(shipmentLocationTO::setLocation);
                           return Mono.just(shipmentLocationTO);
                         }))
         .collectList()
         .map(Optional::of);
   }
 
-  @Override
-  public Mono<BookingConfirmationTO> getBookingByCarrierBookingReference(
-      String carrierBookingReference) {
-    return Mono.empty();
+  private Mono<Optional<List<ConfirmedEquipmentTO>>> fetchConfirmedEquipmentByByBookingID(
+      UUID bookingID) {
+    return requestedEquipmentRepository
+        .findByBookingID(bookingID)
+        .map(
+            requestedEquipment ->
+                confirmedEquipmentMapper.requestedEquipmentToDto(requestedEquipment))
+        .collectList()
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
   }
 
   @Override

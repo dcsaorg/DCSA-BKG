@@ -9,10 +9,12 @@ import org.dcsa.core.events.repository.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -30,6 +32,7 @@ import static org.mockito.Mockito.when;
 class BookingServiceImplTest {
 
   @Mock BookingRepository bookingRepository;
+  @Mock ShipmentRepository shipmentRepository;
   @Mock LocationRepository locationRepository;
   @Mock AddressRepository addressRepository;
   @Mock FacilityRepository facilityRepository;
@@ -43,11 +46,8 @@ class BookingServiceImplTest {
   @Mock PartyContactDetailsRepository partyContactDetailsRepository;
   @Mock PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   @Mock ShipmentLocationRepository shipmentLocationRepository;
+  @Mock ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   @Mock VesselRepository vesselRepository;
-  @Mock ShipmentRepository shipmentRepository;
-
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-  R2dbcEntityTemplate r2dbcEntityTemplate;
 
   @InjectMocks BookingServiceImpl bookingServiceImpl;
 
@@ -55,7 +55,9 @@ class BookingServiceImplTest {
   @Spy LocationMapper locationMapper = Mappers.getMapper(LocationMapper.class);
   @Spy CommodityMapper commodityMapper = Mappers.getMapper(CommodityMapper.class);
   @Spy PartyMapper partyMapper = Mappers.getMapper(PartyMapper.class);
+  @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
   @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
+  @Spy ConfirmedEquipmentMapper confirmedEquipmentMapper = Mappers.getMapper(ConfirmedEquipmentMapper.class);
 
   Booking booking;
   Location location1;
@@ -66,12 +68,16 @@ class BookingServiceImplTest {
   ValueAddedServiceRequest valueAddedServiceRequest;
   Reference reference;
   RequestedEquipment requestedEquipment;
+  RequestedEquipment confirmedEquipment;
   DocumentParty documentParty;
   Party party;
   PartyIdentifyingCode partyIdentifyingCode;
   DisplayedAddress displayedAddress;
   PartyContactDetails partyContactDetails;
   ShipmentLocation shipmentLocation;
+  Shipment shipment;
+  Carrier carrier;
+  ShipmentCutOffTime shipmentCutOffTime;
 
   @BeforeEach
   void init() {
@@ -84,10 +90,14 @@ class BookingServiceImplTest {
     location1 = new Location();
     location1.setId("c703277f-84ca-4816-9ccf-fad8e202d3b6");
     location1.setLocationName("Hamburg");
+    location1.setAddressID(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
+    location1.setFacilityID(UUID.fromString("74dcf8e6-4ed4-439e-a935-ec183df73013"));
 
     location2 = new Location();
     location2.setId("7bf6f428-58f0-4347-9ce8-d6be2f5d5745");
     location2.setLocationName("Singapore");
+    location2.setAddressID(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
+    location2.setFacilityID(UUID.fromString("74dcf8e6-4ed4-439e-a935-ec183df73013"));
 
     address = new Address();
     address.setId(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
@@ -119,8 +129,12 @@ class BookingServiceImplTest {
     reference.setReferenceType(ReferenceTypeCode.FF);
 
     requestedEquipment = new RequestedEquipment();
-    requestedEquipment.setRequestedEquipmentType("22GP");
+    requestedEquipment.setRequestedEquipmentSizetype("22GP");
     requestedEquipment.setRequestedEquipmentUnits(3);
+
+    confirmedEquipment = new RequestedEquipment();
+    confirmedEquipment.setConfirmedEquipmentSizetype("22GP");
+    confirmedEquipment.setConfirmedEquipmentUnits(2);
 
     documentParty = new DocumentParty();
     documentParty.setId(UUID.fromString("3d9542f8-c362-4fa5-8902-90e30d87f1d4"));
@@ -148,11 +162,31 @@ class BookingServiceImplTest {
     partyContactDetails.setName("Peanut");
     partyContactDetails.setEmail("peanut@jeff-fa-fa.com");
 
+    carrier = new Carrier();
+    carrier.setId(UUID.randomUUID());
+    carrier.setCarrierName("Ocean Network Express Pte. Ltd.");
+    carrier.setSmdgCode("TWO");
+    carrier.setNmftaCode("THREE");
+
+    shipment = new Shipment();
+    shipment.setShipmentID(UUID.randomUUID());
+    shipment.setBookingID(booking.getId());
+    shipment.setCarrierID(carrier.getId());
+    shipment.setCarrierBookingReference(UUID.randomUUID().toString());
+    shipment.setTermsAndConditions("Terms and conditions etc...");
+    shipment.setConfirmationDateTime(OffsetDateTime.now());
+
     shipmentLocation = new ShipmentLocation();
+    shipmentLocation.setShipmentID(shipment.getShipmentID());
     shipmentLocation.setLocationID(location1.getId());
     shipmentLocation.setBookingID(booking.getId());
     shipmentLocation.setShipmentLocationTypeCode(LocationType.FCD);
     shipmentLocation.setDisplayedName("Singapore");
+
+    shipmentCutOffTime = new ShipmentCutOffTime();
+    shipmentCutOffTime.setShipmentID(shipment.getShipmentID());
+    shipmentCutOffTime.setCutOffDateTimeCode(CutOffDateTimeCode.AFD);
+    shipmentCutOffTime.setCutOffDateTime(OffsetDateTime.now());
   }
 
   @Nested
@@ -200,7 +234,7 @@ class BookingServiceImplTest {
 
       requestedEquipmentTO = new RequestedEquipmentTO();
       requestedEquipmentTO.setRequestedEquipmentSizeType(
-          requestedEquipment.getRequestedEquipmentType());
+          requestedEquipment.getRequestedEquipmentSizetype());
       requestedEquipmentTO.setRequestedEquipmentUnits(
           requestedEquipment.getRequestedEquipmentUnits());
 
@@ -942,7 +976,8 @@ class BookingServiceImplTest {
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
                     b.getShipmentLocations().get(0).getLocation().getId());
                 Assertions.assertEquals(
-                    LocationType.FCD, b.getShipmentLocations().get(0).getLocationType());
+                    LocationType.FCD,
+                    b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
                 Assertions.assertEquals(
                     "Singapore", b.getShipmentLocations().get(0).getDisplayedName());
               })
@@ -951,6 +986,105 @@ class BookingServiceImplTest {
   }
 
   @Nested
+  @DisplayName("Tests for the method getBookingConfirmationByCarrierBookingReference(#String)")
+  class BookingConfirmationByCarrierBookingReferenceTest {
+    @Test
+    @DisplayName("Method should return shallow booking for given carrierBookingReference")
+    void testGETBookingConfirmationShallow() {
+
+      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
+
+      StepVerifier.create(
+              bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(
+                  shipment.getCarrierBookingReference()))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    shipment.getTermsAndConditions(), b.getTermsAndConditions());
+                Assertions.assertEquals(
+                    shipment.getConfirmationDateTime(), b.getConfirmationDateTime());
+                Assertions.assertNull(b.getBooking());
+                Assertions.assertEquals(0, b.getShipmentLocations().size());
+                Assertions.assertEquals(0, b.getShipmentCutOffTimes().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Method should return shallow booking for given carrierBookingRequestReference")
+    void testGETBookingConfirmationWithShipmentLocationsAndShipmentCutOffTimes() {
+
+      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentLocationRepository.findByBookingID(any()))
+          .thenReturn(Flux.just(shipmentLocation));
+      when(shipmentCutOffTimeRepository.findAllByShipmentID(any()))
+          .thenReturn(Flux.just(shipmentCutOffTime));
+      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(locationRepository.findById(shipmentLocation.getLocationID()))
+          .thenReturn(Mono.just(location1));
+      when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
+      when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
+
+      StepVerifier.create(
+              bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(
+                  shipment.getCarrierBookingReference()))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
+                Assertions.assertNull(b.getBooking());
+                Assertions.assertEquals(1, b.getShipmentLocations().size());
+                Assertions.assertEquals(
+                    shipmentLocation.getShipmentLocationTypeCode(),
+                    b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
+                Assertions.assertEquals(
+                    shipmentLocation.getDisplayedName(),
+                    b.getShipmentLocations().get(0).getDisplayedName());
+                Assertions.assertEquals(
+                    shipmentLocation.getEventDateTime(),
+                    b.getShipmentLocations().get(0).getEventDateTime());
+                Assertions.assertEquals(
+                    location1.getId(), b.getShipmentLocations().get(0).getLocation().getId());
+                Assertions.assertEquals(
+                    address.getId(),
+                    b.getShipmentLocations().get(0).getLocation().getAddress().getId());
+                Assertions.assertEquals(
+                    facility.getFacilityID(),
+                    b.getShipmentLocations().get(0).getLocation().getFacility().getFacilityID());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Method should return confirmed booking for given carrierBookingRequestReference with confirmedEquipment")
+    void testGETBookingConfirmationWithConfirmedEquipment() {
+
+      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.just(confirmedEquipment));
+
+      StepVerifier.create(
+          bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(
+            shipment.getCarrierBookingReference()))
+        .assertNext(
+          b -> {
+            Assertions.assertEquals(
+              shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
+            Assertions.assertNull(b.getBooking());
+            Assertions.assertEquals(1, b.getConfirmedEquipments().size());
+            Assertions.assertEquals(confirmedEquipment.getConfirmedEquipmentSizetype(), b.getConfirmedEquipments().get(0).getConfirmedEquipmentSizetype());
+          })
+        .verifyComplete();
+    }
+
+  }
+
   @DisplayName("Tests for BKG Summaries Service")
   class BookingRequestSummariesTest {
 
