@@ -27,7 +27,6 @@ public class BookingServiceImpl implements BookingService {
 
   // repositories
   private final BookingRepository bookingRepository;
-  private final ShipmentRepository bookingConfirmationRepository;
   private final LocationRepository locationRepository;
   private final AddressRepository addressRepository;
   private final FacilityRepository facilityRepository;
@@ -42,6 +41,7 @@ public class BookingServiceImpl implements BookingService {
   private final ShipmentLocationRepository shipmentLocationRepository;
   private final DisplayedAddressRepository displayedAddressRepository;
   private final ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
+  private final ShipmentRepository shipmentRepository;
   private final VesselRepository vesselRepository;
   private final ShipmentCarrierClausesRepository shipmentCarrierClausesRepository;
   private final CarrierClauseRepository carrierClauseRepository;
@@ -54,6 +54,53 @@ public class BookingServiceImpl implements BookingService {
   private final PartyMapper partyMapper;
   private final ShipmentMapper shipmentMapper;
   private final CarrierClauseMapper carrierClauseMapper;
+  private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
+
+  @Override
+  public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
+      String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
+
+    Flux<Shipment> shipmentResponse =
+        shipmentRepository.findAllByCarrierBookingReference(carrierBookingReference, pageable);
+
+    if (carrierBookingReference == null) {
+      shipmentResponse = shipmentRepository.findShipmentsByBookingIDNotNull(pageable);
+    }
+
+    return shipmentResponse.flatMap(
+        shipment -> {
+          // IF-statement is here so that we *only* make multiple queries if documentStatus is
+          // included as parameter
+          if (documentStatus != null) {
+
+            // Potential issue if booking query returns more than the set limit of results
+            return bookingRepository
+                .findAllByBookingIDAndDocumentStatus(
+                    shipment.getBookingID(), documentStatus, pageable)
+                .mapNotNull(
+                    ignored -> {
+                      BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
+                          new BookingConfirmationSummaryTO();
+                      bookingConfirmationSummaryTO.setCarrierBookingReference(
+                          shipment.getCarrierBookingReference());
+                      bookingConfirmationSummaryTO.setConfirmationDateTime(
+                          shipment.getConfirmationDateTime());
+                      bookingConfirmationSummaryTO.setTermsAndConditions(
+                          shipment.getTermsAndConditions());
+                      return bookingConfirmationSummaryTO;
+                    });
+          } else {
+            BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
+                new BookingConfirmationSummaryTO();
+            bookingConfirmationSummaryTO.setCarrierBookingReference(
+                shipment.getCarrierBookingReference());
+            bookingConfirmationSummaryTO.setConfirmationDateTime(
+                shipment.getConfirmationDateTime());
+            bookingConfirmationSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+            return Mono.just(bookingConfirmationSummaryTO);
+          }
+        });
+  }
 
   @Override
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
@@ -139,10 +186,8 @@ public class BookingServiceImpl implements BookingService {
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
     BookingTO bookingTO = bookingMapper.bookingToDTO(booking);
-    // the mapper creates a new instance of location even if value of
-    // invoicePayableAt is
-    // null in booking
-    // hence we set it to null if its a null object
+    // the mapper creates a new instance of location even if value of invoicePayableAt is null in
+    // booking hence we set it to null if it's a null object
     bookingTO.setInvoicePayableAt(null);
     bookingTO.setPlaceOfIssue(null);
     return bookingTO;
@@ -284,7 +329,7 @@ public class BookingServiceImpl implements BookingService {
                 reTo -> {
                   RequestedEquipment requestedEquipment = new RequestedEquipment();
                   requestedEquipment.setBookingID(bookingID);
-                  requestedEquipment.setRequestedEquipmentType(
+                  requestedEquipment.setRequestedEquipmentSizetype(
                       reTo.getRequestedEquipmentSizeType());
                   requestedEquipment.setRequestedEquipmentUnits(reTo.getRequestedEquipmentUnits());
                   requestedEquipment.setIsShipperOwned(reTo.isShipperOwned());
@@ -296,7 +341,7 @@ public class BookingServiceImpl implements BookingService {
         .map(
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
-              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentType());
+              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizetype());
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
               requestedEquipmentTO.setShipperOwned(re.getIsShipperOwned());
               return requestedEquipmentTO;
@@ -383,7 +428,7 @@ public class BookingServiceImpl implements BookingService {
   @Override
   public Mono<BookingConfirmationTO> getBookingConfirmationByCarrierBookingReference(
       String carrierBookingRequestReference) {
-    return bookingConfirmationRepository
+    return shipmentRepository
         .findByCarrierBookingReference(carrierBookingRequestReference)
         .map(b -> Tuples.of(b, shipmentMapper.shipmentToDTO(b)))
         .flatMap(
@@ -392,7 +437,8 @@ public class BookingServiceImpl implements BookingService {
               return Mono.zip(
                       fetchShipmentCutOffTimeByBookingID(t.getT1().getShipmentID()),
                       fetchShipmentLocationsByBookingID(t.getT1().getBookingID()),
-                      fetchCarrierClausesByShipmentID(t.getT1().getShipmentID()))
+                      fetchCarrierClausesByShipmentID(t.getT1().getShipmentID()),
+                      fetchConfirmedEquipmentByByBookingID(t.getT1().getBookingID()))
                   .flatMap(
                       deepObjs -> {
                         Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt =
@@ -400,11 +446,15 @@ public class BookingServiceImpl implements BookingService {
                         Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt =
                             deepObjs.getT2();
                         Optional<List<CarrierClauseTO>> carrierClauseToOpt = deepObjs.getT3();
+                        Optional<List<ConfirmedEquipmentTO>> confirmedEquipmentTOOpt =
+                            deepObjs.getT4();
                         shipmentCutOffTimeTOpt.ifPresent(
                             bookingConfirmationTO::setShipmentCutOffTimes);
                         shipmentLocationsToOpt.ifPresent(
                             bookingConfirmationTO::setShipmentLocations);
                         carrierClauseToOpt.ifPresent(bookingConfirmationTO::setCarrierClauses);
+                        confirmedEquipmentTOOpt.ifPresent(
+                            bookingConfirmationTO::setConfirmedEquipments);
                         return Mono.just(bookingConfirmationTO);
                       })
                   .thenReturn(bookingConfirmationTO);
@@ -501,7 +551,7 @@ public class BookingServiceImpl implements BookingService {
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
-              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentType());
+              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizetype());
               return requestedEquipmentTO;
             })
         .collectList()
@@ -608,6 +658,18 @@ public class BookingServiceImpl implements BookingService {
                         }))
         .collectList()
         .map(Optional::of);
+  }
+
+  private Mono<Optional<List<ConfirmedEquipmentTO>>> fetchConfirmedEquipmentByByBookingID(
+      UUID bookingID) {
+    return requestedEquipmentRepository
+        .findByBookingID(bookingID)
+        .map(
+            requestedEquipment ->
+                confirmedEquipmentMapper.requestedEquipmentToDto(requestedEquipment))
+        .collectList()
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
   }
 
   @Override

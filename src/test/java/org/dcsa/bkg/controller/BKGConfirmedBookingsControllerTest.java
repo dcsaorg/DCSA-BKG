@@ -82,7 +82,7 @@ class BKGConfirmedBookingsControllerTest {
 
     ConfirmedEquipmentTO confirmedEquipment = new ConfirmedEquipmentTO();
     confirmedEquipment.setConfirmedEquipmentUnits(12);
-    confirmedEquipment.setConfirmedEquipmentSizeType("WHAT");
+    confirmedEquipment.setConfirmedEquipmentSizetype("WHAT");
 
     ChargeTO charge = new ChargeTO();
     charge.setChargeType("ChargeType");
@@ -226,7 +226,7 @@ class BKGConfirmedBookingsControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentUnits")
                   .hasJsonPath()
-                  .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentSizeType")
+                  .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentSizetype")
                   .hasJsonPath()
                   .jsonPath("$.charges.[0].chargeType")
                   .hasJsonPath()

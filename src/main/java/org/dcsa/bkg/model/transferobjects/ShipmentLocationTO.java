@@ -12,9 +12,6 @@ import java.util.UUID;
 
 @Data
 public class ShipmentLocationTO {
-  private UUID shipmentID;
-
-  private UUID bookingID;
 
   @NotNull(message = "Location is required.")
   private LocationTO location;

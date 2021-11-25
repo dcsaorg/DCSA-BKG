@@ -9,10 +9,12 @@ import org.dcsa.core.events.repository.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -49,9 +51,6 @@ class BookingServiceImplTest {
   @Mock ShipmentCarrierClausesRepository shipmentCarrierClausesRepository;
   @Mock CarrierClauseRepository carrierClauseRepository;
 
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-  R2dbcEntityTemplate r2dbcEntityTemplate;
-
   @InjectMocks BookingServiceImpl bookingServiceImpl;
 
   @Spy BookingMapper bookingMapper = Mappers.getMapper(BookingMapper.class);
@@ -61,6 +60,7 @@ class BookingServiceImplTest {
   @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
   @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
   @Spy CarrierClauseMapper carrierClauseMapper = Mappers.getMapper(CarrierClauseMapper.class);
+  @Spy ConfirmedEquipmentMapper confirmedEquipmentMapper = Mappers.getMapper(ConfirmedEquipmentMapper.class);
 
   Booking booking;
   Location location1;
@@ -71,6 +71,7 @@ class BookingServiceImplTest {
   ValueAddedServiceRequest valueAddedServiceRequest;
   Reference reference;
   RequestedEquipment requestedEquipment;
+  RequestedEquipment confirmedEquipment;
   DocumentParty documentParty;
   Party party;
   PartyIdentifyingCode partyIdentifyingCode;
@@ -134,8 +135,12 @@ class BookingServiceImplTest {
     reference.setReferenceType(ReferenceTypeCode.FF);
 
     requestedEquipment = new RequestedEquipment();
-    requestedEquipment.setRequestedEquipmentType("22GP");
+    requestedEquipment.setRequestedEquipmentSizetype("22GP");
     requestedEquipment.setRequestedEquipmentUnits(3);
+
+    confirmedEquipment = new RequestedEquipment();
+    confirmedEquipment.setConfirmedEquipmentSizetype("22GP");
+    confirmedEquipment.setConfirmedEquipmentUnits(2);
 
     documentParty = new DocumentParty();
     documentParty.setId(UUID.fromString("3d9542f8-c362-4fa5-8902-90e30d87f1d4"));
@@ -243,7 +248,7 @@ class BookingServiceImplTest {
 
       requestedEquipmentTO = new RequestedEquipmentTO();
       requestedEquipmentTO.setRequestedEquipmentSizeType(
-          requestedEquipment.getRequestedEquipmentType());
+          requestedEquipment.getRequestedEquipmentSizetype());
       requestedEquipmentTO.setRequestedEquipmentUnits(
           requestedEquipment.getRequestedEquipmentUnits());
 
@@ -995,15 +1000,16 @@ class BookingServiceImplTest {
   }
 
   @Nested
-  @DisplayName("")
+  @DisplayName("Tests for the method getBookingConfirmationByCarrierBookingReference(#String)")
   class BookingConfirmationByCarrierBookingReferenceTest {
     @Test
-    @DisplayName("Method should return shallow booking for given carrierBookingRequestReference")
+    @DisplayName("Method should return shallow booking for given carrierBookingReference")
     void testGETBookingConfirmationShallow() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
               bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(
@@ -1032,6 +1038,7 @@ class BookingServiceImplTest {
           .thenReturn(Flux.just(shipmentLocation));
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any()))
           .thenReturn(Flux.just(shipmentCutOffTime));
+      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(locationRepository.findById(shipmentLocation.getLocationID()))
           .thenReturn(Mono.just(location1));
       when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
@@ -1046,12 +1053,6 @@ class BookingServiceImplTest {
                     shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
                 Assertions.assertNull(b.getBooking());
                 Assertions.assertEquals(1, b.getShipmentLocations().size());
-                Assertions.assertEquals(
-                    shipmentLocation.getShipmentID(),
-                    b.getShipmentLocations().get(0).getShipmentID());
-                Assertions.assertEquals(
-                    shipmentLocation.getBookingID(),
-                    b.getShipmentLocations().get(0).getBookingID());
                 Assertions.assertEquals(
                     shipmentLocation.getShipmentLocationTypeCode(),
                     b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
@@ -1103,12 +1104,6 @@ class BookingServiceImplTest {
                     carrierClause.getClauseContent(),
                     b.getCarrierClauses().get(0).getClauseContent());
                 Assertions.assertEquals(
-                    shipmentLocation.getShipmentID(),
-                    b.getShipmentLocations().get(0).getShipmentID());
-                Assertions.assertEquals(
-                    shipmentLocation.getBookingID(),
-                    b.getShipmentLocations().get(0).getBookingID());
-                Assertions.assertEquals(
                     shipmentLocation.getShipmentLocationTypeCode(),
                     b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
                 Assertions.assertEquals(
@@ -1128,6 +1123,28 @@ class BookingServiceImplTest {
               })
           .verifyComplete();
     }
+    @DisplayName("Method should return confirmed booking for given carrierBookingRequestReference with confirmedEquipment")
+    void testGETBookingConfirmationWithConfirmedEquipment() {
+
+      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.just(confirmedEquipment));
+
+      StepVerifier.create(
+          bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(
+            shipment.getCarrierBookingReference()))
+        .assertNext(
+          b -> {
+            Assertions.assertEquals(
+              shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
+            Assertions.assertNull(b.getBooking());
+            Assertions.assertEquals(1, b.getConfirmedEquipments().size());
+            Assertions.assertEquals(confirmedEquipment.getConfirmedEquipmentSizetype(), b.getConfirmedEquipments().get(0).getConfirmedEquipmentSizetype());
+          })
+        .verifyComplete();
+    }
+
   }
 
   @DisplayName("Tests for BKG Summaries Service")
@@ -1400,6 +1417,186 @@ class BookingServiceImplTest {
               carrierBookingRequestReference.toString(), null, pageRequest);
 
       StepVerifier.create(bookingToResponse).expectComplete().verify();
+    }
+  }
+
+  @Nested
+  @DisplayName("Tests for BKG Confirmation Summaries Service")
+  class BookingConfirmationSummariesTest {
+
+    private Booking initializeBookingTestInstance(UUID bookingId, DocumentStatus documentStatus) {
+      Booking booking = new Booking();
+      booking.setId(bookingId);
+      booking.setCarrierBookingRequestReference(UUID.randomUUID().toString());
+      booking.setDocumentStatus(documentStatus);
+      booking.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
+      booking.setCargoMovementTypeAtDestination(CargoMovementType.FCL);
+      booking.setBookingRequestDateTime(OffsetDateTime.now());
+      booking.setServiceContractReference("234ase3q4");
+      booking.setPaymentTermCode(PaymentTerm.PRE);
+      booking.setIsPartialLoadAllowed(true);
+      booking.setIsExportDeclarationRequired(true);
+      booking.setExportDeclarationReference("ABC123123");
+      booking.setIsImportLicenseRequired(true);
+      booking.setImportLicenseReference("ABC123123");
+      booking.setSubmissionDateTime(OffsetDateTime.now());
+      booking.setIsAMSACIFilingRequired(true);
+      booking.setIsDestinationFilingRequired(true);
+      booking.setContractQuotationReference("DKK");
+      booking.setExpectedDepartureDate(LocalDate.now());
+      booking.setTransportDocumentTypeCode(TransportDocumentTypeCode.BOL);
+      booking.setTransportDocumentReference("ASV23142ASD");
+      booking.setBookingChannelReference("ABC12313");
+      booking.setIncoTerms(IncoTerms.FCA);
+      booking.setCommunicationChannelCode(CommunicationChannel.AO);
+      booking.setIsEquipmentSubstitutionAllowed(true);
+
+      return booking;
+    }
+
+    private Shipment initializeShipmentTestInstance(
+        String carrierBookingReference, UUID bookingID) {
+      Shipment shipment = new Shipment();
+      shipment.setBookingID(bookingID);
+      shipment.setCarrierBookingReference(carrierBookingReference);
+      shipment.setConfirmationDateTime(OffsetDateTime.now());
+      shipment.setTermsAndConditions("x".repeat(150));
+
+      return shipment;
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking confirmation summaries with carrierBookingReference and DocumentStatus should return valid list of booking confirmation summaries.")
+    void
+        bookingConfirmationSummaryRequestWithCarrierBookingReferenceAndDocumentStatusShouldReturnValidBookingConfirmationSummary() {
+
+      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
+      UUID bookingId = UUID.randomUUID();
+      DocumentStatus documentStatus = DocumentStatus.APPR;
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByBookingIDAndDocumentStatus(
+              bookingId, documentStatus, pageRequest))
+          .thenReturn(Flux.just(initializeBookingTestInstance(bookingId, documentStatus)));
+
+      when(shipmentRepository.findAllByCarrierBookingReference(
+              carrierBookingReference, pageRequest))
+          .thenReturn(
+              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+
+      Flux<BookingConfirmationSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingConfirmationSummaries(
+              carrierBookingReference, documentStatus, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingConfirmationSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingReference,
+                    bookingConfirmationSummaryTO.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking confirmation summaries with DocumentStatus should return valid list of booking confirmation summaries.")
+    void
+        bookingConfirmationSummaryRequestWithDocumentStatusShouldReturnValidBookingConfirmationSummary() {
+
+      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
+      UUID bookingId = UUID.randomUUID();
+      DocumentStatus documentStatus = DocumentStatus.APPR;
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByBookingIDAndDocumentStatus(
+              bookingId, documentStatus, pageRequest))
+          .thenReturn(Flux.just(initializeBookingTestInstance(bookingId, documentStatus)));
+
+      when(shipmentRepository.findShipmentsByBookingIDNotNull(pageRequest))
+          .thenReturn(
+              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+
+      Flux<BookingConfirmationSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingConfirmationSummaries(
+              null, documentStatus, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingConfirmationSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingReference,
+                    bookingConfirmationSummaryTO.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking confirmation summaries with carrierBookingReference should return valid list of booking confirmation summaries.")
+    void
+        bookingConfirmationSummaryRequestWithCarrierBookingReferenceShouldReturnValidBookingConfirmationSummary() {
+
+      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
+      UUID bookingId = UUID.randomUUID();
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(shipmentRepository.findAllByCarrierBookingReference(
+              carrierBookingReference, pageRequest))
+          .thenReturn(
+              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+
+      Flux<BookingConfirmationSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingConfirmationSummaries(
+              carrierBookingReference, null, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingConfirmationSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingReference,
+                    bookingConfirmationSummaryTO.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking confirmation summaries should return valid list of booking confirmation summaries.")
+    void bookingConfirmationSummaryRequestShouldReturnValidBookingConfirmationSummary() {
+
+      String carrierBookingReference = UUID.randomUUID().toString().substring(0, 35);
+      UUID bookingId = UUID.randomUUID();
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(shipmentRepository.findShipmentsByBookingIDNotNull(pageRequest))
+          .thenReturn(
+              Flux.just(initializeShipmentTestInstance(carrierBookingReference, bookingId)));
+
+      Flux<BookingConfirmationSummaryTO> bookingToResponse =
+          bookingServiceImpl.getBookingConfirmationSummaries(null, null, pageRequest);
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingConfirmationSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingReference,
+                    bookingConfirmationSummaryTO.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    "x".repeat(150), bookingConfirmationSummaryTO.getTermsAndConditions());
+              })
+          .expectComplete()
+          .verify();
     }
   }
 }
