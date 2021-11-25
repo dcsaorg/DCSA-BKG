@@ -12,7 +12,7 @@ public class RequestedEquipmentTO {
 
   @NotBlank(message = "RequestedEquipmentSizeType is required.")
   @Size(max = 4, message = "RequestedEquipmentSizeType has a max size of 4.")
-  private String requestedEquipmentSizeType;
+  private String requestedEquipmentSizetype;
 
   @PositiveOrZero(message = "RequestedEquipmentUnits has to be a positive value.")
   private Integer requestedEquipmentUnits;

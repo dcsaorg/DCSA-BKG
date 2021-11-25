@@ -6,9 +6,14 @@ import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.DocumentStatus;
+import org.dcsa.core.events.model.enums.DocumentTypeCode;
+import org.dcsa.core.events.model.enums.EventType;
+import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
+import org.dcsa.core.events.service.ShipmentEventService;
+import org.dcsa.core.exception.UpdateException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +57,9 @@ public class BookingServiceImpl implements BookingService {
   private final PartyMapper partyMapper;
   private final ShipmentMapper shipmentMapper;
   private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
+
+  // services
+  private final ShipmentEventService shipmentEventService;
 
   @Override
   public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
@@ -327,7 +335,7 @@ public class BookingServiceImpl implements BookingService {
                   RequestedEquipment requestedEquipment = new RequestedEquipment();
                   requestedEquipment.setBookingID(bookingID);
                   requestedEquipment.setRequestedEquipmentSizetype(
-                      reTo.getRequestedEquipmentSizeType());
+                      reTo.getRequestedEquipmentSizetype());
                   requestedEquipment.setRequestedEquipmentUnits(reTo.getRequestedEquipmentUnits());
                   requestedEquipment.setIsShipperOwned(reTo.isShipperOwned());
                   return requestedEquipment;
@@ -338,7 +346,8 @@ public class BookingServiceImpl implements BookingService {
         .map(
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
-              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizetype());
+              requestedEquipmentTO.setRequestedEquipmentSizetype(
+                  re.getRequestedEquipmentSizetype());
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
               requestedEquipmentTO.setShipperOwned(re.getIsShipperOwned());
               return requestedEquipmentTO;
@@ -533,7 +542,8 @@ public class BookingServiceImpl implements BookingService {
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
-              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizetype());
+              requestedEquipmentTO.setRequestedEquipmentSizetype(
+                  re.getRequestedEquipmentSizetype());
               return requestedEquipmentTO;
             })
         .collectList()
@@ -655,7 +665,58 @@ public class BookingServiceImpl implements BookingService {
   }
 
   @Override
-  public Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference) {
-    return Mono.empty();
+  @Transactional
+  public Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingRequestReference) {
+    return bookingRepository
+        .findByCarrierBookingRequestReference(carrierBookingRequestReference)
+        .switchIfEmpty(
+            Mono.error(
+                new UpdateException("No Booking found with: ." + carrierBookingRequestReference)))
+        .flatMap(checkBookingStatus)
+        .flatMap(
+            booking ->
+                Mono.zip(
+                    bookingRepository
+                        .updateDocumentStatusForCarrierBookingRequestReference(
+                            DocumentStatus.CANC, carrierBookingRequestReference)
+                        .flatMap(verifyCancellation),
+                    shipmentEventFromBooking.apply(booking)))
+        .flatMap(t -> shipmentEventService.create(t.getT2()))
+        .flatMap(shipmentEvent -> Mono.empty());
   }
+
+  private Function<Booking, Mono<ShipmentEvent>> shipmentEventFromBooking =
+      booking -> {
+        ShipmentEvent shipmentEvent = new ShipmentEvent();
+        shipmentEvent.setShipmentEventTypeCode(
+            ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()));
+        shipmentEvent.setDocumentTypeCode(DocumentTypeCode.BKG);
+        shipmentEvent.setCarrierBookingReference(booking.getCarrierBookingRequestReference());
+        shipmentEvent.setEventType(EventType.SHIPMENT);
+        shipmentEvent.setEventID(UUID.randomUUID());
+        shipmentEvent.setEventDateTime(booking.getBookingRequestDateTime());
+        shipmentEvent.setEventCreatedDateTime(OffsetDateTime.now());
+        return Mono.just(shipmentEvent);
+      };
+
+  private Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
+      isRecordUpdated -> {
+        if (isRecordUpdated) {
+          return Mono.just(true);
+        } else {
+          return Mono.error(new UpdateException("Cancellation of booking failed."));
+        }
+      };
+
+  private Function<Booking, Mono<Booking>> checkBookingStatus =
+      booking -> {
+        EnumSet<DocumentStatus> allowedDocumentStatuses =
+            EnumSet.of(DocumentStatus.RECE, DocumentStatus.PENU, DocumentStatus.CONF);
+        if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
+          return Mono.just(booking);
+        } else
+          return Mono.error(
+              new UpdateException(
+                  "Cannot Cancel Booking that is not in status RECE, PENU or CONF"));
+      };
 }
