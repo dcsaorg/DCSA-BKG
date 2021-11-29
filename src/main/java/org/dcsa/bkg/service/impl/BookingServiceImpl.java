@@ -549,7 +549,8 @@ public class BookingServiceImpl implements BookingService {
                           t2.getT2().ifPresent(bookingTO::setPlaceOfIssue);
                           return Mono.just(bookingTO);
                         }))
-        .map(Optional::of);
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
   }
 
   private Mono<Optional<List<ShipmentCutOffTimeTO>>> fetchShipmentCutOffTimeByBookingID(
