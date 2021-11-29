@@ -5,6 +5,7 @@ import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.Address;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
+import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
@@ -91,11 +92,11 @@ class BKGControllerTest {
     partyTO.setIdentifyingCodes(
         Collections.singletonList(PartyTO.IdentifyingCode.builder().build()));
     partyTO.setAddress(new Address());
+    partyTO.setPartyContactDetails(Collections.singletonList(new PartyContactDetailsTO()));
     documentPartyTO.setParty(partyTO);
     documentPartyTO.setPartyFunction(PartyFunction.N1);
     documentPartyTO.setDisplayedAddress(Collections.singletonList("x".repeat(250)));
-    documentPartyTO.setPartyContactDetails(Collections.singletonList(new PartyContactDetailsTO()));
-    documentPartyTO.setToBeNotified(true);
+    documentPartyTO.setIsToBeNotified(true);
     bookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
 
     LocationTO location = new LocationTO();
@@ -357,13 +358,13 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.documentParties[0].displayedAddress")
                   .hasJsonPath()
-                  .jsonPath("$.documentParties[0].partyContactDetails")
+                  .jsonPath("$.documentParties[0].party.partyContactDetails")
                   .hasJsonPath()
-                  .jsonPath("$.documentParties[0].partyContactDetails[0].name")
+                  .jsonPath("$.documentParties[0].party.partyContactDetails[0].name")
                   .hasJsonPath()
-                  .jsonPath("$.documentParties[0].partyContactDetails[0].phone")
+                  .jsonPath("$.documentParties[0].party.partyContactDetails[0].phone")
                   .hasJsonPath()
-                  .jsonPath("$.documentParties[0].partyContactDetails[0].email")
+                  .jsonPath("$.documentParties[0].party.partyContactDetails[0].email")
                   .hasJsonPath()
                   .jsonPath("$.documentParties[0].isToBeNotified")
                   .hasJsonPath()

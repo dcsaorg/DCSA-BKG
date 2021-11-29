@@ -1,6 +1,7 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import org.dcsa.core.events.model.enums.PartyFunction;
+import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.exception.InvalidParameterException;
 import org.junit.jupiter.api.Assertions;
@@ -19,6 +20,7 @@ import java.util.Set;
 class DocumentPartyTOTest {
 
   private Validator validator;
+  private PartyTO partyTO;
   private DocumentPartyTO validDocumentPartyTO;
 
   @BeforeEach
@@ -26,13 +28,14 @@ class DocumentPartyTOTest {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     validator = factory.getValidator();
 
+    partyTO = new PartyTO();
+    partyTO.setPartyContactDetails(Collections.singletonList(new PartyContactDetailsTO()));
+
     validDocumentPartyTO = new DocumentPartyTO();
-    validDocumentPartyTO.setParty(new PartyTO());
+    validDocumentPartyTO.setParty(partyTO);
     validDocumentPartyTO.setPartyFunction(PartyFunction.N1);
     validDocumentPartyTO.setDisplayedAddress(Collections.singletonList("x".repeat(250)));
-    validDocumentPartyTO.setPartyContactDetails(
-        Collections.singletonList(new PartyContactDetailsTO()));
-    validDocumentPartyTO.setToBeNotified(true);
+    validDocumentPartyTO.setIsToBeNotified(true);
   }
 
   @Test
@@ -40,6 +43,15 @@ class DocumentPartyTOTest {
   void testToVerifyNoErrorIsThrowForValidTo() {
     Set<ConstraintViolation<DocumentPartyTO>> violations = validator.validate(validDocumentPartyTO);
     Assertions.assertEquals(0, violations.size());
+  }
+
+  @Test
+  @DisplayName("DocumentPartyTO should throw error if party is not set.")
+  void testToVerifyPartyIsRequired() {
+    validDocumentPartyTO.setParty(null);
+    Set<ConstraintViolation<DocumentPartyTO>> violations = validator.validate(validDocumentPartyTO);
+    Assertions.assertTrue(
+        violations.stream().anyMatch(v -> "Party is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -68,7 +80,7 @@ class DocumentPartyTOTest {
   @Test
   @DisplayName("DocumentPartyTO should throw error if partyContactDetails is not set.")
   void testToVerifyPartyContactDetailsIsRequired() {
-    validDocumentPartyTO.setPartyContactDetails(null);
+    validDocumentPartyTO.getParty().setPartyContactDetails(null);
     Set<ConstraintViolation<DocumentPartyTO>> violations = validator.validate(validDocumentPartyTO);
     Assertions.assertTrue(
         violations.stream()

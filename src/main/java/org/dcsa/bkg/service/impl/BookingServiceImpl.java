@@ -10,6 +10,7 @@ import org.dcsa.core.events.model.enums.DocumentTypeCode;
 import org.dcsa.core.events.model.enums.EventType;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
+import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.ShipmentEventService;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import java.time.OffsetDateTime;
@@ -62,6 +64,7 @@ public class BookingServiceImpl implements BookingService {
   private final ShipmentMapper shipmentMapper;
   private final CarrierClauseMapper carrierClauseMapper;
   private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
+  private final PartyContactDetailsMapper partyContactDetailsMapper;
 
   // services
   private final ShipmentEventService shipmentEventService;
@@ -170,7 +173,9 @@ public class BookingServiceImpl implements BookingService {
                       bookingID, bookingRequest.getValueAddedServiceRequests()),
                   createReferencesByBookingIDAndTOs(bookingID, bookingRequest.getReferences()),
                   createRequestedEquipmentsByBookingIDAndTOs(
-                      bookingID, bookingRequest.getRequestedEquipments()));
+                      bookingID, bookingRequest.getRequestedEquipments()),
+                  createDocumentPartiesByBookingIDAndTOs(
+                      bookingID, bookingRequest.getDocumentParties()));
             })
         .flatMap(
             t -> {
@@ -181,6 +186,7 @@ public class BookingServiceImpl implements BookingService {
               Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt = t.getT5();
               Optional<List<ReferenceTO>> referencesOpt = t.getT6();
               Optional<List<RequestedEquipmentTO>> requestedEquipmentsOpt = t.getT7();
+              Optional<List<DocumentPartyTO>> documentPartiesOpt = t.getT8();
 
               // populate the booking DTO
               invoicePayableAtOpt.ifPresent(bookingTO::setInvoicePayableAt);
@@ -189,6 +195,7 @@ public class BookingServiceImpl implements BookingService {
               valueAddedServiceRequestsOpt.ifPresent(bookingTO::setValueAddedServiceRequests);
               referencesOpt.ifPresent(bookingTO::setReferences);
               requestedEquipmentsOpt.ifPresent(bookingTO::setRequestedEquipments);
+              documentPartiesOpt.ifPresent(bookingTO::setDocumentParties);
 
               return Mono.just(bookingTO);
             })
@@ -367,6 +374,155 @@ public class BookingServiceImpl implements BookingService {
           bookingTOMono
               .flatMap(BookingServiceImpl.this::createShipmentEventFromBookingTO)
               .flatMap(shipmentEvent -> bookingTOMono);
+
+  private Mono<Optional<List<DocumentPartyTO>>> createDocumentPartiesByBookingIDAndTOs(
+      final UUID bookingID, List<DocumentPartyTO> documentParties) {
+
+    if (Objects.isNull(documentParties) || documentParties.isEmpty()) {
+      return Mono.just(Optional.of(Collections.emptyList()));
+    }
+
+    return Flux.fromStream(documentParties.stream())
+        .flatMap(
+            dp ->
+                // party is mandatory, cannot be null in document party as per API specs
+                createPartyByTO(dp.getParty())
+                    .flatMap(
+                        t -> {
+                          DocumentParty documentParty = new DocumentParty();
+                          documentParty.setPartyID(t.getT1());
+                          documentParty.setBookingID(bookingID);
+                          documentParty.setPartyFunction(dp.getPartyFunction());
+                          documentParty.setIsToBeNotified(dp.getIsToBeNotified());
+                          return documentPartyRepository
+                              .save(documentParty)
+                              .map(
+                                  savedDp -> {
+                                    DocumentPartyTO documentPartyTO = new DocumentPartyTO();
+                                    documentPartyTO.setParty(t.getT2());
+                                    documentPartyTO.setDisplayedAddress(dp.getDisplayedAddress());
+                                    documentPartyTO.setPartyFunction(savedDp.getPartyFunction());
+                                    documentPartyTO.setIsToBeNotified(savedDp.getIsToBeNotified());
+                                    return Tuples.of(savedDp.getId(), documentPartyTO);
+                                  });
+                        }))
+        .flatMap(
+            t -> {
+              Stream<DisplayedAddress> displayedAddressStream =
+                  t.getT2().getDisplayedAddress().stream()
+                      .map(
+                          da -> {
+                            DisplayedAddress displayedAddress = new DisplayedAddress();
+                            displayedAddress.setDocumentPartyID(t.getT1());
+                            displayedAddress.setAddressLine(da);
+                            displayedAddress.setAddressLineNumber(
+                                t.getT2().getDisplayedAddress().indexOf(da));
+                            return displayedAddress;
+                          });
+
+              return displayedAddressRepository
+                  .saveAll(Flux.fromStream(displayedAddressStream))
+                  .map(DisplayedAddress::getAddressLine)
+                  .collectList()
+                  .flatMap(
+                      s -> {
+                        t.getT2().setDisplayedAddress(s);
+                        return Mono.just(t.getT2());
+                      });
+            })
+        .collectList()
+        .map(Optional::of);
+  }
+
+  private Mono<Tuple2<String, PartyTO>> createPartyByTO(final PartyTO partyTO) {
+
+    Mono<Tuple2<String, PartyTO>> partyMap;
+
+    if (Objects.isNull(partyTO.getAddress())) {
+
+      partyMap =
+          partyRepository
+              .save(partyMapper.dtoToParty(partyTO))
+              .map(p -> Tuples.of(p.getId(), partyMapper.partyToDTO(p)));
+
+    } else {
+      // if there is an address connected to the party, we need to create it first.
+      partyMap =
+          addressRepository
+              .save(partyTO.getAddress())
+              .flatMap(
+                  a -> {
+                    Party party = partyMapper.dtoToParty(partyTO);
+                    party.setAddressID(a.getId());
+                    return partyRepository
+                        .save(party)
+                        .map(
+                            p -> {
+                              PartyTO pTO = partyMapper.partyToDTO(p);
+                              pTO.setAddress(a);
+                              return Tuples.of(p.getId(), pTO);
+                            });
+                  });
+    }
+
+    return partyMap
+        .flatMap(
+            t -> {
+              Stream<PartyContactDetails> partyContactDetailsStream =
+                  partyTO.getPartyContactDetails().stream()
+                      .map(
+                          pcdTO -> {
+                            PartyContactDetails pcd =
+                                partyContactDetailsMapper.dtoToPartyContactDetails(pcdTO);
+                            pcd.setPartyID(t.getT1());
+                            return pcd;
+                          });
+
+              return partyContactDetailsRepository
+                  .saveAll(Flux.fromStream(partyContactDetailsStream))
+                  .map(partyContactDetailsMapper::partyContactDetailsToDTO)
+                  .collectList()
+                  .flatMap(
+                      pcds -> {
+                        t.getT2().setPartyContactDetails(pcds);
+                        return Mono.just(t);
+                      });
+            })
+        .flatMap(
+            t -> {
+              Stream<PartyIdentifyingCode> partyIdentifyingCodeStream =
+                  partyTO.getIdentifyingCodes().stream()
+                      .map(
+                          idc -> {
+                            PartyIdentifyingCode partyIdentifyingCode = new PartyIdentifyingCode();
+                            partyIdentifyingCode.setPartyID(t.getT1());
+                            partyIdentifyingCode.setDcsaResponsibleAgencyCode(
+                                idc.getDcsaResponsibleAgencyCode());
+                            partyIdentifyingCode.setCodeListName(idc.getCodeListName());
+                            partyIdentifyingCode.setPartyCode(idc.getPartyCode());
+                            return partyIdentifyingCode;
+                          });
+              return partyIdentifyingCodeRepository
+                  .saveAll(
+                      Flux.fromStream(
+                          partyIdentifyingCodeStream)) // save identifying codes related to party
+                  // obj
+                  .map(
+                      savedIdcs ->
+                          PartyTO.IdentifyingCode.builder()
+                              .partyCode(savedIdcs.getPartyCode())
+                              .codeListName(savedIdcs.getCodeListName())
+                              .dcsaResponsibleAgencyCode(savedIdcs.getDcsaResponsibleAgencyCode())
+                              .build())
+                  .collectList()
+                  .flatMap(
+                      identifyingCodes -> {
+                        PartyTO pTO = t.getT2();
+                        pTO.setIdentifyingCodes(identifyingCodes);
+                        return Mono.just(Tuples.of(t.getT1(), pTO));
+                      });
+            });
+  }
 
   @Override
   public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
@@ -584,22 +740,17 @@ public class BookingServiceImpl implements BookingService {
             dp ->
                 Mono.zip(
                         fetchPartyByID(dp.getPartyID()),
-                        fetchPartyContactDetailsByPartyID(dp.getPartyID()),
                         fetchDisplayAddressByDocumentID(dp.getId()))
                     .flatMap(
                         t -> {
                           Optional<PartyTO> partyToOpt = t.getT1();
-                          Optional<List<PartyContactDetailsTO>> partyContactDetailsToOpt =
-                              t.getT2();
-                          Optional<List<String>> displayAddressOpt = t.getT3();
+                          Optional<List<String>> displayAddressOpt = t.getT2();
 
                           DocumentPartyTO documentPartyTO = new DocumentPartyTO();
                           partyToOpt.ifPresent(documentPartyTO::setParty);
                           documentPartyTO.setPartyFunction(dp.getPartyFunction());
-                          documentPartyTO.setToBeNotified(dp.getIsToBeNotified());
+                          documentPartyTO.setIsToBeNotified(dp.getIsToBeNotified());
                           displayAddressOpt.ifPresent(documentPartyTO::setDisplayedAddress);
-                          partyContactDetailsToOpt.ifPresent(
-                              documentPartyTO::setPartyContactDetails);
                           return Mono.just(documentPartyTO);
                         }))
         .collectList()
@@ -628,14 +779,17 @@ public class BookingServiceImpl implements BookingService {
                                         .build())
                             .collectList()
                             .map(Optional::of)
-                            .defaultIfEmpty(Optional.empty()))
+                            .defaultIfEmpty(Optional.empty()),
+                        fetchPartyContactDetailsByPartyID(partyID))
                     .flatMap(
                         t -> {
                           Optional<Address> addressOpt = t.getT1();
                           Optional<List<PartyTO.IdentifyingCode>> identifyingCodesOpt = t.getT2();
+                          Optional<List<PartyContactDetailsTO>> partyContactDetailsOpt = t.getT3();
                           PartyTO partyTO = partyMapper.partyToDTO(p);
                           addressOpt.ifPresent(partyTO::setAddress);
                           identifyingCodesOpt.ifPresent(partyTO::setIdentifyingCodes);
+                          partyContactDetailsOpt.ifPresent(partyTO::setPartyContactDetails);
                           return Mono.just(partyTO);
                         }))
         .map(Optional::of)
