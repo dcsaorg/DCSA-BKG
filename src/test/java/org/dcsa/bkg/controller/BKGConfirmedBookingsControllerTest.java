@@ -8,6 +8,7 @@ import org.dcsa.core.events.model.enums.DCSATransportType;
 import org.dcsa.core.events.model.enums.LocationType;
 import org.dcsa.core.events.model.enums.PaymentTerm;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
+import org.dcsa.core.exception.UpdateException;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
@@ -188,6 +189,31 @@ class BKGConfirmedBookingsControllerTest {
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
     checkStatus204.apply(exchange);
+  }
+
+  @Test
+  @DisplayName("Cancelling of a booking in unallowed status should return a 400 for invalid request")
+  void confirmedBookingsCancellationShouldReturn400() {
+
+    Mockito.when(
+        bookingService.cancelBookingByCarrierBookingReference(
+          bookingConfirmationTO.getCarrierBookingReference()))
+      .thenReturn(Mono.error(
+        new UpdateException(
+          "Cannot Cancel Booking that is not in status RECE, PENU or CONF")));
+
+    WebTestClient.ResponseSpec exchange =
+      webTestClient
+        .post()
+        .uri(
+          CONFIRMED_BOOKING_ENDPOINT
+            + "/"
+            + bookingConfirmationTO.getCarrierBookingReference()
+            + "/cancellation")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange();
+
+    checkStatus400.apply(exchange);
   }
 
   private final Function<WebTestClient.ResponseSpec, WebTestClient.BodyContentSpec>
