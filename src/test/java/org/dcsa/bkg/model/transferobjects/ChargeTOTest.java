@@ -82,7 +82,7 @@ class ChargeTOTest {
     chargeTO.setChargeTypeCode(null);
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "ChargeType is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "ChargeTypeCode is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -111,7 +111,7 @@ class ChargeTOTest {
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "ChargeType has a max size of 20.".equals(v.getMessage())));
+            .anyMatch(v -> "ChargeTypeCode has a max size of 20.".equals(v.getMessage())));
   }
 
   @Test
