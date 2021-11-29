@@ -25,6 +25,7 @@ import reactor.util.function.Tuples;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 @Service
@@ -358,7 +359,7 @@ public class BookingServiceImpl implements BookingService {
         .map(Optional::of);
   }
 
-  private final Function<Mono<BookingTO>, Mono<BookingTO>> createShipmentEventFromBookingTO =
+  private final UnaryOperator<Mono<BookingTO>> createShipmentEventFromBookingTO =
       bookingTOMono ->
           bookingTOMono
               .flatMap(BookingServiceImpl.this::createShipmentEventFromBookingTO)
