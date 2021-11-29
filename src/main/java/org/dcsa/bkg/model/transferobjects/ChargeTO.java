@@ -9,9 +9,9 @@ import javax.validation.constraints.Size;
 @Data
 public class ChargeTO {
 
-  @NotNull(message = "ChargeType is required.")
-  @Size(max = 20, message = "ChargeType has a max size of 20.")
-  private String chargeType;
+  @NotNull(message = "ChargeTypeCode is required.")
+  @Size(max = 20, message = "ChargeTypeCode has a max size of 20.")
+  private String chargeTypeCode;
 
   @NotNull(message = "CurrencyAmount is required.")
   private Double currencyAmount;

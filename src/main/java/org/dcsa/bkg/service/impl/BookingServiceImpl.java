@@ -45,6 +45,7 @@ public class BookingServiceImpl implements BookingService {
   private final VesselRepository vesselRepository;
   private final ShipmentCarrierClausesRepository shipmentCarrierClausesRepository;
   private final CarrierClauseRepository carrierClauseRepository;
+  private final ChargeRepository chargeRepository;
 
   // mappers
   private final BookingMapper bookingMapper;
@@ -55,6 +56,7 @@ public class BookingServiceImpl implements BookingService {
   private final ShipmentMapper shipmentMapper;
   private final CarrierClauseMapper carrierClauseMapper;
   private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
+  private final ChargeMapper chargeMapper;
 
   @Override
   public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
@@ -341,7 +343,8 @@ public class BookingServiceImpl implements BookingService {
         .map(
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
-              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizetype());
+              requestedEquipmentTO.setRequestedEquipmentSizeType(
+                  re.getRequestedEquipmentSizetype());
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
               requestedEquipmentTO.setShipperOwned(re.getIsShipperOwned());
               return requestedEquipmentTO;
@@ -438,7 +441,9 @@ public class BookingServiceImpl implements BookingService {
                       fetchShipmentCutOffTimeByBookingID(t.getT1().getShipmentID()),
                       fetchShipmentLocationsByBookingID(t.getT1().getBookingID()),
                       fetchCarrierClausesByShipmentID(t.getT1().getShipmentID()),
-                      fetchConfirmedEquipmentByByBookingID(t.getT1().getBookingID()))
+                      fetchConfirmedEquipmentByByBookingID(t.getT1().getBookingID()),
+                      fetchChargesByShipmentID(t.getT1().getShipmentID()),
+                      fetchBookingByBookingID(t.getT1().getBookingID()))
                   .flatMap(
                       deepObjs -> {
                         Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt =
@@ -448,6 +453,9 @@ public class BookingServiceImpl implements BookingService {
                         Optional<List<CarrierClauseTO>> carrierClauseToOpt = deepObjs.getT3();
                         Optional<List<ConfirmedEquipmentTO>> confirmedEquipmentTOOpt =
                             deepObjs.getT4();
+                        Optional<List<ChargeTO>> chargesToOpt = deepObjs.getT5();
+                        Optional<BookingTO> bookingToOpt = deepObjs.getT6();
+
                         shipmentCutOffTimeTOpt.ifPresent(
                             bookingConfirmationTO::setShipmentCutOffTimes);
                         shipmentLocationsToOpt.ifPresent(
@@ -455,6 +463,8 @@ public class BookingServiceImpl implements BookingService {
                         carrierClauseToOpt.ifPresent(bookingConfirmationTO::setCarrierClauses);
                         confirmedEquipmentTOOpt.ifPresent(
                             bookingConfirmationTO::setConfirmedEquipments);
+                        chargesToOpt.ifPresent(bookingConfirmationTO::setCharges);
+                        bookingToOpt.ifPresent(bookingConfirmationTO::setBooking);
                         return Mono.just(bookingConfirmationTO);
                       })
                   .thenReturn(bookingConfirmationTO);
@@ -483,6 +493,7 @@ public class BookingServiceImpl implements BookingService {
                           t2.getT2().ifPresent(locTO::setFacility);
                           return Mono.just(locTO);
                         }))
+        .onErrorReturn(new LocationTO())
         .map(Optional::of);
   }
 
@@ -503,6 +514,33 @@ public class BookingServiceImpl implements BookingService {
         .findByBookingID(bookingID)
         .map(commodityMapper::commodityToDTO)
         .collectList()
+        .map(Optional::of);
+  }
+
+  private Mono<Optional<List<ChargeTO>>> fetchChargesByShipmentID(UUID shipmentID) {
+    return chargeRepository
+        .findAllByShipmentID(shipmentID)
+        .map(chargeMapper::chargeToDTO)
+        .collectList()
+        .map(Optional::of);
+  }
+
+  private Mono<Optional<BookingTO>> fetchBookingByBookingID(UUID bookingID) {
+    if (bookingID == null) return Mono.just(Optional.empty());
+    return bookingRepository
+        .findById(bookingID)
+        .flatMap(
+            booking ->
+                Mono.zip(
+                        fetchLocationByID(booking.getInvoicePayableAt()),
+                        fetchLocationByID(booking.getPlaceOfIssueID()))
+                    .flatMap(
+                        t2 -> {
+                          BookingTO bookingTO = bookingMapper.bookingToDTO(booking);
+                          t2.getT1().ifPresent(bookingTO::setInvoicePayableAt);
+                          t2.getT2().ifPresent(bookingTO::setPlaceOfIssue);
+                          return Mono.just(bookingTO);
+                        }))
         .map(Optional::of);
   }
 
@@ -551,7 +589,8 @@ public class BookingServiceImpl implements BookingService {
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
-              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizetype());
+              requestedEquipmentTO.setRequestedEquipmentSizeType(
+                  re.getRequestedEquipmentSizetype());
               return requestedEquipmentTO;
             })
         .collectList()
@@ -644,6 +683,7 @@ public class BookingServiceImpl implements BookingService {
 
   private Mono<Optional<List<ShipmentLocationTO>>> fetchShipmentLocationsByBookingID(
       UUID bookingID) {
+    if (bookingID == null) return Mono.just(Optional.empty());
     return shipmentLocationRepository
         .findByBookingID(bookingID)
         .flatMap(
@@ -664,9 +704,7 @@ public class BookingServiceImpl implements BookingService {
       UUID bookingID) {
     return requestedEquipmentRepository
         .findByBookingID(bookingID)
-        .map(
-            requestedEquipment ->
-                confirmedEquipmentMapper.requestedEquipmentToDto(requestedEquipment))
+        .map(confirmedEquipmentMapper::requestedEquipmentToDto)
         .collectList()
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());

@@ -85,7 +85,7 @@ class BKGConfirmedBookingsControllerTest {
     confirmedEquipment.setConfirmedEquipmentSizetype("WHAT");
 
     ChargeTO charge = new ChargeTO();
-    charge.setChargeType("ChargeType");
+    charge.setChargeTypeCode("ChargeTypeCode");
     charge.setCalculationBasis("CalculationBasis");
     charge.setCurrencyAmount(12.12);
     charge.setCurrencyCode("ABC");
