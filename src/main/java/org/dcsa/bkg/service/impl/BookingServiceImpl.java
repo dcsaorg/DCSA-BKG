@@ -541,12 +541,24 @@ public class BookingServiceImpl implements BookingService {
             booking ->
                 Mono.zip(
                         fetchLocationByID(booking.getInvoicePayableAt()),
-                        fetchLocationByID(booking.getPlaceOfIssueID()))
+                        fetchLocationByID(booking.getPlaceOfIssueID()),
+                        fetchCommoditiesByBookingID(booking.getId()),
+                        fetchValueAddedServiceRequestsByBookingID(booking.getId()),
+                        fetchReferencesByBookingID(booking.getId()),
+                        fetchRequestedEquipmentsByBookingID(booking.getId()),
+                        fetchDocumentPartiesByBookingID(booking.getId()),
+                        fetchShipmentLocationsByBookingID(booking.getId()))
                     .flatMap(
                         t2 -> {
                           BookingTO bookingTO = bookingMapper.bookingToDTO(booking);
                           t2.getT1().ifPresent(bookingTO::setInvoicePayableAt);
                           t2.getT2().ifPresent(bookingTO::setPlaceOfIssue);
+                          t2.getT3().ifPresent(bookingTO::setCommodities);
+                          t2.getT4().ifPresent(bookingTO::setValueAddedServiceRequests);
+                          t2.getT5().ifPresent(bookingTO::setReferences);
+                          t2.getT6().ifPresent(bookingTO::setRequestedEquipments);
+                          t2.getT7().ifPresent(bookingTO::setDocumentParties);
+                          t2.getT8().ifPresent(bookingTO::setShipmentLocations);
                           return Mono.just(bookingTO);
                         }))
         .map(Optional::of)
@@ -607,6 +619,7 @@ public class BookingServiceImpl implements BookingService {
   }
 
   private Mono<Optional<List<DocumentPartyTO>>> fetchDocumentPartiesByBookingID(UUID bookingId) {
+    if (bookingId == null) return Mono.empty();
     return documentPartyRepository
         .findByBookingID(bookingId)
         .flatMap(
@@ -636,6 +649,7 @@ public class BookingServiceImpl implements BookingService {
   }
 
   private Mono<Optional<PartyTO>> fetchPartyByID(String partyID) {
+    if (partyID == null) return Mono.empty();
     return partyRepository
         .findByIdOrEmpty(partyID)
         .flatMap(
