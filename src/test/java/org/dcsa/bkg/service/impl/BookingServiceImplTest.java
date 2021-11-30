@@ -12,10 +12,7 @@ import org.dcsa.core.exception.UpdateException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import reactor.core.publisher.Flux;
@@ -63,7 +60,10 @@ class BookingServiceImplTest {
   @Spy PartyMapper partyMapper = Mappers.getMapper(PartyMapper.class);
   @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
   @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
-  @Spy ConfirmedEquipmentMapper confirmedEquipmentMapper = Mappers.getMapper(ConfirmedEquipmentMapper.class);
+
+  @Spy
+  ConfirmedEquipmentMapper confirmedEquipmentMapper =
+      Mappers.getMapper(ConfirmedEquipmentMapper.class);
 
   Booking booking;
   Location location1;
@@ -264,7 +264,7 @@ class BookingServiceImplTest {
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(shipmentEventService.create(any()))
-        .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
@@ -295,7 +295,7 @@ class BookingServiceImplTest {
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
-        .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
       when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
           .thenReturn(Mono.just(location1));
@@ -333,7 +333,7 @@ class BookingServiceImplTest {
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
-        .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
       when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
           .thenReturn(Mono.just(location1));
@@ -372,7 +372,7 @@ class BookingServiceImplTest {
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
-        .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
       when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
           .thenReturn(Mono.just(location1));
@@ -423,7 +423,7 @@ class BookingServiceImplTest {
           .thenReturn(Flux.just(valueAddedServiceRequest));
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
       when(shipmentEventService.create(any()))
-        .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
@@ -467,7 +467,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(requestedEquipment));
       when(shipmentEventService.create(any()))
-        .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
@@ -506,18 +506,16 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(shipmentEventService.create(any()))
-        .thenAnswer(arguments -> Mono.empty());
+      when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.empty());
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
-        .expectErrorSatisfies(
-          throwable -> {
-            Assertions.assertTrue(throwable instanceof CreateException);
-            Assertions.assertEquals(
-              "Failed to create shipment event for Booking.",
-              throwable.getMessage());
-          })
-        .verify();
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertEquals(
+                    "Failed to create shipment event for Booking.", throwable.getMessage());
+              })
+          .verify();
     }
   }
 
@@ -1109,28 +1107,31 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Method should return confirmed booking for given carrierBookingRequestReference with confirmedEquipment")
+    @DisplayName(
+        "Method should return confirmed booking for given carrierBookingRequestReference with confirmedEquipment")
     void testGETBookingConfirmationWithConfirmedEquipment() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
-      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.just(confirmedEquipment));
+      when(requestedEquipmentRepository.findByBookingID(any()))
+          .thenReturn(Flux.just(confirmedEquipment));
 
       StepVerifier.create(
-          bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(
-            shipment.getCarrierBookingReference()))
-        .assertNext(
-          b -> {
-            Assertions.assertEquals(
-              shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
-            Assertions.assertNull(b.getBooking());
-            Assertions.assertEquals(1, b.getConfirmedEquipments().size());
-            Assertions.assertEquals(confirmedEquipment.getConfirmedEquipmentSizetype(), b.getConfirmedEquipments().get(0).getConfirmedEquipmentSizetype());
-          })
-        .verifyComplete();
+              bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(
+                  shipment.getCarrierBookingReference()))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
+                Assertions.assertNull(b.getBooking());
+                Assertions.assertEquals(1, b.getConfirmedEquipments().size());
+                Assertions.assertEquals(
+                    confirmedEquipment.getConfirmedEquipmentSizetype(),
+                    b.getConfirmedEquipments().get(0).getConfirmedEquipmentSizetype());
+              })
+          .verifyComplete();
     }
-
   }
 
   @Nested
@@ -1490,6 +1491,8 @@ class BookingServiceImplTest {
     @DisplayName("Cancellation of the booking should result in an updated booking")
     void cancelBookingSuccess() {
 
+      ArgumentCaptor<ShipmentEvent> argumentCaptor = ArgumentCaptor.forClass(ShipmentEvent.class);
+
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
@@ -1508,7 +1511,10 @@ class BookingServiceImplTest {
 
       StepVerifier.create(cancelBookingResponse).verifyComplete();
 
-      verify(shipmentEventService).create(any());
+      verify(shipmentEventService).create(argumentCaptor.capture());
+
+      ShipmentEvent shipmentEvent = argumentCaptor.getValue();
+      Assertions.assertEquals(shipmentEvent.getShipmentEventTypeCode(), ShipmentEventTypeCode.CANC);
     }
   }
 }

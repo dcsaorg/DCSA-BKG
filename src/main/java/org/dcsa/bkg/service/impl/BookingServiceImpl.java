@@ -687,7 +687,12 @@ public class BookingServiceImpl implements BookingService {
                         .updateDocumentStatusForCarrierBookingRequestReference(
                             DocumentStatus.CANC, carrierBookingRequestReference)
                         .flatMap(verifyCancellation),
-                    Mono.just(booking)))
+                    Mono.just(booking)
+                        .map(
+                            bkg -> {
+                              bkg.setDocumentStatus(DocumentStatus.CANC);
+                              return bkg;
+                            })))
         .flatMap(t -> createShipmentEventFromBooking(t.getT2()))
         .flatMap(t -> Mono.empty());
   }
