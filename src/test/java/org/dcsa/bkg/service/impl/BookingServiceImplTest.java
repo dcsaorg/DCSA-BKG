@@ -1407,7 +1407,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(1, b.getBooking().getReferences().size());
                 Assertions.assertEquals(1, b.getBooking().getDocumentParties().size());
                 Assertions.assertEquals(1, b.getBooking().getDocumentParties().get(0).getDisplayedAddress().size());
-                Assertions.assertEquals(1, b.getBooking().getDocumentParties().get(0).getPartyContactDetails().size());
+                Assertions.assertEquals(1, b.getBooking().getDocumentParties().get(0).getParty().getPartyContactDetails().size());
                 Assertions.assertEquals(1, b.getBooking().getRequestedEquipments().size());
                 Assertions.assertEquals(1, b.getBooking().getValueAddedServiceRequests().size());
                 Assertions.assertNotNull(b.getBooking().getPlaceOfIssue());
