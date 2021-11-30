@@ -13,6 +13,7 @@ import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.ShipmentEventService;
+import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.UpdateException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import reactor.util.function.Tuples;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 @Service
@@ -189,7 +191,8 @@ public class BookingServiceImpl implements BookingService {
               requestedEquipmentsOpt.ifPresent(bookingTO::setRequestedEquipments);
 
               return Mono.just(bookingTO);
-            });
+            })
+        .transform(createShipmentEventFromBookingTO);
   }
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
@@ -358,6 +361,12 @@ public class BookingServiceImpl implements BookingService {
         .collectList()
         .map(Optional::of);
   }
+
+  private final UnaryOperator<Mono<BookingTO>> createShipmentEventFromBookingTO =
+      bookingTOMono ->
+          bookingTOMono
+              .flatMap(BookingServiceImpl.this::createShipmentEventFromBookingTO)
+              .flatMap(shipmentEvent -> bookingTOMono);
 
   @Override
   public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
@@ -674,9 +683,7 @@ public class BookingServiceImpl implements BookingService {
       UUID bookingID) {
     return requestedEquipmentRepository
         .findByBookingID(bookingID)
-        .map(
-            requestedEquipment ->
-                confirmedEquipmentMapper.requestedEquipmentToDto(requestedEquipment))
+        .map(confirmedEquipmentMapper::requestedEquipmentToDto)
         .collectList()
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
@@ -698,12 +705,29 @@ public class BookingServiceImpl implements BookingService {
                         .updateDocumentStatusForCarrierBookingRequestReference(
                             DocumentStatus.CANC, carrierBookingRequestReference)
                         .flatMap(verifyCancellation),
-                    shipmentEventFromBooking.apply(booking)))
-        .flatMap(t -> shipmentEventService.create(t.getT2()))
-        .flatMap(shipmentEvent -> Mono.empty());
+                    Mono.just(booking)
+                        .map(
+                            bkg -> {
+                              bkg.setDocumentStatus(DocumentStatus.CANC);
+                              return bkg;
+                            })))
+        .flatMap(t -> createShipmentEventFromBooking(t.getT2()))
+        .flatMap(t -> Mono.empty());
   }
 
-  private Function<Booking, Mono<ShipmentEvent>> shipmentEventFromBooking =
+  private Mono<ShipmentEvent> createShipmentEventFromBookingTO(BookingTO bookingTo) {
+    return createShipmentEventFromBooking(bookingMapper.dtoToBooking(bookingTo));
+  }
+
+  private Mono<ShipmentEvent> createShipmentEventFromBooking(Booking booking) {
+    return shipmentEventFromBooking
+        .apply(booking)
+        .flatMap(shipmentEventService::create)
+        .switchIfEmpty(
+            Mono.error(new CreateException("Failed to create shipment event for Booking.")));
+  }
+
+  private final Function<Booking, Mono<ShipmentEvent>> shipmentEventFromBooking =
       booking -> {
         ShipmentEvent shipmentEvent = new ShipmentEvent();
         shipmentEvent.setShipmentEventTypeCode(
@@ -717,7 +741,7 @@ public class BookingServiceImpl implements BookingService {
         return Mono.just(shipmentEvent);
       };
 
-  private Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
+  private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
       isRecordUpdated -> {
         if (isRecordUpdated) {
           return Mono.just(true);
@@ -726,7 +750,7 @@ public class BookingServiceImpl implements BookingService {
         }
       };
 
-  private Function<Booking, Mono<Booking>> checkBookingStatus =
+  private final Function<Booking, Mono<Booking>> checkBookingStatus =
       booking -> {
         EnumSet<DocumentStatus> allowedDocumentStatuses =
             EnumSet.of(DocumentStatus.RECE, DocumentStatus.PENU, DocumentStatus.CONF);
