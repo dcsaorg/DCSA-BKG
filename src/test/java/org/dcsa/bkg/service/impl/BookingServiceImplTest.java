@@ -66,11 +66,7 @@ class BookingServiceImplTest {
   @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
   @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
   @Spy CarrierClauseMapper carrierClauseMapper = Mappers.getMapper(CarrierClauseMapper.class);
-
-  @Spy
-  ConfirmedEquipmentMapper confirmedEquipmentMapper =
-      Mappers.getMapper(ConfirmedEquipmentMapper.class);
-
+  @Spy ConfirmedEquipmentMapper confirmedEquipmentMapper = Mappers.getMapper(ConfirmedEquipmentMapper.class);
   @Spy ChargeMapper chargeMapper = Mappers.getMapper(ChargeMapper.class);
 
   Booking booking;
@@ -1144,8 +1140,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName(
-        "Method should return confirmed booking for given carrierBookingRequestReference with confirmedEquipment")
+    @DisplayName("Method should return confirmed booking for given carrierBookingRequestReference with confirmedEquipment")
     void testGETBookingConfirmationWithConfirmedEquipment() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));

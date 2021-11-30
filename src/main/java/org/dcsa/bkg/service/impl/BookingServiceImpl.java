@@ -463,7 +463,6 @@ public class BookingServiceImpl implements BookingService {
                             deepObjs.getT4();
                         Optional<List<ChargeTO>> chargesToOpt = deepObjs.getT5();
                         Optional<BookingTO> bookingToOpt = deepObjs.getT6();
-
                         shipmentCutOffTimeTOpt.ifPresent(
                             bookingConfirmationTO::setShipmentCutOffTimes);
                         shipmentLocationsToOpt.ifPresent(
@@ -502,6 +501,18 @@ public class BookingServiceImpl implements BookingService {
                           return Mono.just(locTO);
                         }))
         .onErrorReturn(new LocationTO())
+        .map(Optional::of);
+  }
+
+  private Mono<Optional<List<CarrierClauseTO>>> fetchCarrierClausesByShipmentID(UUID shipmentID) {
+    if (shipmentID == null) return Mono.just(Optional.empty());
+    return shipmentCarrierClausesRepository
+        .findAllByShipmentID(shipmentID)
+        .flatMap(
+            shipmentCarrierClause ->
+                carrierClauseRepository.findById(shipmentCarrierClause.getCarrierClauseID()))
+        .flatMap(x -> Mono.just(carrierClauseMapper.carrierClauseToDTO(x)))
+        .collectList()
         .map(Optional::of);
   }
 
