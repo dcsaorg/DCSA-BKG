@@ -7,4 +7,6 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface PartyMapper {
   PartyTO partyToDTO(Party party);
+
+  Party dtoToParty(PartyTO partyTO);
 }
