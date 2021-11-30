@@ -454,22 +454,16 @@ public class BookingServiceImpl implements BookingService {
                       fetchBookingByBookingID(t.getT1().getBookingID()))
                   .flatMap(
                       deepObjs -> {
-                        Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt =
-                            deepObjs.getT1();
-                        Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt =
-                            deepObjs.getT2();
+                        Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt = deepObjs.getT1();
+                        Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt = deepObjs.getT2();
                         Optional<List<CarrierClauseTO>> carrierClauseToOpt = deepObjs.getT3();
-                        Optional<List<ConfirmedEquipmentTO>> confirmedEquipmentTOOpt =
-                            deepObjs.getT4();
+                        Optional<List<ConfirmedEquipmentTO>> confirmedEquipmentTOOpt = deepObjs.getT4();
                         Optional<List<ChargeTO>> chargesToOpt = deepObjs.getT5();
                         Optional<BookingTO> bookingToOpt = deepObjs.getT6();
-                        shipmentCutOffTimeTOpt.ifPresent(
-                            bookingConfirmationTO::setShipmentCutOffTimes);
-                        shipmentLocationsToOpt.ifPresent(
-                            bookingConfirmationTO::setShipmentLocations);
+                        shipmentCutOffTimeTOpt.ifPresent(bookingConfirmationTO::setShipmentCutOffTimes);
+                        shipmentLocationsToOpt.ifPresent(bookingConfirmationTO::setShipmentLocations);
                         carrierClauseToOpt.ifPresent(bookingConfirmationTO::setCarrierClauses);
-                        confirmedEquipmentTOOpt.ifPresent(
-                            bookingConfirmationTO::setConfirmedEquipments);
+                        confirmedEquipmentTOOpt.ifPresent(bookingConfirmationTO::setConfirmedEquipments);
                         chargesToOpt.ifPresent(bookingConfirmationTO::setCharges);
                         bookingToOpt.ifPresent(bookingConfirmationTO::setBooking);
                         return Mono.just(bookingConfirmationTO);
@@ -501,18 +495,6 @@ public class BookingServiceImpl implements BookingService {
                           return Mono.just(locTO);
                         }))
         .onErrorReturn(new LocationTO())
-        .map(Optional::of);
-  }
-
-  private Mono<Optional<List<CarrierClauseTO>>> fetchCarrierClausesByShipmentID(UUID shipmentID) {
-    if (shipmentID == null) return Mono.just(Optional.empty());
-    return shipmentCarrierClausesRepository
-        .findAllByShipmentID(shipmentID)
-        .flatMap(
-            shipmentCarrierClause ->
-                carrierClauseRepository.findById(shipmentCarrierClause.getCarrierClauseID()))
-        .flatMap(x -> Mono.just(carrierClauseMapper.carrierClauseToDTO(x)))
-        .collectList()
         .map(Optional::of);
   }
 
