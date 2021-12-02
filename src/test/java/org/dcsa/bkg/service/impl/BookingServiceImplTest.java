@@ -1252,7 +1252,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.APPR;
+      DocumentStatus documentStatus = DocumentStatus.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
@@ -1275,7 +1275,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                Assertions.assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
                 Assertions.assertEquals("ABC12313", bookingSummaryTO.getVesselIMONumber());
               })
           .expectComplete()
@@ -1290,7 +1290,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.APPR;
+      DocumentStatus documentStatus = DocumentStatus.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
@@ -1312,7 +1312,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                Assertions.assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
               })
           .expectComplete()
           .verify();
@@ -1326,7 +1326,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = null;
-      DocumentStatus documentStatus = DocumentStatus.APPR;
+      DocumentStatus documentStatus = DocumentStatus.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
@@ -1348,7 +1348,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                Assertions.assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
               })
           .expectComplete()
           .verify();
@@ -1394,7 +1394,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.APPR;
+      DocumentStatus documentStatus = DocumentStatus.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
@@ -1416,7 +1416,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                Assertions.assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
               })
           .expectComplete()
           .verify();
@@ -1428,7 +1428,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.APPR;
+      DocumentStatus documentStatus = DocumentStatus.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
@@ -1480,13 +1480,13 @@ class BookingServiceImplTest {
   class BookingCancellationTests {
 
     @Test
-    @DisplayName("Cancel of a booking with document status PENA should result in an error")
+    @DisplayName("Cancel of a booking with document status PENC should result in an error")
     void cancelBookingWithInvalidDocumentStatusShouldResultToError() {
 
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
-      mockBookingResponse.setDocumentStatus(DocumentStatus.PENA);
+      mockBookingResponse.setDocumentStatus(DocumentStatus.PENC);
 
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));

@@ -52,7 +52,7 @@ class BKGControllerTest {
     // populate DTO with relevant objects to verify json schema returned
     bookingTO = new BookingTO();
     bookingTO.setCarrierBookingRequestReference(UUID.randomUUID().toString());
-    bookingTO.setDocumentStatus(DocumentStatus.PENA);
+    bookingTO.setDocumentStatus(DocumentStatus.PENU);
     bookingTO.setBookingRequestDateTime(OffsetDateTime.now());
     bookingTO.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingTO.setDeliveryTypeAtDestination(ReceiptDeliveryType.SD);
