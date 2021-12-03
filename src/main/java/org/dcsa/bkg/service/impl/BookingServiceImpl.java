@@ -115,7 +115,7 @@ public class BookingServiceImpl implements BookingService {
   }
 
   @Override
-  public Flux<BookingSummaryTO> getBookingRequestSummaries(
+  public Flux<Tuple2<BookingSummaryTO, Long>> getBookingRequestSummaries(
       DocumentStatus documentStatus, Pageable pageable) {
 
     Flux<Booking> queryResponse =
@@ -132,7 +132,7 @@ public class BookingServiceImpl implements BookingService {
                       bookingSummaryTO.setVesselIMONumber(vessel.getVesselIMONumber());
                       return bookingSummaryTO;
                     })
-                .defaultIfEmpty(bookingSummaryMapper.bookingSummaryTOFromBooking(booking)));
+                .defaultIfEmpty(bookingSummaryMapper.bookingSummaryTOFromBooking(booking))).zipWith(bookingRepository.countAllByDocumentStatus(documentStatus));
   }
 
   @Override

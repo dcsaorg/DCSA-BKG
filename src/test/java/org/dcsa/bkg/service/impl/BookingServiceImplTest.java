@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.util.function.Tuple2;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -2661,7 +2662,8 @@ class BookingServiceImplTest {
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(documentStatus, pageRequest);
+          bookingServiceImpl.getBookingRequestSummaries(
+              documentStatus, pageRequest).map(Tuple2::getT1);
 
       StepVerifier.create(bookingToResponse)
           .assertNext(
@@ -2695,7 +2697,8 @@ class BookingServiceImplTest {
       when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(documentStatus, pageRequest);
+          bookingServiceImpl.getBookingRequestSummaries(
+              documentStatus, pageRequest).map(Tuple2::getT1);
 
       StepVerifier.create(bookingToResponse)
           .assertNext(
@@ -2728,7 +2731,8 @@ class BookingServiceImplTest {
       when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(documentStatus, pageRequest);
+          bookingServiceImpl.getBookingRequestSummaries(
+              documentStatus, pageRequest).map(Tuple2::getT1);
 
       StepVerifier.create(bookingToResponse)
           .assertNext(
@@ -2762,7 +2766,7 @@ class BookingServiceImplTest {
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(documentStatus, pageRequest);
+          bookingServiceImpl.getBookingRequestSummaries(documentStatus, pageRequest).map(Tuple2::getT1);
 
       StepVerifier.create(bookingToResponse)
           .assertNext(
@@ -2795,7 +2799,7 @@ class BookingServiceImplTest {
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(null, pageRequest);
+          bookingServiceImpl.getBookingRequestSummaries(null, pageRequest).map(Tuple2::getT1);
 
       StepVerifier.create(bookingToResponse)
           .assertNext(
@@ -2819,7 +2823,8 @@ class BookingServiceImplTest {
       when(bookingRepository.findAllByDocumentStatus(null, pageRequest)).thenReturn(Flux.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(null, pageRequest);
+          bookingServiceImpl.getBookingRequestSummaries(
+              null, pageRequest).map(Tuple2::getT1);
 
       StepVerifier.create(bookingToResponse).expectComplete().verify();
     }
