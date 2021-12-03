@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.dcsa.bkg.model.enums.TransportPlanStage;
+import org.dcsa.core.events.model.enums.TransportPlanStageCode;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Set;
 
 @DisplayName("Tests for TransportTOTest")
@@ -33,12 +35,12 @@ class TransportTOTest {
     objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     transportTO = new TransportTO();
-    transportTO.setTransportPlanStage(TransportPlanStage.MNC);
+    transportTO.setTransportPlanStage(TransportPlanStageCode.MNC);
     transportTO.setTransportPlanStageSequenceNumber(25);
     transportTO.setLoadLocation(new LocationTO());
     transportTO.setDischargeLocation(new LocationTO());
-    transportTO.setPlannedDepartureDate(LocalDate.now());
-    transportTO.setPlannedArrivalDate(LocalDate.now().plusDays(2));
+    transportTO.setPlannedDepartureDate(OffsetDateTime.now());
+    transportTO.setPlannedArrivalDate(OffsetDateTime.now().plusDays(2));
     transportTO.setVesselName("x".repeat(35));
     transportTO.setCarrierVoyageNumber("x".repeat(50));
     transportTO.setIsUnderShippersResponsibility(true);

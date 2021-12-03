@@ -3,10 +3,7 @@ package org.dcsa.bkg.controller;
 import org.dcsa.bkg.model.enums.TransportPlanStage;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
-import org.dcsa.core.events.model.enums.CutOffDateTimeCode;
-import org.dcsa.core.events.model.enums.DCSATransportType;
-import org.dcsa.core.events.model.enums.LocationType;
-import org.dcsa.core.events.model.enums.PaymentTerm;
+import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.exception.UpdateException;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
@@ -61,12 +58,12 @@ class BKGConfirmedBookingsControllerTest {
     location.setLongitude("12.57705349");
 
     TransportTO transport = new TransportTO();
-    transport.setTransportPlanStage(TransportPlanStage.MNC);
+    transport.setTransportPlanStage(TransportPlanStageCode.MNC);
     transport.setModeOfTransport(DCSATransportType.VESSEL);
     transport.setLoadLocation(location);
     transport.setDischargeLocation(location);
-    transport.setPlannedDepartureDate(LocalDate.now());
-    transport.setPlannedArrivalDate(LocalDate.now());
+    transport.setPlannedDepartureDate(OffsetDateTime.now());
+    transport.setPlannedArrivalDate(OffsetDateTime.now());
     transport.setVesselName("VesselName");
     transport.setVesselIMONumber("1234567");
     transport.setCarrierVoyageNumber("CarrierVoyageNumber");

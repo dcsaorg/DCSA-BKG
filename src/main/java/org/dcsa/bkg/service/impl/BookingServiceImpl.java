@@ -5,16 +5,15 @@ import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.*;
-import org.dcsa.core.events.model.enums.DocumentStatus;
-import org.dcsa.core.events.model.enums.DocumentTypeCode;
-import org.dcsa.core.events.model.enums.EventType;
-import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
+import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
+import org.dcsa.core.exception.DeleteException;
+import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -55,6 +54,12 @@ public class BookingServiceImpl implements BookingService {
   private final ShipmentCarrierClausesRepository shipmentCarrierClausesRepository;
   private final CarrierClauseRepository carrierClauseRepository;
   private final ChargeRepository chargeRepository;
+  private final TransportRepository transportRepository;
+  private final ShipmentTransportRepository shipmentTransportRepository;
+  private final TransportCallRepository transportCallRepository;
+  private final TransportEventRepository transportEventRepository;
+  private final ModeOfTransportRepository modeOfTransportRepository;
+  private final VoyageRepository voyageRepository;
 
   // mappers
   private final BookingMapper bookingMapper;
@@ -67,6 +72,7 @@ public class BookingServiceImpl implements BookingService {
   private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
   private final ChargeMapper chargeMapper;
   private final PartyContactDetailsMapper partyContactDetailsMapper;
+  private final TransportMapper transportMapper;
 
   // services
   private final ShipmentEventService shipmentEventService;
@@ -616,21 +622,30 @@ public class BookingServiceImpl implements BookingService {
                       fetchCarrierClausesByShipmentID(t.getT1().getShipmentID()),
                       fetchConfirmedEquipmentByByBookingID(t.getT1().getBookingID()),
                       fetchChargesByShipmentID(t.getT1().getShipmentID()),
-                      fetchBookingByBookingID(t.getT1().getBookingID()))
+                      fetchBookingByBookingID(t.getT1().getBookingID()),
+                      fetchTransports(t.getT1().getShipmentID()))
                   .flatMap(
                       deepObjs -> {
-                        Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt = deepObjs.getT1();
-                        Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt = deepObjs.getT2();
+                        Optional<List<ShipmentCutOffTimeTO>> shipmentCutOffTimeTOpt =
+                            deepObjs.getT1();
+                        Optional<List<ShipmentLocationTO>> shipmentLocationsToOpt =
+                            deepObjs.getT2();
                         Optional<List<CarrierClauseTO>> carrierClauseToOpt = deepObjs.getT3();
-                        Optional<List<ConfirmedEquipmentTO>> confirmedEquipmentTOOpt = deepObjs.getT4();
+                        Optional<List<ConfirmedEquipmentTO>> confirmedEquipmentTOOpt =
+                            deepObjs.getT4();
                         Optional<List<ChargeTO>> chargesToOpt = deepObjs.getT5();
                         Optional<BookingTO> bookingToOpt = deepObjs.getT6();
-                        shipmentCutOffTimeTOpt.ifPresent(bookingConfirmationTO::setShipmentCutOffTimes);
-                        shipmentLocationsToOpt.ifPresent(bookingConfirmationTO::setShipmentLocations);
+                        Optional<List<TransportTO>> transportsToOpt = deepObjs.getT7();
+                        shipmentCutOffTimeTOpt.ifPresent(
+                            bookingConfirmationTO::setShipmentCutOffTimes);
+                        shipmentLocationsToOpt.ifPresent(
+                            bookingConfirmationTO::setShipmentLocations);
                         carrierClauseToOpt.ifPresent(bookingConfirmationTO::setCarrierClauses);
-                        confirmedEquipmentTOOpt.ifPresent(bookingConfirmationTO::setConfirmedEquipments);
+                        confirmedEquipmentTOOpt.ifPresent(
+                            bookingConfirmationTO::setConfirmedEquipments);
                         chargesToOpt.ifPresent(bookingConfirmationTO::setCharges);
                         bookingToOpt.ifPresent(bookingConfirmationTO::setBooking);
+                        transportsToOpt.ifPresent(bookingConfirmationTO::setTransports);
                         return Mono.just(bookingConfirmationTO);
                       })
                   .thenReturn(bookingConfirmationTO);
@@ -661,6 +676,12 @@ public class BookingServiceImpl implements BookingService {
                         }))
         .onErrorReturn(new LocationTO())
         .map(Optional::of);
+  }
+
+  private Mono<Optional<LocationTO>> fetchLocationByTransportCallId(String id) {
+    if (id == null) return Mono.just(Optional.empty());
+    return transportCallRepository.findById(id)
+        .flatMap(transportCall -> fetchLocationByID(transportCall.getLocationID()));
   }
 
   private Mono<Optional<List<CarrierClauseTO>>> fetchCarrierClausesByShipmentID(UUID shipmentID) {
@@ -884,6 +905,89 @@ public class BookingServiceImpl implements BookingService {
     return requestedEquipmentRepository
         .findByBookingID(bookingID)
         .map(confirmedEquipmentMapper::requestedEquipmentToDto)
+        .collectList()
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
+  }
+
+  private Mono<Optional<TransportCall>> fetchTransportCall(String transportCallId) {
+      return transportCallRepository.findById(transportCallId)
+              .map(Optional::of)
+              .defaultIfEmpty(Optional.empty());
+  }
+
+  private Mono<Optional<List<TransportEvent>>> fetchTransportEventsByTransportId(UUID transportId) {
+      return transportRepository.findAllById(List.of(transportId)).flatMap(x ->
+              transportEventRepository.findAllByLoadOrDischargeTransportCallId(x.getLoadTransportCallID(), x.getDischargeTransportCallID(), EventClassifierCode.PLN))
+              .collectList()
+              .map(Optional::of)
+              .defaultIfEmpty(Optional.empty());
+  }
+
+  private Mono<Optional<Voyage>> fetchExportVoyageByTransportCallId(String transportCallId) {
+      if (transportCallId == null) return Mono.just(Optional.empty());
+      return transportCallRepository.findById(transportCallId).flatMap(x -> voyageRepository.findById(x.getExportVoyageID())).map(Optional::of).defaultIfEmpty(Optional.empty());
+  }
+  private Mono<Optional<Vessel>> fetchVesselByTransportCallId(String transportCallId) {
+      if (transportCallId == null) return Mono.just(Optional.empty());
+      return transportCallRepository.findById(transportCallId).flatMap(x -> vesselRepository.findById(x.getVesselID())).map(Optional::of).defaultIfEmpty(Optional.empty());
+  }
+
+  private Mono<Optional<ModeOfTransport>> fetchModeOfTransportByTransportCallId(String transportCallId) {
+      if (transportCallId == null) return Mono.just(Optional.empty());
+      return modeOfTransportRepository.findByTransportCallID(transportCallId).map(Optional::of).defaultIfEmpty(Optional.empty());
+  }
+
+  private Mono<Optional<List<TransportTO>>> fetchTransports(UUID shipmentId) {
+    return shipmentTransportRepository
+        .findAllByShipmentID(shipmentId)
+        .flatMap(
+            shipmentTransport ->
+                transportRepository
+                    .findAllById(List.of(shipmentTransport.getTransportID()))
+                    .flatMap(
+                        transport ->
+                            Mono.zip(
+                                    fetchTransportEventsByTransportId(transport.getTransportID()),
+                                    fetchLocationByTransportCallId(transport.getLoadTransportCallID()),
+                                    fetchLocationByTransportCallId(transport.getDischargeTransportCallID()),
+                                    fetchModeOfTransportByTransportCallId(transport.getLoadTransportCallID()),
+                                    fetchVesselByTransportCallId(transport.getLoadTransportCallID()),
+                                    fetchExportVoyageByTransportCallId(transport.getDischargeTransportCallID()))
+                                .map(
+                                    x -> {
+                                      TransportTO transportTO = transportMapper.transportToDTO(transport);
+                                      transportTO.setTransportPlanStage(shipmentTransport.getTransportPlanStageCode());
+                                      transportTO.setTransportPlanStageSequenceNumber(shipmentTransport.getTransportPlanStageSequenceNumber());
+                                      transportTO.setTransportName(transport.getTransportName());
+                                      transportTO.setTransportReference(transport.getTransportReference());
+                                      transportTO.setIsUnderShippersResponsibility(shipmentTransport.getIsUnderShippersResponsibility());
+                                      if (x.getT1().isPresent() && x.getT1().get().size() >= 2) {
+                                          // loadLocation => eventDateTime.Departure
+                                          // dischargeLocation => eventDateTime.Arrival
+
+                                          // ARGH!
+                                          x.getT1().ifPresent(t1 -> {
+                                              if (t1.get(0).getTransportEventTypeCode().equals(TransportEventTypeCode.ARRI)) {
+                                                transportTO.setPlannedArrivalDate(t1.get(0).getEventDateTime());
+                                                transportTO.setPlannedDepartureDate(t1.get(1).getEventDateTime());
+                                              } else {
+                                                transportTO.setPlannedArrivalDate(t1.get(1).getEventDateTime());
+                                                transportTO.setPlannedDepartureDate(t1.get(0).getEventDateTime());
+                                              }
+                                          });
+                                      }
+                                      // Possible problem: can be null, but are mandatory for transports
+                                      x.getT2().ifPresent(transportTO::setLoadLocation);
+                                      x.getT3().ifPresent(transportTO::setDischargeLocation);
+                                      x.getT4().ifPresent(t4 -> transportTO.setModeOfTransport(t4.getDcsaTransportType()));
+                                      x.getT5().ifPresent(t5 -> {
+                                          transportTO.setVesselName(t5.getVesselName());
+                                          transportTO.setVesselIMONumber(t5.getVesselIMONumber());
+                                      });
+                                      x.getT6().ifPresent(t6 -> transportTO.setCarrierVoyageNumber(t6.getCarrierVoyageNumber()));
+                                      return transportTO;
+                                    })))
         .collectList()
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
