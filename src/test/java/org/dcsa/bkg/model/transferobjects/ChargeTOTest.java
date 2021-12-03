@@ -24,7 +24,7 @@ class ChargeTOTest {
 
     chargeTO = new ChargeTO();
     chargeTO.setPaymentTermCode(PaymentTerm.PRE);
-    chargeTO.setChargeType("x".repeat(20));
+    chargeTO.setChargeTypeCode("x".repeat(20));
     chargeTO.setUnitPrice(20.20);
     chargeTO.setQuantity(20.20);
     chargeTO.setCurrencyCode("x".repeat(3));
@@ -79,10 +79,10 @@ class ChargeTOTest {
   @Test
   @DisplayName("ChargeTO should throw error if chargeType is not set.")
   void testToVerifyChargeTypeIsRequired() {
-    chargeTO.setChargeType(null);
+    chargeTO.setChargeTypeCode(null);
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "ChargeType is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "ChargeTypeCode is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -107,11 +107,11 @@ class ChargeTOTest {
   @DisplayName(
       "ChargeTO should throw error if chargeType length exceeds max size of 20.")
   void testToChargeTypeIsNotAllowedToExceed20() {
-    chargeTO.setChargeType("x".repeat(21));
+    chargeTO.setChargeTypeCode("x".repeat(21));
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "ChargeType has a max size of 20.".equals(v.getMessage())));
+            .anyMatch(v -> "ChargeTypeCode has a max size of 20.".equals(v.getMessage())));
   }
 
   @Test
