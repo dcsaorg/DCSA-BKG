@@ -7,7 +7,7 @@ import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.dcsa.core.events.model.enums.DocumentTypeCode;
-import org.dcsa.core.events.model.enums.EventType;
+import org.dcsa.core.events.model.enums.EventClassifierCode;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
@@ -1010,9 +1010,10 @@ public class BookingServiceImpl implements BookingService {
         shipmentEvent.setShipmentEventTypeCode(
             ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()));
         shipmentEvent.setDocumentTypeCode(DocumentTypeCode.BKG);
-        shipmentEvent.setCarrierBookingReference(booking.getCarrierBookingRequestReference());
-        shipmentEvent.setEventType(EventType.SHIPMENT);
-        shipmentEvent.setEventID(UUID.randomUUID());
+        shipmentEvent.setEventClassifierCode(EventClassifierCode.REQ);
+        shipmentEvent.setEventType(null);
+        shipmentEvent.setCarrierBookingReference(null);
+        shipmentEvent.setDocumentID(booking.getCarrierBookingRequestReference());
         shipmentEvent.setEventDateTime(booking.getBookingRequestDateTime());
         shipmentEvent.setEventCreatedDateTime(OffsetDateTime.now());
         return Mono.just(shipmentEvent);
