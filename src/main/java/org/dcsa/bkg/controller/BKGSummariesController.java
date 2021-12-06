@@ -30,24 +30,29 @@ public class BKGSummariesController {
 
   @GetMapping
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
-    @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
-    @RequestParam(value = "limit", defaultValue = "${pagination.defaultPageSize}", required = false) @Min(1) int limit,
-    @RequestParam(value = "cursor", defaultValue = "0", required = false) String cursor,
-    ServerHttpResponse response) {
+      @RequestParam(value = "carrierBookingRequestReference", required = false)
+          String carrierBookingRequestReference,
+      @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
+      @RequestParam(
+              value = "limit",
+              defaultValue = "${pagination.defaultPageSize}",
+              required = false)
+          @Min(1)
+          int limit,
+      @RequestParam(value = "cursor", defaultValue = "0", required = false) String cursor,
+      ServerHttpResponse response) {
 
-    Flux<Tuple2<BookingSummaryTO, Long>> queryResponse = bookingService.getBookingRequestSummaries(documentStatus, PageRequest.of(Integer.parseInt(cursor), limit, Sort.Direction.DESC, "bookingRequestDateTime"));
-
-
-    response.getHeaders().add("foo", "foo");
-    return queryResponse
-      .doOnNext(objects -> {
-      objects.mapT2(aLong -> {
-        response.getHeaders().add("total-count", String.valueOf(aLong));
-        return aLong;
-      });
-
-    })
-      .map(Tuple2::getT1);
-
+    return bookingService
+        .getBookingRequestSummaries(
+            documentStatus,
+            PageRequest.of(
+                Integer.parseInt(cursor), limit, Sort.Direction.DESC, "bookingRequestDateTime"))
+        .doOnNext(
+            objects -> {
+              if (response.getHeaders().get("foo-count") == null) {
+                response.getHeaders().add("foo-count", String.valueOf(objects.getT2()));
+              }
+            })
+        .map(Tuple2::getT1);
   }
 }
