@@ -12,8 +12,6 @@ import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
-import org.dcsa.core.exception.DeleteException;
-import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -910,16 +908,13 @@ public class BookingServiceImpl implements BookingService {
         .defaultIfEmpty(Optional.empty());
   }
 
-  private Mono<Optional<TransportCall>> fetchTransportCall(String transportCallId) {
-      return transportCallRepository.findById(transportCallId)
-              .map(Optional::of)
-              .defaultIfEmpty(Optional.empty());
-  }
-
-  private Mono<Optional<List<TransportEvent>>> fetchTransportEventsByTransportId(UUID transportId) {
-      return transportRepository.findAllById(List.of(transportId)).flatMap(x ->
-              transportEventRepository.findAllByLoadOrDischargeTransportCallId(x.getLoadTransportCallID(), x.getDischargeTransportCallID(), EventClassifierCode.PLN))
-              .collectList()
+  private Mono<Optional<TransportEvent>> fetchTransportEventByTransportId(UUID transportId, TransportEventTypeCode transportEventTypeCode, boolean useLoad) {
+      return transportRepository.findById(transportId).flatMap(x -> {
+              if (useLoad) {
+                  return transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(x.getLoadTransportCallID(), transportEventTypeCode, EventClassifierCode.PLN);
+              } else {
+                  return transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(x.getDischargeTransportCallID(), transportEventTypeCode, EventClassifierCode.PLN);
+              }})
               .map(Optional::of)
               .defaultIfEmpty(Optional.empty());
   }
@@ -948,12 +943,13 @@ public class BookingServiceImpl implements BookingService {
                     .flatMap(
                         transport ->
                             Mono.zip(
-                                    fetchTransportEventsByTransportId(transport.getTransportID()),
+                                    fetchTransportEventByTransportId(transport.getTransportID(), TransportEventTypeCode.DEPA, true),
+                                    fetchTransportEventByTransportId(transport.getTransportID(), TransportEventTypeCode.ARRI, false),
                                     fetchLocationByTransportCallId(transport.getLoadTransportCallID()),
                                     fetchLocationByTransportCallId(transport.getDischargeTransportCallID()),
                                     fetchModeOfTransportByTransportCallId(transport.getLoadTransportCallID()),
                                     fetchVesselByTransportCallId(transport.getLoadTransportCallID()),
-                                    fetchExportVoyageByTransportCallId(transport.getDischargeTransportCallID()))
+                                    fetchExportVoyageByTransportCallId(transport.getLoadTransportCallID()))
                                 .map(
                                     x -> {
                                       TransportTO transportTO = transportMapper.transportToDTO(transport);
@@ -962,30 +958,29 @@ public class BookingServiceImpl implements BookingService {
                                       transportTO.setTransportName(transport.getTransportName());
                                       transportTO.setTransportReference(transport.getTransportReference());
                                       transportTO.setIsUnderShippersResponsibility(shipmentTransport.getIsUnderShippersResponsibility());
-                                      if (x.getT1().isPresent() && x.getT1().get().size() >= 2) {
-                                          // loadLocation => eventDateTime.Departure
-                                          // dischargeLocation => eventDateTime.Arrival
 
-                                          // ARGH!
-                                          x.getT1().ifPresent(t1 -> {
-                                              if (t1.get(0).getTransportEventTypeCode().equals(TransportEventTypeCode.ARRI)) {
-                                                transportTO.setPlannedArrivalDate(t1.get(0).getEventDateTime());
-                                                transportTO.setPlannedDepartureDate(t1.get(1).getEventDateTime());
-                                              } else {
-                                                transportTO.setPlannedArrivalDate(t1.get(1).getEventDateTime());
-                                                transportTO.setPlannedDepartureDate(t1.get(0).getEventDateTime());
-                                              }
-                                          });
-                                      }
-                                      // Possible problem: can be null, but are mandatory for transports
-                                      x.getT2().ifPresent(transportTO::setLoadLocation);
-                                      x.getT3().ifPresent(transportTO::setDischargeLocation);
-                                      x.getT4().ifPresent(t4 -> transportTO.setModeOfTransport(t4.getDcsaTransportType()));
-                                      x.getT5().ifPresent(t5 -> {
-                                          transportTO.setVesselName(t5.getVesselName());
-                                          transportTO.setVesselIMONumber(t5.getVesselIMONumber());
+                                      x.getT1().ifPresent(t1 -> transportTO.setPlannedDepartureDate(t1.getEventDateTime()));
+                                      x.getT2().ifPresent(t2 -> transportTO.setPlannedArrivalDate(t2.getEventDateTime()));
+
+                                      x.getT3().ifPresent(transportTO::setLoadLocation);
+                                      x.getT4().ifPresent(transportTO::setDischargeLocation);
+
+                                      x.getT5().ifPresent(t5 -> transportTO.setModeOfTransport(t5.getDcsaTransportType()));
+                                      x.getT6().ifPresent(t6 -> {
+                                          transportTO.setVesselName(t6.getVesselName());
+                                          transportTO.setVesselIMONumber(t6.getVesselIMONumber());
                                       });
-                                      x.getT6().ifPresent(t6 -> transportTO.setCarrierVoyageNumber(t6.getCarrierVoyageNumber()));
+
+                                      /*
+                                        We are using exportVoyage from loadLocation according to the following mail from Christian:
+
+                                        The voyage number on a booking is always the Export voyage number (the shipment is leaving the origin).
+                                        This voyage number will remain the same until the shipment arrives at destination,
+                                        but will then be the import voyage number of the arriving vessel.
+                                        In other words only one voyage is required on a booking.
+                                        The T&T event that is sent to the consignee will mention the voyage number as the “import voyage number”.
+                                      */
+                                      x.getT7().ifPresent(t7 -> transportTO.setCarrierVoyageNumber(t7.getCarrierVoyageNumber()));
                                       return transportTO;
                                     })))
         .collectList()
