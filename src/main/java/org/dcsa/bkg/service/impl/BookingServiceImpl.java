@@ -908,13 +908,12 @@ public class BookingServiceImpl implements BookingService {
         .defaultIfEmpty(Optional.empty());
   }
 
-  private Mono<Optional<TransportEvent>> fetchTransportEventByTransportId(UUID transportId, TransportEventTypeCode transportEventTypeCode, boolean useLoad) {
-      return transportRepository.findById(transportId).flatMap(x -> {
-              if (useLoad) {
-                  return transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(x.getLoadTransportCallID(), transportEventTypeCode, EventClassifierCode.PLN);
-              } else {
-                  return transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(x.getDischargeTransportCallID(), transportEventTypeCode, EventClassifierCode.PLN);
-              }})
+  private Mono<Optional<Tuple2<TransportEvent, TransportEvent>>> fetchTransportEventByTransportId(UUID transportId) {
+      return transportRepository.findById(transportId).flatMap(x ->
+          Mono.zip(
+                  transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(x.getLoadTransportCallID(), TransportEventTypeCode.ARRI, EventClassifierCode.PLN),
+                  transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(x.getDischargeTransportCallID(), TransportEventTypeCode.DEPA, EventClassifierCode.PLN))
+              .flatMap(y -> Mono.just(Tuples.of(y.getT1(), y.getT2()))))
               .map(Optional::of)
               .defaultIfEmpty(Optional.empty());
   }
@@ -943,8 +942,7 @@ public class BookingServiceImpl implements BookingService {
                     .flatMap(
                         transport ->
                             Mono.zip(
-                                    fetchTransportEventByTransportId(transport.getTransportID(), TransportEventTypeCode.DEPA, true),
-                                    fetchTransportEventByTransportId(transport.getTransportID(), TransportEventTypeCode.ARRI, false),
+                                    fetchTransportEventByTransportId(transport.getTransportID()),
                                     fetchLocationByTransportCallId(transport.getLoadTransportCallID()),
                                     fetchLocationByTransportCallId(transport.getDischargeTransportCallID()),
                                     fetchModeOfTransportByTransportCallId(transport.getLoadTransportCallID()),
@@ -959,16 +957,18 @@ public class BookingServiceImpl implements BookingService {
                                       transportTO.setTransportReference(transport.getTransportReference());
                                       transportTO.setIsUnderShippersResponsibility(shipmentTransport.getIsUnderShippersResponsibility());
 
-                                      x.getT1().ifPresent(t1 -> transportTO.setPlannedDepartureDate(t1.getEventDateTime()));
-                                      x.getT2().ifPresent(t2 -> transportTO.setPlannedArrivalDate(t2.getEventDateTime()));
+                                      x.getT1().ifPresent(t1 -> {
+                                          transportTO.setPlannedDepartureDate(t1.getT1().getEventDateTime());
+                                          transportTO.setPlannedArrivalDate(t1.getT2().getEventDateTime());
+                                      });
 
-                                      x.getT3().ifPresent(transportTO::setLoadLocation);
-                                      x.getT4().ifPresent(transportTO::setDischargeLocation);
+                                      x.getT2().ifPresent(transportTO::setLoadLocation);
+                                      x.getT3().ifPresent(transportTO::setDischargeLocation);
 
-                                      x.getT5().ifPresent(t5 -> transportTO.setModeOfTransport(t5.getDcsaTransportType()));
-                                      x.getT6().ifPresent(t6 -> {
-                                          transportTO.setVesselName(t6.getVesselName());
-                                          transportTO.setVesselIMONumber(t6.getVesselIMONumber());
+                                      x.getT4().ifPresent(t4 -> transportTO.setModeOfTransport(t4.getDcsaTransportType()));
+                                      x.getT5().ifPresent(t5 -> {
+                                          transportTO.setVesselName(t5.getVesselName());
+                                          transportTO.setVesselIMONumber(t5.getVesselIMONumber());
                                       });
 
                                       /*
@@ -980,7 +980,7 @@ public class BookingServiceImpl implements BookingService {
                                         In other words only one voyage is required on a booking.
                                         The T&T event that is sent to the consignee will mention the voyage number as the “import voyage number”.
                                       */
-                                      x.getT7().ifPresent(t7 -> transportTO.setCarrierVoyageNumber(t7.getCarrierVoyageNumber()));
+                                      x.getT6().ifPresent(t6 -> transportTO.setCarrierVoyageNumber(t6.getCarrierVoyageNumber()));
                                       return transportTO;
                                     })))
         .collectList()
