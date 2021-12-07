@@ -24,7 +24,6 @@ import reactor.test.StepVerifier;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Collections;
-import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -1437,8 +1436,8 @@ class BookingServiceImplTest {
       when(modeOfTransportRepository.findByTransportCallID(any())).thenReturn(Mono.just(modeOfTransport));
       when(vesselRepository.findById((UUID) any())).thenReturn(Mono.just(vessel));
       when(voyageRepository.findById((UUID) any())).thenReturn(Mono.just(voyage));
-      when(transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(transport.getLoadTransportCallID(), TransportEventTypeCode.DEPA, EventClassifierCode.PLN)).thenReturn(Mono.just(departureTransportEvent));
-      when(transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(transport.getDischargeTransportCallID(), TransportEventTypeCode.ARRI, EventClassifierCode.PLN)).thenReturn(Mono.just(arrivalTransportEvent));
+      when(transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(transport.getLoadTransportCallID(), TransportEventTypeCode.ARRI, EventClassifierCode.PLN)).thenReturn(Mono.just(departureTransportEvent));
+      when(transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(transport.getDischargeTransportCallID(), TransportEventTypeCode.DEPA, EventClassifierCode.PLN)).thenReturn(Mono.just(arrivalTransportEvent));
 
       StepVerifier.create(bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(shipment.getCarrierBookingReference())).assertNext(
               b -> {
@@ -1496,8 +1495,8 @@ class BookingServiceImplTest {
       when(modeOfTransportRepository.findByTransportCallID(any())).thenReturn(Mono.just(modeOfTransport));
       when(vesselRepository.findById((UUID) any())).thenReturn(Mono.just(vessel));
       when(voyageRepository.findById((UUID) any())).thenReturn(Mono.just(voyage));
-      when(transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(transport.getLoadTransportCallID(), TransportEventTypeCode.DEPA, EventClassifierCode.PLN)).thenReturn(Mono.just(departureTransportEvent));
-      when(transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(transport.getDischargeTransportCallID(), TransportEventTypeCode.ARRI, EventClassifierCode.PLN)).thenReturn(Mono.just(arrivalTransportEvent));
+      when(transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(transport.getLoadTransportCallID(), TransportEventTypeCode.ARRI, EventClassifierCode.PLN)).thenReturn(Mono.just(departureTransportEvent));
+      when(transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(transport.getDischargeTransportCallID(), TransportEventTypeCode.DEPA, EventClassifierCode.PLN)).thenReturn(Mono.just(arrivalTransportEvent));
 
       StepVerifier.create(bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(shipment.getCarrierBookingReference())).assertNext(
               b -> {
