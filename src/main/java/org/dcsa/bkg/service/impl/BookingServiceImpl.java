@@ -1,6 +1,7 @@
 package org.dcsa.bkg.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
@@ -163,7 +164,17 @@ public class BookingServiceImpl implements BookingService {
               final UUID bookingID = booking.getId();
 
               return Mono.zip(
-                      Mono.just(bookingToDTOWithNullLocations(booking)),
+                      createVesselAndUpdateBooking(
+                              bookingRequest.getVesselName(),
+                              bookingRequest.getVesselIMONumber(),
+                              bookingID)
+                          .flatMap(
+                              v -> {
+                                BookingTO bookingTO = bookingToDTOWithNullLocations(booking);
+                                bookingTO.setVesselName(v.getVesselName());
+                                bookingTO.setVesselIMONumber(v.getVesselIMONumber());
+                                return Mono.just(bookingTO);
+                              }),
                       createLocationByTO(
                           bookingRequest.getInvoicePayableAt(),
                           invPayAT -> bookingRepository.setInvoicePayableAtFor(invPayAT, cbReqRef)),
@@ -219,6 +230,40 @@ public class BookingServiceImpl implements BookingService {
     bookingTO.setInvoicePayableAt(null);
     bookingTO.setPlaceOfIssue(null);
     return bookingTO;
+  }
+
+  private Mono<Vessel> createVesselAndUpdateBooking(
+      String vesselName, String vesselIMONumber, UUID bookingID) {
+
+    if (StringUtils.isEmpty(vesselName) && StringUtils.isEmpty(vesselIMONumber)) {
+      return Mono.just(new Vessel());
+    }
+
+    Vessel vessel = new Vessel();
+    vessel.setVesselName(vesselName);
+    vessel.setVesselIMONumber(vesselIMONumber);
+
+    return vesselRepository
+        .findByVesselIMONumberOrEmpty(vesselIMONumber)
+        .flatMap(
+            v -> {
+              if (!vesselName.equals(v.getVesselName())) {
+                return Mono.error(
+                    new CreateException(
+                        "Provided vessel name does not match vessel name of existing vesselIMONumber."));
+              }
+              return Mono.just(v);
+            })
+        .switchIfEmpty(
+            Mono.defer(
+                () ->
+                    vesselRepository.save(
+                        vessel))) // the reason defer is used with switchIfEmpty is switchIfEmpty
+        // accepts Mono "by value". Meaning that even before you
+        // subscribe to your mono, this alternative mono's evaluation is already triggered.
+        // The problem is not related to Reactor but to Java language itself and how it resolves
+        // method parameters.
+        .flatMap(v -> bookingRepository.setVesselIDFor(v.getId(), bookingID).thenReturn(v));
   }
 
   private Mono<Optional<LocationTO>> createLocationByTO(
