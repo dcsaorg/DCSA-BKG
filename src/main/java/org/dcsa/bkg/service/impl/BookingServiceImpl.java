@@ -1009,8 +1009,8 @@ public class BookingServiceImpl implements BookingService {
         ShipmentEvent shipmentEvent = new ShipmentEvent();
         shipmentEvent.setShipmentEventTypeCode(
             ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()));
-        shipmentEvent.setDocumentTypeCode(DocumentTypeCode.BKG);
-        shipmentEvent.setEventClassifierCode(EventClassifierCode.REQ);
+        shipmentEvent.setDocumentTypeCode(DocumentTypeCode.CBR);
+        shipmentEvent.setEventClassifierCode(EventClassifierCode.ACT);
         shipmentEvent.setEventType(null);
         shipmentEvent.setCarrierBookingReference(null);
         shipmentEvent.setDocumentID(booking.getCarrierBookingRequestReference());
