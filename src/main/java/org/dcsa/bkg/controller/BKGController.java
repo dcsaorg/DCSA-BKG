@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Size;
 
 @RequiredArgsConstructor
 @RestController
@@ -43,5 +44,20 @@ public class BKGController {
       @PathVariable String carrierBookingRequestReference) {
     return bookingService.getBookingByCarrierBookingRequestReference(
         carrierBookingRequestReference);
+  }
+
+  // To avoid spelling confusion we just accept both spellings
+  @PostMapping(path = "{carrierBookingRequestReference}/cancelation")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public Mono<Void> bookingCancelation(
+    @PathVariable @Size(max = 35) String carrierBookingRequestReference) {
+    return bookingCancellation(carrierBookingRequestReference);
+  }
+
+  @PostMapping(path = "{carrierBookingRequestReference}/cancellation")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public Mono<Void> bookingCancellation(
+    @PathVariable @Size(max = 35) String carrierBookingRequestReference) {
+    return bookingService.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
   }
 }

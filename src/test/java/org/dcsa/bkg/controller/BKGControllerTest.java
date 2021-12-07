@@ -7,12 +7,14 @@ import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
+import org.dcsa.core.exception.UpdateException;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -217,11 +219,76 @@ class BKGControllerTest {
     checkStatus200.andThen(checkBookingResponseJsonSchema).apply(exchange);
   }
 
+  @Test
+  @DisplayName(
+    "Cancelling a booking request should return a 204")
+  void bookingsCancelationShouldReturn204() {
+
+    WebTestClient.ResponseSpec exchange =
+      webTestClient
+        .post()
+        .uri(
+          BOOKING_ENDPOINT
+            + "/"
+            + bookingTO.getCarrierBookingRequestReference()
+            + "/cancellation")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange();
+    checkStatus204.apply(exchange);
+  }
+
+  @Test
+  @DisplayName(
+    "Canceling a booking request should return a 204")
+  void confirmedBookingsCancellationShouldReturn204() {
+
+    WebTestClient.ResponseSpec exchange =
+      webTestClient
+        .post()
+        .uri(
+          BOOKING_ENDPOINT
+            + "/"
+            + bookingTO.getCarrierBookingRequestReference()
+            + "/cancelation")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange();
+
+    checkStatus204.apply(exchange);
+  }
+
+  @Test
+  @DisplayName("Cancelling of a booking in unallowed status should return a 400 for invalid request")
+  void confirmedBookingsCancellationShouldReturn400() {
+
+    Mockito.when(
+        bookingService.cancelBookingByCarrierBookingReference(
+          bookingTO.getCarrierBookingRequestReference()))
+      .thenReturn(Mono.error(
+        new UpdateException(
+          "Cannot Cancel Booking that is not in status RECE, PENU or CONF")));
+
+    WebTestClient.ResponseSpec exchange =
+      webTestClient
+        .post()
+        .uri(
+          BOOKING_ENDPOINT
+            + "/"
+            + bookingTO.getCarrierBookingRequestReference()
+            + "/cancellation")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange();
+
+    checkStatus400.apply(exchange);
+  }
+
   private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus200 =
       (exchange) -> exchange.expectStatus().isOk();
 
   private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus202 =
       (exchange) -> exchange.expectStatus().isAccepted();
+
+  private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus204 =
+    (exchange) -> exchange.expectStatus().isNoContent();
 
   private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus400 =
       (exchange) -> exchange.expectStatus().isBadRequest();
