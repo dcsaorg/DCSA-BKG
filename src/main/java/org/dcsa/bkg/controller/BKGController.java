@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Size;
 
 @RequiredArgsConstructor
 @RestController
@@ -30,7 +31,7 @@ public class BKGController {
   @PutMapping("/{carrierBookingRequestReference}")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public Mono<BookingTO> updateBookingByReference(
-      @PathVariable String carrierBookingRequestReference,
+      @PathVariable @Size(max = 100) String carrierBookingRequestReference,
       @Valid @RequestBody BookingTO bookingRequest) {
     // ToDo: adjust this when the IM is ready for booking
     return bookingService.updateBookingByReferenceCarrierBookingRequestReference(
@@ -40,8 +41,23 @@ public class BKGController {
   @GetMapping("/{carrierBookingRequestReference}")
   @ResponseStatus(HttpStatus.OK)
   public Mono<BookingTO> getBookingByReference(
-      @PathVariable String carrierBookingRequestReference) {
+      @PathVariable @Size(max = 100) String carrierBookingRequestReference) {
     return bookingService.getBookingByCarrierBookingRequestReference(
         carrierBookingRequestReference);
+  }
+
+  // To avoid spelling confusion we just accept both spellings
+  @PostMapping(path = "{carrierBookingRequestReference}/cancelation")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public Mono<Void> bookingCancelation(
+    @PathVariable @Size(max = 100) String carrierBookingRequestReference) {
+    return bookingCancellation(carrierBookingRequestReference);
+  }
+
+  @PostMapping(path = "{carrierBookingRequestReference}/cancellation")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public Mono<Void> bookingCancellation(
+    @PathVariable @Size(max = 100) String carrierBookingRequestReference) {
+    return bookingService.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
   }
 }

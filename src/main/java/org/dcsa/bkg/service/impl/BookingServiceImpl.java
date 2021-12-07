@@ -167,32 +167,39 @@ public class BookingServiceImpl implements BookingService {
               final UUID bookingID = booking.getId();
 
               return Mono.zip(
-                  Mono.just(bookingToDTOWithNullLocations(booking)),
-                  createLocationByTO(
-                      bookingRequest.getInvoicePayableAt(),
-                      invPayAT -> bookingRepository.setInvoicePayableAtFor(invPayAT, cbReqRef)),
-                  createLocationByTO(
-                      bookingRequest.getPlaceOfIssue(),
-                      placeOfIss -> bookingRepository.setPlaceOfIssueIDFor(placeOfIss, cbReqRef)),
-                  createCommoditiesByBookingIDAndTOs(bookingID, bookingRequest.getCommodities()),
-                  createValueAddedServiceRequestsByBookingIDAndTOs(
-                      bookingID, bookingRequest.getValueAddedServiceRequests()),
-                  createReferencesByBookingIDAndTOs(bookingID, bookingRequest.getReferences()),
-                  createRequestedEquipmentsByBookingIDAndTOs(
-                      bookingID, bookingRequest.getRequestedEquipments()),
-                  createDocumentPartiesByBookingIDAndTOs(
-                      bookingID, bookingRequest.getDocumentParties()));
+                      Mono.just(bookingToDTOWithNullLocations(booking)),
+                      createLocationByTO(
+                          bookingRequest.getInvoicePayableAt(),
+                          invPayAT -> bookingRepository.setInvoicePayableAtFor(invPayAT, cbReqRef)),
+                      createLocationByTO(
+                          bookingRequest.getPlaceOfIssue(),
+                          placeOfIss ->
+                              bookingRepository.setPlaceOfIssueIDFor(placeOfIss, cbReqRef)),
+                      createCommoditiesByBookingIDAndTOs(
+                          bookingID, bookingRequest.getCommodities()),
+                      createValueAddedServiceRequestsByBookingIDAndTOs(
+                          bookingID, bookingRequest.getValueAddedServiceRequests()),
+                      createReferencesByBookingIDAndTOs(bookingID, bookingRequest.getReferences()),
+                      createRequestedEquipmentsByBookingIDAndTOs(
+                          bookingID, bookingRequest.getRequestedEquipments()),
+                      createDocumentPartiesByBookingIDAndTOs(
+                          bookingID, bookingRequest.getDocumentParties()))
+                  .zipWith(
+                      createShipmentLocationsByBookingIDAndTOs(
+                          bookingID, bookingRequest.getShipmentLocations()));
             })
         .flatMap(
             t -> {
-              BookingTO bookingTO = t.getT1();
-              Optional<LocationTO> invoicePayableAtOpt = t.getT2();
-              Optional<LocationTO> placeOfIssueOpt = t.getT3();
-              Optional<List<CommodityTO>> commoditiesOpt = t.getT4();
-              Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt = t.getT5();
-              Optional<List<ReferenceTO>> referencesOpt = t.getT6();
-              Optional<List<RequestedEquipmentTO>> requestedEquipmentsOpt = t.getT7();
-              Optional<List<DocumentPartyTO>> documentPartiesOpt = t.getT8();
+              BookingTO bookingTO = t.getT1().getT1();
+              Optional<LocationTO> invoicePayableAtOpt = t.getT1().getT2();
+              Optional<LocationTO> placeOfIssueOpt = t.getT1().getT3();
+              Optional<List<CommodityTO>> commoditiesOpt = t.getT1().getT4();
+              Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt =
+                  t.getT1().getT5();
+              Optional<List<ReferenceTO>> referencesOpt = t.getT1().getT6();
+              Optional<List<RequestedEquipmentTO>> requestedEquipmentsOpt = t.getT1().getT7();
+              Optional<List<DocumentPartyTO>> documentPartiesOpt = t.getT1().getT8();
+              Optional<List<ShipmentLocationTO>> shipmentLocationsOpt = t.getT2();
 
               // populate the booking DTO
               invoicePayableAtOpt.ifPresent(bookingTO::setInvoicePayableAt);
@@ -202,6 +209,7 @@ public class BookingServiceImpl implements BookingService {
               referencesOpt.ifPresent(bookingTO::setReferences);
               requestedEquipmentsOpt.ifPresent(bookingTO::setRequestedEquipments);
               documentPartiesOpt.ifPresent(bookingTO::setDocumentParties);
+              shipmentLocationsOpt.ifPresent(bookingTO::setShipmentLocations);
 
               return Mono.just(bookingTO);
             })
@@ -530,6 +538,69 @@ public class BookingServiceImpl implements BookingService {
             });
   }
 
+  private Mono<Optional<List<ShipmentLocationTO>>> createShipmentLocationsByBookingIDAndTOs(
+      final UUID bookingID, List<ShipmentLocationTO> shipmentLocations) {
+
+    if (Objects.isNull(shipmentLocations) || shipmentLocations.isEmpty()) {
+      return Mono.just(Optional.of(Collections.emptyList()));
+    }
+
+    return Flux.fromStream(shipmentLocations.stream())
+        .flatMap(
+            slTO -> {
+              ShipmentLocation shipmentLocation = new ShipmentLocation();
+              shipmentLocation.setBookingID(bookingID);
+              shipmentLocation.setShipmentLocationTypeCode(slTO.getShipmentLocationTypeCode());
+              shipmentLocation.setDisplayedName(slTO.getDisplayedName());
+              shipmentLocation.setEventDateTime(slTO.getEventDateTime());
+
+              Location location = locationMapper.dtoToLocation(slTO.getLocation());
+
+              if (Objects.isNull(slTO.getLocation().getAddress())) {
+                return locationRepository
+                    .save(location)
+                    .map(
+                        l -> {
+                          LocationTO lTO = locationMapper.locationToDTO(l);
+                          shipmentLocation.setLocationID(l.getId());
+                          return Tuples.of(lTO, shipmentLocation);
+                        });
+              } else {
+                return addressRepository
+                    .save(slTO.getLocation().getAddress())
+                    .flatMap(
+                        a -> {
+                          location.setAddressID(a.getId());
+                          return locationRepository
+                              .save(location)
+                              .map(
+                                  l -> {
+                                    LocationTO lTO = locationMapper.locationToDTO(l);
+                                    lTO.setAddress(a);
+                                    shipmentLocation.setLocationID(l.getId());
+                                    return Tuples.of(lTO, shipmentLocation);
+                                  });
+                        });
+              }
+            })
+        .flatMap(
+            t ->
+                shipmentLocationRepository
+                    .save(t.getT2())
+                    .map(
+                        savedSl -> {
+                          ShipmentLocationTO shipmentLocationTO = new ShipmentLocationTO();
+                          shipmentLocationTO.setLocation(t.getT1());
+                          shipmentLocationTO.setShipmentLocationTypeCode(
+                              savedSl.getShipmentLocationTypeCode());
+                          shipmentLocationTO.setDisplayedName(savedSl.getDisplayedName());
+                          shipmentLocationTO.setEventDateTime(savedSl.getEventDateTime());
+                          return shipmentLocationTO;
+                        }))
+        .collectList()
+        .map(Optional::of);
+  }
+
   @Override
   public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
       String carrierBookingRequestReference, BookingTO bookingRequest) {
@@ -634,6 +705,7 @@ public class BookingServiceImpl implements BookingService {
                         Optional<List<ChargeTO>> chargesToOpt = deepObjs.getT5();
                         Optional<BookingTO> bookingToOpt = deepObjs.getT6();
                         Optional<List<TransportTO>> transportsToOpt = deepObjs.getT7();
+
                         shipmentCutOffTimeTOpt.ifPresent(
                             bookingConfirmationTO::setShipmentCutOffTimes);
                         shipmentLocationsToOpt.ifPresent(

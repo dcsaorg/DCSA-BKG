@@ -74,7 +74,11 @@ class BookingServiceImplTest {
   @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
   @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
   @Spy CarrierClauseMapper carrierClauseMapper = Mappers.getMapper(CarrierClauseMapper.class);
-  @Spy ConfirmedEquipmentMapper confirmedEquipmentMapper = Mappers.getMapper(ConfirmedEquipmentMapper.class);
+
+  @Spy
+  ConfirmedEquipmentMapper confirmedEquipmentMapper =
+      Mappers.getMapper(ConfirmedEquipmentMapper.class);
+
   @Spy ChargeMapper chargeMapper = Mappers.getMapper(ChargeMapper.class);
   @Spy PartyContactDetailsMapper partyContactDetailsMapper = Mappers.getMapper(PartyContactDetailsMapper.class);
   @Spy TransportMapper transportMapper = Mappers.getMapper(TransportMapper.class);
@@ -319,6 +323,7 @@ class BookingServiceImplTest {
     PartyTO.IdentifyingCode identifyingCode;
     PartyContactDetailsTO partyContactDetailsTO;
     DocumentPartyTO documentPartyTO;
+    ShipmentLocationTO shipmentLocationTO;
 
     @BeforeEach
     void init() {
@@ -384,6 +389,13 @@ class BookingServiceImplTest {
       documentPartyTO.setIsToBeNotified(true);
 
       bookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
+
+      shipmentLocationTO = new ShipmentLocationTO();
+      shipmentLocationTO.setDisplayedName("Singapore");
+      shipmentLocationTO.setShipmentLocationTypeCode(LocationType.FCD);
+      shipmentLocationTO.setLocation(locationMapper.locationToDTO(location1));
+
+      bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
     }
 
     @Test
@@ -399,6 +411,7 @@ class BookingServiceImplTest {
       bookingTO.setReferences(null);
       bookingTO.setRequestedEquipments(null);
       bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
@@ -429,6 +442,7 @@ class BookingServiceImplTest {
       bookingTO.setReferences(null);
       bookingTO.setRequestedEquipments(null);
       bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
@@ -468,6 +482,7 @@ class BookingServiceImplTest {
       bookingTO.setReferences(null);
       bookingTO.setRequestedEquipments(null);
       bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
@@ -508,6 +523,7 @@ class BookingServiceImplTest {
       bookingTO.setReferences(null);
       bookingTO.setRequestedEquipments(null);
       bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
@@ -551,6 +567,7 @@ class BookingServiceImplTest {
 
       bookingTO.setRequestedEquipments(null);
       bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
@@ -595,6 +612,7 @@ class BookingServiceImplTest {
     void testCreateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferencesAndReqEquip() {
 
       bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
@@ -649,6 +667,7 @@ class BookingServiceImplTest {
       bookingTO.setReferences(null);
       bookingTO.setRequestedEquipments(null);
       bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
@@ -664,11 +683,14 @@ class BookingServiceImplTest {
           .verify();
     }
 
+    @Test
     @DisplayName(
         "Method should save and return booking with location, commodities, valueAddedServiceRequests, references,"
             + " requestedEquipments and documentParties for given booking request")
     void
         testCreateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferencesAndReqEquipAndDocParties() {
+
+      bookingTO.setShipmentLocations(null);
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
@@ -694,6 +716,8 @@ class BookingServiceImplTest {
       when(documentPartyRepository.save(any())).thenReturn(Mono.just(documentParty));
       when(displayedAddressRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(displayedAddress));
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
@@ -729,6 +753,89 @@ class BookingServiceImplTest {
                     "Javastraat", b.getDocumentParties().get(0).getDisplayedAddress().get(0));
                 Assertions.assertEquals(
                     PartyFunction.DDS, b.getDocumentParties().get(0).getPartyFunction());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should save and return booking with location, commodities, valueAddedServiceRequests, references,"
+            + " requestedEquipments, documentParties and shipmentLocations for given booking request")
+    void
+        testCreateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferencesAndReqEquipAndDocPartiesAndShipmentLocations() {
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
+          .thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
+          .thenReturn(Mono.just(location2));
+      when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(requestedEquipment));
+      when(addressRepository.save(any())).thenReturn(Mono.just(address));
+      when(partyRepository.save(any())).thenReturn(Mono.just(party));
+      when(partyContactDetailsRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(partyContactDetails));
+      when(partyIdentifyingCodeRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(partyIdentifyingCode));
+      when(documentPartyRepository.save(any())).thenReturn(Mono.just(documentParty));
+      when(displayedAddressRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(displayedAddress));
+      when(locationRepository.save(location1)).thenReturn(Mono.just(location1));
+      when(shipmentLocationRepository.save(any())).thenReturn(Mono.just(shipmentLocation));
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(
+                    "Mobile phones", b.getCommodities().get(0).getCommodityType());
+                Assertions.assertEquals(
+                    ValueAddedServiceCode.CDECL,
+                    b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                Assertions.assertEquals(
+                    ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
+                Assertions.assertEquals(
+                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
+                Assertions.assertEquals(
+                    "DCSA", b.getDocumentParties().get(0).getParty().getPartyName());
+                Assertions.assertEquals(
+                    "coin@gmail.com",
+                    b.getDocumentParties()
+                        .get(0)
+                        .getParty()
+                        .getPartyContactDetails()
+                        .get(0)
+                        .getEmail());
+                Assertions.assertEquals(
+                    "København", b.getDocumentParties().get(0).getParty().getAddress().getCity());
+                Assertions.assertEquals(
+                    "Javastraat", b.getDocumentParties().get(0).getDisplayedAddress().get(0));
+                Assertions.assertEquals(
+                    PartyFunction.DDS, b.getDocumentParties().get(0).getPartyFunction());
+                Assertions.assertEquals(
+                    bookingTO.getShipmentLocations().get(0).getDisplayedName(),
+                    b.getShipmentLocations().get(0).getDisplayedName());
+                Assertions.assertEquals(
+                    bookingTO.getShipmentLocations().get(0).getShipmentLocationTypeCode(),
+                    b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
+                Assertions.assertEquals(
+                    bookingTO.getShipmentLocations().get(0).getLocation().getLocationName(),
+                    b.getShipmentLocations().get(0).getLocation().getLocationName());
               })
           .verifyComplete();
     }
@@ -1325,9 +1432,12 @@ class BookingServiceImplTest {
     void testGETBookingConfirmationWithShipmentLocationsAndShipmentCutOffTimesAndCarrierClauses() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.just(shipmentLocation));
-      when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.just(shipmentCutOffTime));
-      when(locationRepository.findById(shipmentLocation.getLocationID())).thenReturn(Mono.just(location1));
+      when(shipmentLocationRepository.findByBookingID(any()))
+          .thenReturn(Flux.just(shipmentLocation));
+      when(shipmentCutOffTimeRepository.findAllByShipmentID(any()))
+          .thenReturn(Flux.just(shipmentCutOffTime));
+      when(locationRepository.findById(shipmentLocation.getLocationID()))
+          .thenReturn(Mono.just(location1));
       when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
       when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
       when(shipmentCarrierClausesRepository.findAllByShipmentID(any())).thenReturn(Flux.just(shipmentCarrierClause));
@@ -1339,17 +1449,31 @@ class BookingServiceImplTest {
 
       StepVerifier.create(bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(shipment.getCarrierBookingReference())).assertNext(
               b -> {
-                Assertions.assertEquals(shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
                 Assertions.assertNull(b.getBooking());
                 Assertions.assertEquals(1, b.getShipmentLocations().size());
                 Assertions.assertEquals(1, b.getCarrierClauses().size());
-                Assertions.assertEquals(carrierClause.getClauseContent(), b.getCarrierClauses().get(0).getClauseContent());
-                Assertions.assertEquals(shipmentLocation.getShipmentLocationTypeCode(), b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
-                Assertions.assertEquals(shipmentLocation.getDisplayedName(), b.getShipmentLocations().get(0).getDisplayedName());
-                Assertions.assertEquals(shipmentLocation.getEventDateTime(), b.getShipmentLocations().get(0).getEventDateTime());
-                Assertions.assertEquals(location1.getId(), b.getShipmentLocations().get(0).getLocation().getId());
-                Assertions.assertEquals(address.getId(), b.getShipmentLocations().get(0).getLocation().getAddress().getId());
-                Assertions.assertEquals(facility.getFacilityID(), b.getShipmentLocations().get(0).getLocation().getFacility().getFacilityID());
+                Assertions.assertEquals(
+                    carrierClause.getClauseContent(),
+                    b.getCarrierClauses().get(0).getClauseContent());
+                Assertions.assertEquals(
+                    shipmentLocation.getShipmentLocationTypeCode(),
+                    b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
+                Assertions.assertEquals(
+                    shipmentLocation.getDisplayedName(),
+                    b.getShipmentLocations().get(0).getDisplayedName());
+                Assertions.assertEquals(
+                    shipmentLocation.getEventDateTime(),
+                    b.getShipmentLocations().get(0).getEventDateTime());
+                Assertions.assertEquals(
+                    location1.getId(), b.getShipmentLocations().get(0).getLocation().getId());
+                Assertions.assertEquals(
+                    address.getId(),
+                    b.getShipmentLocations().get(0).getLocation().getAddress().getId());
+                Assertions.assertEquals(
+                    facility.getFacilityID(),
+                    b.getShipmentLocations().get(0).getLocation().getFacility().getFacilityID());
               })
           .verifyComplete();
     }
@@ -1380,7 +1504,8 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Method should return confirmed booking for given carrierBookingRequestReference with charges")
+    @DisplayName(
+        "Method should return confirmed booking for given carrierBookingRequestReference with charges")
     void testGETBookingConfirmationWithCharges() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
@@ -1397,13 +1522,17 @@ class BookingServiceImplTest {
                   shipment.getCarrierBookingReference()))
           .assertNext(
               b -> {
-                        Assertions.assertEquals(shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
-                        Assertions.assertEquals(shipment.getTermsAndConditions(), b.getTermsAndConditions());
-                        Assertions.assertEquals(shipment.getConfirmationDateTime(), b.getConfirmationDateTime());
-                        Assertions.assertNull(b.getBooking());
-                        Assertions.assertNotNull(b.getCharges());
-                        Assertions.assertEquals(1, b.getCharges().size());
-                        Assertions.assertEquals(charge.getChargeTypeCode(), b.getCharges().get(0).getChargeTypeCode());
+                Assertions.assertEquals(
+                    shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
+                Assertions.assertEquals(
+                    shipment.getTermsAndConditions(), b.getTermsAndConditions());
+                Assertions.assertEquals(
+                    shipment.getConfirmationDateTime(), b.getConfirmationDateTime());
+                Assertions.assertNull(b.getBooking());
+                Assertions.assertNotNull(b.getCharges());
+                Assertions.assertEquals(1, b.getCharges().size());
+                Assertions.assertEquals(
+                    charge.getChargeTypeCode(), b.getCharges().get(0).getChargeTypeCode());
               })
           .verifyComplete();
     }
@@ -1467,12 +1596,16 @@ class BookingServiceImplTest {
     @Test
     @DisplayName("Method should return confirmed booking for given carrierBookingRequestReference with everything")
     void testGETBookingConfirmationWithEverything() {
-
+      
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.just(shipmentLocation));
-      when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.just(shipmentCutOffTime));
-      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.just(confirmedEquipment));
-      when(shipmentCarrierClausesRepository.findAllByShipmentID(any())).thenReturn(Flux.just(shipmentCarrierClause));
+      when(shipmentLocationRepository.findByBookingID(any()))
+          .thenReturn(Flux.just(shipmentLocation));
+      when(shipmentCutOffTimeRepository.findAllByShipmentID(any()))
+          .thenReturn(Flux.just(shipmentCutOffTime));
+      when(requestedEquipmentRepository.findByBookingID(any()))
+          .thenReturn(Flux.just(confirmedEquipment));
+      when(shipmentCarrierClausesRepository.findAllByShipmentID(any()))
+          .thenReturn(Flux.just(shipmentCarrierClause));
       when(carrierClauseRepository.findById((UUID) any())).thenReturn(Mono.just(carrierClause));
       when(chargeRepository.findAllByShipmentID(any())).thenReturn(Flux.just(charge));
       when(locationRepository.findById((String) any())).thenReturn(Mono.just(location1));
@@ -1480,10 +1613,12 @@ class BookingServiceImplTest {
       when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.just(booking));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
-      when(valueAddedServiceRequestRepository.findByBookingID(any())).thenReturn(Flux.just(valueAddedServiceRequest));
+      when(valueAddedServiceRequestRepository.findByBookingID(any()))
+          .thenReturn(Flux.just(valueAddedServiceRequest));
       when(referenceRepository.findByBookingID(any())).thenReturn(Flux.just(reference));
       when(documentPartyRepository.findByBookingID(any())).thenReturn(Flux.just(documentParty));
       when(partyRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(party));
+  
       when(partyContactDetailsRepository.findByPartyID(any())).thenReturn(Flux.just(partyContactDetails));
       when(displayedAddressRepository.findByDocumentPartyIDOrderByAddressLineNumber(any())).thenReturn(Flux.just(displayedAddress));
       when(partyIdentifyingCodeRepository.findAllByPartyID(any())).thenReturn(Flux.just(partyIdentifyingCode));
@@ -1497,12 +1632,17 @@ class BookingServiceImplTest {
       when(voyageRepository.findById((UUID) any())).thenReturn(Mono.just(voyage));
       when(transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(transport.getLoadTransportCallID(), TransportEventTypeCode.ARRI, EventClassifierCode.PLN)).thenReturn(Mono.just(departureTransportEvent));
       when(transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(transport.getDischargeTransportCallID(), TransportEventTypeCode.DEPA, EventClassifierCode.PLN)).thenReturn(Mono.just(arrivalTransportEvent));
+      when(partyContactDetailsRepository.findByPartyID(any())).thenReturn(Flux.just(partyContactDetails));
+      when(displayedAddressRepository.findByDocumentPartyIDOrderByAddressLineNumber(any())).thenReturn(Flux.just(displayedAddress));
+      when(partyIdentifyingCodeRepository.findAllByPartyID(any())).thenReturn(Flux.just(partyIdentifyingCode));
 
       StepVerifier.create(bookingServiceImpl.getBookingConfirmationByCarrierBookingReference(shipment.getCarrierBookingReference())).assertNext(
               b -> {
                 Assertions.assertEquals(shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
                 Assertions.assertNotNull(b.getBooking());
-                Assertions.assertEquals(booking.getCarrierBookingRequestReference(), b.getBooking().getCarrierBookingRequestReference());
+                Assertions.assertEquals(
+                    booking.getCarrierBookingRequestReference(),
+                    b.getBooking().getCarrierBookingRequestReference());
                 Assertions.assertNotNull(b.getBooking().getInvoicePayableAt());
                 Assertions.assertNotNull(b.getBooking().getPlaceOfIssue());
                 Assertions.assertEquals(1, b.getConfirmedEquipments().size());
@@ -1514,8 +1654,16 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(1, b.getBooking().getCommodities().size());
                 Assertions.assertEquals(1, b.getBooking().getReferences().size());
                 Assertions.assertEquals(1, b.getBooking().getDocumentParties().size());
-                Assertions.assertEquals(1, b.getBooking().getDocumentParties().get(0).getDisplayedAddress().size());
-                Assertions.assertEquals(1, b.getBooking().getDocumentParties().get(0).getParty().getPartyContactDetails().size());
+                Assertions.assertEquals(
+                    1, b.getBooking().getDocumentParties().get(0).getDisplayedAddress().size());
+                Assertions.assertEquals(
+                    1,
+                    b.getBooking()
+                        .getDocumentParties()
+                        .get(0)
+                        .getParty()
+                        .getPartyContactDetails()
+                        .size());
                 Assertions.assertEquals(1, b.getBooking().getRequestedEquipments().size());
                 Assertions.assertEquals(1, b.getBooking().getValueAddedServiceRequests().size());
                 Assertions.assertEquals(1, b.getTransports().size());
@@ -1582,7 +1730,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.APPR;
+      DocumentStatus documentStatus = DocumentStatus.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
@@ -1605,7 +1753,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                Assertions.assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
                 Assertions.assertEquals("ABC12313", bookingSummaryTO.getVesselIMONumber());
               })
           .expectComplete()
@@ -1620,7 +1768,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.APPR;
+      DocumentStatus documentStatus = DocumentStatus.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
@@ -1642,7 +1790,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                Assertions.assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
               })
           .expectComplete()
           .verify();
@@ -1656,7 +1804,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = null;
-      DocumentStatus documentStatus = DocumentStatus.APPR;
+      DocumentStatus documentStatus = DocumentStatus.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
@@ -1678,7 +1826,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                Assertions.assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
               })
           .expectComplete()
           .verify();
@@ -1724,7 +1872,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.APPR;
+      DocumentStatus documentStatus = DocumentStatus.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
@@ -1746,7 +1894,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                Assertions.assertEquals(DocumentStatus.APPR, bookingSummaryTO.getDocumentStatus());
+                Assertions.assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
               })
           .expectComplete()
           .verify();
@@ -1758,7 +1906,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.APPR;
+      DocumentStatus documentStatus = DocumentStatus.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
@@ -1810,13 +1958,13 @@ class BookingServiceImplTest {
   class BookingCancellationTests {
 
     @Test
-    @DisplayName("Cancel of a booking with document status PENA should result in an error")
+    @DisplayName("Cancel of a booking with document status PENC should result in an error")
     void cancelBookingWithInvalidDocumentStatusShouldResultToError() {
 
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
-      mockBookingResponse.setDocumentStatus(DocumentStatus.PENA);
+      mockBookingResponse.setDocumentStatus(DocumentStatus.PENC);
 
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
