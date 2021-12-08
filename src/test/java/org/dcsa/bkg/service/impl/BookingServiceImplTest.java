@@ -414,7 +414,7 @@ class BookingServiceImplTest {
 
     @Test
     @DisplayName(
-        "Creation of booking should result in an error if provided vesselName does not match existing vesselName (based on vesselIMONumber) ")
+        "Creation of booking should result in an error if provided vesselName does not match existing vesselName (based on vesselIMONumber).")
     void testCreateBookingShallowWithExistingVesselButWrongVesselNameShouldFail() {
 
       booking.setInvoicePayableAt(null);
@@ -446,7 +446,40 @@ class BookingServiceImplTest {
 
     @Test
     @DisplayName(
-        "Method should save and return shallow booking with new vessel for given booking request")
+            "Creation of booking should result in an error if provided vesselName is linked to multiple vessels.")
+    void testCreateBookingShallowWithExistingVesselButNonUniqueVesselNameShouldFail() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setVesselName("Rum Runner");
+      bookingTO.setVesselIMONumber(null);
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselNameOrEmpty(any())).thenReturn(Flux.just(vessel, new Vessel()));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+              .expectErrorSatisfies(
+                      throwable -> {
+                        Assertions.assertTrue(throwable instanceof CreateException);
+                        Assertions.assertEquals(
+                                "Unable to identify unique vessel, please provide a vesselIMONumber.",
+                                throwable.getMessage());
+                      })
+              .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should save and return shallow booking with vessel (by vesselName) for given booking request")
     void testCreateBookingShallowWithNewVessel() {
 
       booking.setInvoicePayableAt(null);
@@ -463,8 +496,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(vesselRepository.findByVesselIMONumberOrEmpty(null)).thenReturn(Mono.empty());
-      when(vesselRepository.save(any())).thenReturn(Mono.just(vessel));
+      when(vesselRepository.findByVesselNameOrEmpty(any())).thenReturn(Flux.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
@@ -498,8 +530,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.empty());
-      when(vesselRepository.save(any())).thenReturn(Mono.just(vessel));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
@@ -542,8 +573,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.empty());
-      when(vesselRepository.save(any())).thenReturn(Mono.just(vessel));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
@@ -587,8 +617,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.empty());
-      when(vesselRepository.save(any())).thenReturn(Mono.just(vessel));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
@@ -635,8 +664,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.empty());
-      when(vesselRepository.save(any())).thenReturn(Mono.just(vessel));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
@@ -684,8 +712,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.empty());
-      when(vesselRepository.save(any())).thenReturn(Mono.just(vessel));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
@@ -768,8 +795,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.empty());
-      when(vesselRepository.save(any())).thenReturn(Mono.just(vessel));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
@@ -844,8 +870,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.empty());
-      when(vesselRepository.save(any())).thenReturn(Mono.just(vessel));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));

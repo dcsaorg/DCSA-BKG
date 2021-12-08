@@ -164,7 +164,7 @@ public class BookingServiceImpl implements BookingService {
               final UUID bookingID = booking.getId();
 
               return Mono.zip(
-                      createVesselAndUpdateBooking(
+                      findVesselAndUpdateBooking(
                               bookingRequest.getVesselName(),
                               bookingRequest.getVesselIMONumber(),
                               bookingID)
@@ -232,38 +232,46 @@ public class BookingServiceImpl implements BookingService {
     return bookingTO;
   }
 
-  private Mono<Vessel> createVesselAndUpdateBooking(
+  // Booking should not create a vessel, only use existing ones.
+  // If the requested vessel does not exist or the values don't match
+  // an error should be thrown
+  private Mono<Vessel> findVesselAndUpdateBooking(
       String vesselName, String vesselIMONumber, UUID bookingID) {
-
-    if (StringUtils.isEmpty(vesselName) && StringUtils.isEmpty(vesselIMONumber)) {
-      return Mono.just(new Vessel());
-    }
 
     Vessel vessel = new Vessel();
     vessel.setVesselName(vesselName);
     vessel.setVesselIMONumber(vesselIMONumber);
 
-    return vesselRepository
-        .findByVesselIMONumberOrEmpty(vesselIMONumber)
-        .flatMap(
-            v -> {
-              if (!vesselName.equals(v.getVesselName())) {
-                return Mono.error(
-                    new CreateException(
-                        "Provided vessel name does not match vessel name of existing vesselIMONumber."));
-              }
-              return Mono.just(v);
-            })
-        .switchIfEmpty(
-            Mono.defer(
-                () ->
-                    vesselRepository.save(
-                        vessel))) // the reason defer is used with switchIfEmpty is switchIfEmpty
-        // accepts Mono "by value". Meaning that even before you
-        // subscribe to your mono, this alternative mono's evaluation is already triggered.
-        // The problem is not related to Reactor but to Java language itself and how it resolves
-        // method parameters.
-        .flatMap(v -> bookingRepository.setVesselIDFor(v.getId(), bookingID).thenReturn(v));
+    if (!StringUtils.isEmpty(vesselIMONumber)) {
+      return vesselRepository
+          .findByVesselIMONumberOrEmpty(vesselIMONumber)
+          .flatMap(
+              v -> {
+                if (!vesselName.equals(v.getVesselName())) {
+                  return Mono.error(
+                      new CreateException(
+                          "Provided vessel name does not match vessel name of existing vesselIMONumber."));
+                }
+                return Mono.just(v);
+              })
+          .flatMap(v -> bookingRepository.setVesselIDFor(v.getId(), bookingID).thenReturn(v));
+    } else if (!StringUtils.isEmpty(vesselName)) {
+      return vesselRepository
+          .findByVesselNameOrEmpty(vesselIMONumber)
+          .collectList()
+          .flatMap(
+              vs -> {
+                if (vs.size() > 1) {
+                  return Mono.error(
+                      new CreateException(
+                          "Unable to identify unique vessel, please provide a vesselIMONumber."));
+                }
+                return Mono.just(vs.get(0));
+              })
+          .flatMap(v -> bookingRepository.setVesselIDFor(v.getId(), bookingID).thenReturn(v));
+    } else {
+      return Mono.just(new Vessel());
+    }
   }
 
   private Mono<Optional<LocationTO>> createLocationByTO(
