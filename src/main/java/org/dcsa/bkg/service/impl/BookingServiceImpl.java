@@ -1,6 +1,7 @@
 package org.dcsa.bkg.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.dcsa.bkg.model.mappers.*;
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
@@ -163,7 +164,17 @@ public class BookingServiceImpl implements BookingService {
               final UUID bookingID = booking.getId();
 
               return Mono.zip(
-                      Mono.just(bookingToDTOWithNullLocations(booking)),
+                      findVesselAndUpdateBooking(
+                              bookingRequest.getVesselName(),
+                              bookingRequest.getVesselIMONumber(),
+                              bookingID)
+                          .flatMap(
+                              v -> {
+                                BookingTO bookingTO = bookingToDTOWithNullLocations(booking);
+                                bookingTO.setVesselName(v.getVesselName());
+                                bookingTO.setVesselIMONumber(v.getVesselIMONumber());
+                                return Mono.just(bookingTO);
+                              }),
                       createLocationByTO(
                           bookingRequest.getInvoicePayableAt(),
                           invPayAT -> bookingRepository.setInvoicePayableAtFor(invPayAT, cbReqRef)),
@@ -219,6 +230,48 @@ public class BookingServiceImpl implements BookingService {
     bookingTO.setInvoicePayableAt(null);
     bookingTO.setPlaceOfIssue(null);
     return bookingTO;
+  }
+
+  // Booking should not create a vessel, only use existing ones.
+  // If the requested vessel does not exist or the values don't match
+  // an error should be thrown
+  private Mono<Vessel> findVesselAndUpdateBooking(
+      String vesselName, String vesselIMONumber, UUID bookingID) {
+
+    Vessel vessel = new Vessel();
+    vessel.setVesselName(vesselName);
+    vessel.setVesselIMONumber(vesselIMONumber);
+
+    if (!StringUtils.isEmpty(vesselIMONumber)) {
+      return vesselRepository
+          .findByVesselIMONumberOrEmpty(vesselIMONumber)
+          .flatMap(
+              v -> {
+                if (!vesselName.equals(v.getVesselName())) {
+                  return Mono.error(
+                      new CreateException(
+                          "Provided vessel name does not match vessel name of existing vesselIMONumber."));
+                }
+                return Mono.just(v);
+              })
+          .flatMap(v -> bookingRepository.setVesselIDFor(v.getId(), bookingID).thenReturn(v));
+    } else if (!StringUtils.isEmpty(vesselName)) {
+      return vesselRepository
+          .findByVesselNameOrEmpty(vesselIMONumber)
+          .collectList()
+          .flatMap(
+              vs -> {
+                if (vs.size() > 1) {
+                  return Mono.error(
+                      new CreateException(
+                          "Unable to identify unique vessel, please provide a vesselIMONumber."));
+                }
+                return Mono.just(vs.get(0));
+              })
+          .flatMap(v -> bookingRepository.setVesselIDFor(v.getId(), bookingID).thenReturn(v));
+    } else {
+      return Mono.just(new Vessel());
+    }
   }
 
   private Mono<Optional<LocationTO>> createLocationByTO(
