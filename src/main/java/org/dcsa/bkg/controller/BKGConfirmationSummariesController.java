@@ -19,7 +19,7 @@ import javax.validation.constraints.Min;
 @RestController
 @Validated
 @RequestMapping(
-    value = "/booking-confirmation-summaries",
+    value = "/confirmed-booking-summaries",
     produces = {MediaType.APPLICATION_JSON_VALUE})
 public class BKGConfirmationSummariesController {
 
