@@ -63,6 +63,7 @@ management:
       exposure:
         include: health
 
-#dcsa:
-#  specification:
-#    version: 1.0.0
+dcsa:
+  specification:
+    version: 1.0.0
+    
