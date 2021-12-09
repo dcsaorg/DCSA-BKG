@@ -153,6 +153,8 @@ class BookingServiceImplTest {
     vessel.setId(UUID.fromString("8aa766f3-73ff-4173-8a5e-c13079dcbffb"));
     vessel.setVesselName("Rum Runner");
     vessel.setVesselIMONumber("9321483");
+    vessel.setVesselOperatorCarrierID(UUID.randomUUID());
+    vessel.setVesselFlag("FU");
 
     commodity = new Commodity();
     commodity.setCommodityType("Mobile phones");
@@ -254,13 +256,6 @@ class BookingServiceImplTest {
     modeOfTransport.setDescription("Transport of goods and/or persons is by sea.");
     modeOfTransport.setName("Maritime transport");
     modeOfTransport.setDcsaTransportType(DCSATransportType.VESSEL);
-
-    vessel = new Vessel();
-    vessel.setId(UUID.randomUUID());
-    vessel.setVesselName("v".repeat(35));
-    vessel.setVesselOperatorCarrierID(UUID.randomUUID());
-    vessel.setVesselIMONumber("1234567");
-    vessel.setVesselFlag("FU");
 
     voyage = new Voyage();
     voyage.setId(UUID.randomUUID());
