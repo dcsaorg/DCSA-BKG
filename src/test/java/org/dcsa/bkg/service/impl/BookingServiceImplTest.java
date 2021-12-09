@@ -29,8 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for BookingService Implementation.")
@@ -149,6 +148,11 @@ class BookingServiceImplTest {
     facility.setFacilityName("DP WORLD JEBEL ALI - CT1");
     facility.setUnLocationCode("AEJEA");
     facility.setFacilitySMDGCode("DPWJA");
+
+    vessel = new Vessel();
+    vessel.setId(UUID.fromString("8aa766f3-73ff-4173-8a5e-c13079dcbffb"));
+    vessel.setVesselName("Rum Runner");
+    vessel.setVesselIMONumber("9321483");
 
     commodity = new Commodity();
     commodity.setCommodityType("Mobile phones");
@@ -339,6 +343,9 @@ class BookingServiceImplTest {
 
       bookingTO.setPlaceOfIssue(placeOfIssue);
 
+      bookingTO.setVesselName("Rum Runner");
+      bookingTO.setVesselIMONumber("9321483");
+
       commodityTO = new CommodityTO();
       commodityTO.setCommodityType(commodity.getCommodityType());
 
@@ -404,6 +411,8 @@ class BookingServiceImplTest {
 
       booking.setInvoicePayableAt(null);
       booking.setPlaceOfIssueID(null);
+      bookingTO.setVesselName(null);
+      bookingTO.setVesselIMONumber(null);
       bookingTO.setInvoicePayableAt(null);
       bookingTO.setPlaceOfIssue(null);
       bookingTO.setCommodities(null);
@@ -434,6 +443,155 @@ class BookingServiceImplTest {
     }
 
     @Test
+    @DisplayName(
+        "Method should save and return shallow booking with existing vessel (IMO exists and name matches) "
+            + "for given booking request")
+    void testCreateBookingShallowWithExistingVessel() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+          .assertNext(
+              b -> {
+                verify(vesselRepository, times(0))
+                    .save(any()); // verify .switchIfEmpty(Mono.defer(() ->
+                // vesselRepository.save(vessel))) was not
+                // called if vessel is present
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
+                Assertions.assertNull(b.getInvoicePayableAt());
+                Assertions.assertNull(b.getPlaceOfIssue());
+                Assertions.assertEquals(0, b.getCommodities().size());
+                Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Creation of booking should result in an error if provided vesselName does not match existing vesselName (based on vesselIMONumber).")
+    void testCreateBookingShallowWithExistingVesselButWrongVesselNameShouldFail() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setVesselName("Freedom");
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertEquals(
+                    "Provided vessel name does not match vessel name of existing vesselIMONumber.",
+                    throwable.getMessage());
+              })
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+            "Creation of booking should result in an error if provided vesselName is linked to multiple vessels.")
+    void testCreateBookingShallowWithExistingVesselButNonUniqueVesselNameShouldFail() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setVesselName("Rum Runner");
+      bookingTO.setVesselIMONumber(null);
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselNameOrEmpty(any())).thenReturn(Flux.just(vessel, new Vessel()));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+              .expectErrorSatisfies(
+                      throwable -> {
+                        Assertions.assertTrue(throwable instanceof CreateException);
+                        Assertions.assertEquals(
+                                "Unable to identify unique vessel, please provide a vesselIMONumber.",
+                                throwable.getMessage());
+                      })
+              .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should save and return shallow booking with vessel (by vesselName) for given booking request")
+    void testCreateBookingShallowWithNewVessel() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setVesselIMONumber(null);
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselNameOrEmpty(any())).thenReturn(Flux.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
+                Assertions.assertNull(b.getInvoicePayableAt());
+                Assertions.assertNull(b.getPlaceOfIssue());
+                Assertions.assertEquals(0, b.getCommodities().size());
+                Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
     @DisplayName("Method should save and return booking with location for given booking request")
     void testCreateBookingWithLocation() {
 
@@ -446,6 +604,8 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
@@ -461,6 +621,7 @@ class BookingServiceImplTest {
               b -> {
                 Assertions.assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
                 Assertions.assertEquals(
@@ -486,6 +647,8 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
@@ -502,6 +665,7 @@ class BookingServiceImplTest {
               b -> {
                 Assertions.assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
                 Assertions.assertEquals(
@@ -527,6 +691,8 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
@@ -545,6 +711,7 @@ class BookingServiceImplTest {
               b -> {
                 Assertions.assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
                 Assertions.assertEquals(
@@ -571,6 +738,8 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
 
@@ -590,6 +759,7 @@ class BookingServiceImplTest {
               b -> {
                 Assertions.assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
                 Assertions.assertEquals(
@@ -616,6 +786,8 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
 
@@ -637,6 +809,7 @@ class BookingServiceImplTest {
               b -> {
                 Assertions.assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
                 Assertions.assertEquals(
@@ -660,6 +833,8 @@ class BookingServiceImplTest {
 
       booking.setInvoicePayableAt(null);
       booking.setPlaceOfIssueID(null);
+      bookingTO.setVesselName(null);
+      bookingTO.setVesselIMONumber(null);
       bookingTO.setInvoicePayableAt(null);
       bookingTO.setPlaceOfIssue(null);
       bookingTO.setCommodities(null);
@@ -694,6 +869,8 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
 
@@ -724,6 +901,7 @@ class BookingServiceImplTest {
               b -> {
                 Assertions.assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
                 Assertions.assertEquals(
@@ -766,6 +944,8 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
 
@@ -798,6 +978,7 @@ class BookingServiceImplTest {
               b -> {
                 Assertions.assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
                 Assertions.assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
                 Assertions.assertEquals(

@@ -6,15 +6,12 @@ import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.http.server.reactive.MockServerHttpResponse;
 import org.springframework.test.context.ActiveProfiles;
@@ -39,7 +36,7 @@ class BKGConfirmationSummariesControllerTest {
   MockServerHttpResponse serverHttpResponse;
   MockServerHttpRequest serverHttpRequest;
 
-  private final String BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT = "/booking-confirmation-summaries";
+  private final String BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT = "/confirmed-booking-summaries";
 
   @Test
   @DisplayName("Get booking summaries should throw bad request for invalid document status.")
