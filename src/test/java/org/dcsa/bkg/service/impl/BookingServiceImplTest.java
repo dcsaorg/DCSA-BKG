@@ -15,16 +15,12 @@ import org.dcsa.core.exception.UpdateException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import reactor.util.function.Tuple2;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -2662,8 +2658,9 @@ class BookingServiceImplTest {
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(
-              documentStatus, pageRequest).map(Tuple2::getT1);
+          bookingServiceImpl
+              .getBookingRequestSummaries(documentStatus, pageRequest)
+              .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
       StepVerifier.create(bookingToResponse)
           .assertNext(
@@ -2697,8 +2694,9 @@ class BookingServiceImplTest {
       when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(
-              documentStatus, pageRequest).map(Tuple2::getT1);
+          bookingServiceImpl
+              .getBookingRequestSummaries(documentStatus, pageRequest)
+              .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
       StepVerifier.create(bookingToResponse)
           .assertNext(
@@ -2731,8 +2729,9 @@ class BookingServiceImplTest {
       when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(
-              documentStatus, pageRequest).map(Tuple2::getT1);
+          bookingServiceImpl
+              .getBookingRequestSummaries(documentStatus, pageRequest)
+              .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
       StepVerifier.create(bookingToResponse)
           .assertNext(
@@ -2741,6 +2740,39 @@ class BookingServiceImplTest {
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
                 Assertions.assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
+              })
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Get booking summaries with carrierBookingRequestReference should return valid list of booking request summaries.")
+    void bookingSummaryRequestWithCarrierBookingRequestReferenceShouldReturnValidBooking() {
+
+      UUID carrierBookingRequestReference = UUID.randomUUID();
+      UUID vesselId = UUID.randomUUID();
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(bookingRepository.findAllByDocumentStatus(null, pageRequest))
+          .thenReturn(
+              Flux.just(
+                  initializeBookingTestInstance(carrierBookingRequestReference, null, vesselId)));
+
+      Mockito.when(vesselRepository.findByIdOrEmpty(vesselId))
+          .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
+
+      Flux<BookingSummaryTO> bookingToResponse =
+          bookingServiceImpl
+              .getBookingRequestSummaries(null, pageRequest)
+              .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
+
+      StepVerifier.create(bookingToResponse)
+          .assertNext(
+              bookingSummaryTO -> {
+                Assertions.assertEquals(
+                    carrierBookingRequestReference.toString(),
+                    bookingSummaryTO.getCarrierBookingRequestReference());
               })
           .expectComplete()
           .verify();
@@ -2766,7 +2798,9 @@ class BookingServiceImplTest {
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(documentStatus, pageRequest).map(Tuple2::getT1);
+          bookingServiceImpl
+              .getBookingRequestSummaries(documentStatus, pageRequest)
+              .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
       StepVerifier.create(bookingToResponse)
           .assertNext(
@@ -2799,7 +2833,9 @@ class BookingServiceImplTest {
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(null, pageRequest).map(Tuple2::getT1);
+          bookingServiceImpl
+              .getBookingRequestSummaries(null, pageRequest)
+              .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
       StepVerifier.create(bookingToResponse)
           .assertNext(
@@ -2823,8 +2859,9 @@ class BookingServiceImplTest {
       when(bookingRepository.findAllByDocumentStatus(null, pageRequest)).thenReturn(Flux.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl.getBookingRequestSummaries(
-              null, pageRequest).map(Tuple2::getT1);
+          bookingServiceImpl
+              .getBookingRequestSummaries(null, pageRequest)
+              .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
       StepVerifier.create(bookingToResponse).expectComplete().verify();
     }

@@ -15,6 +15,8 @@ import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.UpdateException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -115,24 +117,28 @@ public class BookingServiceImpl implements BookingService {
   }
 
   @Override
-  public Flux<Tuple2<BookingSummaryTO, Long>> getBookingRequestSummaries(
+  public Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
       DocumentStatus documentStatus, Pageable pageable) {
 
     Flux<Booking> queryResponse =
         bookingRepository.findAllByDocumentStatus(documentStatus, pageable);
 
-    return queryResponse.flatMap(
-        booking ->
-            vesselRepository
-                .findByIdOrEmpty(booking.getVesselId())
-                .mapNotNull(
-                    vessel -> {
-                      BookingSummaryTO bookingSummaryTO =
-                          bookingSummaryMapper.bookingSummaryTOFromBooking(booking);
-                      bookingSummaryTO.setVesselIMONumber(vessel.getVesselIMONumber());
-                      return bookingSummaryTO;
-                    })
-                .defaultIfEmpty(bookingSummaryMapper.bookingSummaryTOFromBooking(booking))).zipWith(bookingRepository.countAllByDocumentStatus(documentStatus));
+    return queryResponse
+        .flatMap(
+            booking ->
+                vesselRepository
+                    .findByIdOrEmpty(booking.getVesselId())
+                    .mapNotNull(
+                        vessel -> {
+                          BookingSummaryTO bookingSummaryTO =
+                              bookingSummaryMapper.bookingSummaryTOFromBooking(booking);
+                          bookingSummaryTO.setVesselIMONumber(vessel.getVesselIMONumber());
+                          return bookingSummaryTO;
+                        })
+                    .defaultIfEmpty(bookingSummaryMapper.bookingSummaryTOFromBooking(booking)))
+        .collectList()
+        .zipWith(bookingRepository.countAllByDocumentStatus(documentStatus))
+        .map(objects -> new PageImpl<>(objects.getT1(), pageable, objects.getT2()));
   }
 
   @Override

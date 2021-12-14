@@ -2,14 +2,14 @@ package org.dcsa.bkg.service;
 
 import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.core.events.model.enums.DocumentStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 public interface BookingService {
-
-  Flux<Tuple2<BookingSummaryTO, Long>> getBookingRequestSummaries(DocumentStatus documentStatus, Pageable pageable);
+//  Flux<Tuple2<BookingSummaryTO, Long>> getBookingRequestSummaries(String carrierBookingRequestReference, DocumentStatus documentStatus, Pageable pageable);
+  Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(DocumentStatus documentStatus, Pageable pageable);
 
   Mono<BookingTO> createBooking(BookingTO bookingRequest);
 
