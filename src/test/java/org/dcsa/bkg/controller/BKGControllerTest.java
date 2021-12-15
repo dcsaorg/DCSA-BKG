@@ -357,7 +357,7 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.vesselIMONumber")
                   .hasJsonPath()
-                  .jsonPath("$.carrierVoyageNumber")
+                  .jsonPath("$.exportVoyageNumber")
                   .hasJsonPath()
                   .jsonPath("$.commodities")
                   .hasJsonPath()
