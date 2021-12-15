@@ -2,20 +2,26 @@ package org.dcsa.bkg.model.transferobjects;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import org.dcsa.bkg.model.enums.TransportPlanStage;
 import org.dcsa.core.events.model.enums.DCSATransportType;
+import org.dcsa.core.events.model.enums.TransportPlanStageCode;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.validator.ValidVesselIMONumber;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 @Data
 public class TransportTO {
 
+  @Size(max = 50)
+  private String transportReference;
+
+  @Size(max = 100)
+  private String transportName;
+
   @NotNull(message = "TransportPlanStage is required.")
-  private TransportPlanStage transportPlanStage;
+  private TransportPlanStageCode transportPlanStage;
 
   private int transportPlanStageSequenceNumber;
 
@@ -27,11 +33,11 @@ public class TransportTO {
 
   @NotNull(message = "PlannedDepartureDate is required.")
   @JsonFormat(shape = JsonFormat.Shape.STRING)
-  private LocalDate plannedDepartureDate;
+  private OffsetDateTime plannedDepartureDate;
 
   @NotNull(message = "PlannedArrivalDate is required.")
   @JsonFormat(shape = JsonFormat.Shape.STRING)
-  private LocalDate plannedArrivalDate;
+  private OffsetDateTime plannedArrivalDate;
 
   private DCSATransportType modeOfTransport;
 
