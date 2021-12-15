@@ -238,7 +238,7 @@ class BookingTOTest {
   @Test
   @DisplayName("BookingTO should throw error if carrierVoyageNumber length exceeds max size of 50.")
   void testToVerifyCarrierVoyageNumberDoesNotExceedALengthOf50() {
-    validBookingTO.setCarrierVoyageNumber("0".repeat(51));
+    validBookingTO.setExportVoyageNumber("0".repeat(51));
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()

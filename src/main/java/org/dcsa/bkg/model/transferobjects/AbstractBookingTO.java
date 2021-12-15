@@ -88,6 +88,6 @@ public abstract class AbstractBookingTO {
   @ValidVesselIMONumber(allowNull = true, message = "VesselIMONumber is invalid.")
   protected String vesselIMONumber;
 
-  @Size(max = 50, message = "CarrierVoyageNumber has a max size of 50.")
-  protected String carrierVoyageNumber;
+  @Size(max = 50, message = "ExportVoyageNumber has a max size of 50.")
+  protected String exportVoyageNumber;
 }
