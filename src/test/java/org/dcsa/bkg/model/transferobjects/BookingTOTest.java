@@ -242,7 +242,7 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "CarrierVoyageNumber has a max size of 50.".equals(v.getMessage())));
+            .anyMatch(v -> "ExportVoyageNumber has a max size of 50.".equals(v.getMessage())));
   }
 
   @Test
