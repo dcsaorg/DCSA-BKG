@@ -90,4 +90,6 @@ public abstract class AbstractBookingTO {
 
   @Size(max = 50, message = "ExportVoyageNumber has a max size of 50.")
   protected String exportVoyageNumber;
+
+  protected DCSATransportType preCarriageModeOfTransportCode;
 }
