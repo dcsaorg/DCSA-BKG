@@ -27,7 +27,7 @@ public class BKGShipmentController {
   public Mono<ShipmentTO> getBookingReference(
       @PathVariable @Size(max = 35) String carrierBookingReference) {
     // ToDo: adjust this when the IM is ready for booking
-    return bookingService.getBookingConfirmationByCarrierBookingReference(carrierBookingReference);
+    return bookingService.getShipmentByCarrierBookingReference(carrierBookingReference);
   }
 
 }

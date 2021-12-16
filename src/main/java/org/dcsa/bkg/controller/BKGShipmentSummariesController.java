@@ -33,6 +33,6 @@ public class BKGShipmentSummariesController {
       @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
       @RequestParam(value = "limit", defaultValue = "${pagination.defaultPageSize}", required = false) @Min(1) int limit,
       @RequestParam(value = "cursor", defaultValue = "0", required = false) String cursor) {
-    return bookingService.getBookingConfirmationSummaries(carrierBookingReference, documentStatus, PageRequest.of(Integer.parseInt(cursor), limit));
+    return bookingService.getShipmentSummaries(carrierBookingReference, documentStatus, PageRequest.of(Integer.parseInt(cursor), limit));
   }
 }

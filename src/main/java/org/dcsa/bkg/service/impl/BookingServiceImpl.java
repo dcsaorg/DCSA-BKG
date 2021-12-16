@@ -77,7 +77,7 @@ public class BookingServiceImpl implements BookingService {
   private final ShipmentEventService shipmentEventService;
 
   @Override
-  public Flux<ShipmentSummaryTO> getBookingConfirmationSummaries(
+  public Flux<ShipmentSummaryTO> getShipmentSummaries(
       String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
 
     Flux<Shipment> shipmentResponse =
@@ -730,7 +730,7 @@ public class BookingServiceImpl implements BookingService {
   }
 
   @Override
-  public Mono<ShipmentTO> getBookingConfirmationByCarrierBookingReference(
+  public Mono<ShipmentTO> getShipmentByCarrierBookingReference(
       String carrierBookingRequestReference) {
     return shipmentRepository
         .findByCarrierBookingReference(carrierBookingRequestReference)

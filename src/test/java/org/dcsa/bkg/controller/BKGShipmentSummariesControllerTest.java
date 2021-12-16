@@ -88,7 +88,7 @@ class BKGShipmentSummariesControllerTest {
     shipmentSummaryTO.setConfirmationDateTime(dateTimeOffset);
     shipmentSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
 
-    Mockito.when(bookingService.getBookingConfirmationSummaries(any(), any(), any()))
+    Mockito.when(bookingService.getShipmentSummaries(any(), any(), any()))
         .thenReturn(Flux.just(shipmentSummaryTO));
 
     webTestClient

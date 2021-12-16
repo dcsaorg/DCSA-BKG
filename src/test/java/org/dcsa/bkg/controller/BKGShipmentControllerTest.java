@@ -117,7 +117,7 @@ class BKGShipmentControllerTest {
   void confirmedBookingsShouldReturnListOfBookingConfirmation() {
 
     Mockito.when(
-            bookingService.getBookingConfirmationByCarrierBookingReference(
+            bookingService.getShipmentByCarrierBookingReference(
                 shipmentTO.getCarrierBookingReference()))
         .thenReturn(Mono.just(shipmentTO));
 

@@ -19,9 +19,9 @@ public interface BookingService {
 
   Mono<BookingTO> getBookingByCarrierBookingRequestReference(String carrierBookingRequestReference);
 
-  Mono<ShipmentTO> getBookingConfirmationByCarrierBookingReference(String carrierBookingReference);
+  Mono<ShipmentTO> getShipmentByCarrierBookingReference(String carrierBookingReference);
 
   Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference);
 
-  Flux<ShipmentSummaryTO> getBookingConfirmationSummaries(String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable);
+  Flux<ShipmentSummaryTO> getShipmentSummaries(String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable);
 }
