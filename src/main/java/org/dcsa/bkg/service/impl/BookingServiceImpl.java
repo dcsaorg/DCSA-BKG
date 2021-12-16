@@ -77,7 +77,7 @@ public class BookingServiceImpl implements BookingService {
   private final ShipmentEventService shipmentEventService;
 
   @Override
-  public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
+  public Flux<ShipmentSummaryTO> getShipmentSummaries(
       String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
 
     Flux<Shipment> shipmentResponse =
@@ -99,25 +99,25 @@ public class BookingServiceImpl implements BookingService {
                     shipment.getBookingID(), documentStatus, pageable)
                 .mapNotNull(
                     ignored -> {
-                      BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
-                          new BookingConfirmationSummaryTO();
-                      bookingConfirmationSummaryTO.setCarrierBookingReference(
+                      ShipmentSummaryTO shipmentSummaryTO =
+                          new ShipmentSummaryTO();
+                      shipmentSummaryTO.setCarrierBookingReference(
                           shipment.getCarrierBookingReference());
-                      bookingConfirmationSummaryTO.setConfirmationDateTime(
+                      shipmentSummaryTO.setConfirmationDateTime(
                           shipment.getConfirmationDateTime());
-                      bookingConfirmationSummaryTO.setTermsAndConditions(
+                      shipmentSummaryTO.setTermsAndConditions(
                           shipment.getTermsAndConditions());
-                      return bookingConfirmationSummaryTO;
+                      return shipmentSummaryTO;
                     });
           } else {
-            BookingConfirmationSummaryTO bookingConfirmationSummaryTO =
-                new BookingConfirmationSummaryTO();
-            bookingConfirmationSummaryTO.setCarrierBookingReference(
+            ShipmentSummaryTO shipmentSummaryTO =
+                new ShipmentSummaryTO();
+            shipmentSummaryTO.setCarrierBookingReference(
                 shipment.getCarrierBookingReference());
-            bookingConfirmationSummaryTO.setConfirmationDateTime(
+            shipmentSummaryTO.setConfirmationDateTime(
                 shipment.getConfirmationDateTime());
-            bookingConfirmationSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
-            return Mono.just(bookingConfirmationSummaryTO);
+            shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+            return Mono.just(shipmentSummaryTO);
           }
         });
   }
@@ -730,14 +730,14 @@ public class BookingServiceImpl implements BookingService {
   }
 
   @Override
-  public Mono<BookingConfirmationTO> getBookingConfirmationByCarrierBookingReference(
+  public Mono<ShipmentTO> getShipmentByCarrierBookingReference(
       String carrierBookingRequestReference) {
     return shipmentRepository
         .findByCarrierBookingReference(carrierBookingRequestReference)
         .map(b -> Tuples.of(b, shipmentMapper.shipmentToDTO(b)))
         .flatMap(
             t -> {
-              BookingConfirmationTO bookingConfirmationTO = t.getT2();
+              ShipmentTO shipmentTO = t.getT2();
               return Mono.zip(
                       fetchShipmentCutOffTimeByBookingID(t.getT1().getShipmentID()),
                       fetchShipmentLocationsByBookingID(t.getT1().getBookingID()),
@@ -760,18 +760,18 @@ public class BookingServiceImpl implements BookingService {
                         Optional<List<TransportTO>> transportsToOpt = deepObjs.getT7();
 
                         shipmentCutOffTimeTOpt.ifPresent(
-                            bookingConfirmationTO::setShipmentCutOffTimes);
+                            shipmentTO::setShipmentCutOffTimes);
                         shipmentLocationsToOpt.ifPresent(
-                            bookingConfirmationTO::setShipmentLocations);
-                        carrierClauseToOpt.ifPresent(bookingConfirmationTO::setCarrierClauses);
+                            shipmentTO::setShipmentLocations);
+                        carrierClauseToOpt.ifPresent(shipmentTO::setCarrierClauses);
                         confirmedEquipmentTOOpt.ifPresent(
-                            bookingConfirmationTO::setConfirmedEquipments);
-                        chargesToOpt.ifPresent(bookingConfirmationTO::setCharges);
-                        bookingToOpt.ifPresent(bookingConfirmationTO::setBooking);
-                        transportsToOpt.ifPresent(bookingConfirmationTO::setTransports);
-                        return Mono.just(bookingConfirmationTO);
+                            shipmentTO::setConfirmedEquipments);
+                        chargesToOpt.ifPresent(shipmentTO::setCharges);
+                        bookingToOpt.ifPresent(shipmentTO::setBooking);
+                        transportsToOpt.ifPresent(shipmentTO::setTransports);
+                        return Mono.just(shipmentTO);
                       })
-                  .thenReturn(bookingConfirmationTO);
+                  .thenReturn(shipmentTO);
             });
   }
 
