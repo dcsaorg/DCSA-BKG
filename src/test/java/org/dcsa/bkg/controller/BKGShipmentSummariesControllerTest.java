@@ -23,7 +23,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 
-@DisplayName("Tests for BKG Confirmation Summaries Controller")
+@DisplayName("Tests for Shipment Summaries Controller")
 @ActiveProfiles("test")
 @WebFluxTest(controllers = {BKGShipmentSummariesController.class})
 @Import(value = {GlobalExceptionHandler.class, SecurityConfig.class})
@@ -36,18 +36,18 @@ class BKGShipmentSummariesControllerTest {
   MockServerHttpResponse serverHttpResponse;
   MockServerHttpRequest serverHttpRequest;
 
-  private final String BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT = "/shipment-summaries";
+  private final String SHIPMENT_SUMMARIES_ENDPOINT = "/shipment-summaries";
 
   @Test
-  @DisplayName("Get booking summaries should throw bad request for invalid document status.")
-  void bookingConfirmationSummariesShouldThrowBadRequestForInvalidDocumentStatus() {
+  @DisplayName("Get shipment summaries should throw bad request for invalid document status.")
+  void shipmentSummariesShouldThrowBadRequestForInvalidDocumentStatus() {
 
     webTestClient
         .get()
         .uri(
             uriBuilder ->
                 uriBuilder
-                    .path(BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT)
+                    .path(SHIPMENT_SUMMARIES_ENDPOINT)
                     .queryParam("documentStatus", "DUMMY")
                     .build())
         .accept(MediaType.APPLICATION_JSON)
@@ -57,15 +57,15 @@ class BKGShipmentSummariesControllerTest {
   }
 
   @Test
-  @DisplayName("Get booking summaries should throw bad request for limit 0.")
-  void bookingConfirmationSummariesShouldThrowBadRequestForLimitZero() {
+  @DisplayName("Get shipment should throw bad request for limit 0.")
+  void shipmentSummariesShouldThrowBadRequestForLimitZero() {
 
     webTestClient
         .get()
         .uri(
             uriBuilder ->
                 uriBuilder
-                    .path(BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT)
+                    .path(SHIPMENT_SUMMARIES_ENDPOINT)
                     .queryParam("limit", "0")
                     .build())
         .accept(MediaType.APPLICATION_JSON)
@@ -76,8 +76,8 @@ class BKGShipmentSummariesControllerTest {
 
   @Test
   @DisplayName(
-      "Get booking confirmation summaries should return valid list of booking request summaries for valid request.")
-  void bookingConfirmationSummariesShouldReturnListOfBookingRequestSummaries() {
+      "Get shipment summaries should return valid list of booking request summaries for valid request.")
+  void shipmentSummariesShouldReturnListOfBookingRequestSummaries() {
 
     String carrierBookingReference = UUID.randomUUID().toString().substring(0, 33);
     OffsetDateTime dateTimeOffset = OffsetDateTime.now();
@@ -93,7 +93,7 @@ class BKGShipmentSummariesControllerTest {
 
     webTestClient
         .get()
-        .uri(BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT)
+        .uri(SHIPMENT_SUMMARIES_ENDPOINT)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectStatus()

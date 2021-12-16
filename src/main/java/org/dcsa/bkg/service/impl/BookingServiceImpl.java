@@ -98,36 +98,26 @@ public class BookingServiceImpl implements BookingService {
                 .findAllByBookingIDAndDocumentStatus(
                     shipment.getBookingID(), documentStatus, pageable)
                 .mapNotNull(
-                    booking -> {
-                      ShipmentSummaryTO shipmentSummaryTO =
-                          new ShipmentSummaryTO();
-                      shipmentSummaryTO.setCarrierBookingReference(
-                          shipment.getCarrierBookingReference());
-                      shipmentSummaryTO.setConfirmationDateTime(
-                          shipment.getConfirmationDateTime());
-                      shipmentSummaryTO.setTermsAndConditions(
-                          shipment.getTermsAndConditions());
-                      shipmentSummaryTO.setDocumentStatus(booking.getDocumentStatus());
-                      shipmentSummaryTO.setCarrierBookingRequestReference(booking.getCarrierBookingRequestReference());
-                      return shipmentSummaryTO;
-                    });
+                  booking -> createShipmentSummaryTO(shipment, booking));
           } else {
            return bookingRepository.findById(shipment.getBookingID()).mapNotNull(
-              booking -> {
-                ShipmentSummaryTO shipmentSummaryTO =
-                  new ShipmentSummaryTO();
-                shipmentSummaryTO.setCarrierBookingReference(
-                  shipment.getCarrierBookingReference());
-                shipmentSummaryTO.setConfirmationDateTime(
-                  shipment.getConfirmationDateTime());
-                shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
-                shipmentSummaryTO.setCarrierBookingRequestReference(booking.getCarrierBookingRequestReference());
-                shipmentSummaryTO.setDocumentStatus(booking.getDocumentStatus());
-                return shipmentSummaryTO;
-              }
+              booking -> createShipmentSummaryTO(shipment, booking)
             );
           }
         });
+  }
+
+  private ShipmentSummaryTO createShipmentSummaryTO(Shipment shipment, Booking booking) {
+    ShipmentSummaryTO shipmentSummaryTO =
+      new ShipmentSummaryTO();
+    shipmentSummaryTO.setCarrierBookingReference(
+      shipment.getCarrierBookingReference());
+    shipmentSummaryTO.setConfirmationDateTime(
+      shipment.getConfirmationDateTime());
+    shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+    shipmentSummaryTO.setCarrierBookingRequestReference(booking.getCarrierBookingRequestReference());
+    shipmentSummaryTO.setDocumentStatus(booking.getDocumentStatus());
+    return shipmentSummaryTO;
   }
 
   @Override
