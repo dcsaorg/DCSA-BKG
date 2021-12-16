@@ -151,6 +151,8 @@ public class BookingServiceImpl implements BookingService {
     Booking requestedBooking = bookingMapper.dtoToBooking(bookingRequest);
     requestedBooking.setDocumentStatus(DocumentStatus.RECE);
     requestedBooking.setBookingRequestDateTime(OffsetDateTime.now());
+    requestedBooking.setCreatedDateTime(OffsetDateTime.now());
+    requestedBooking.setUpdatedDateTime(OffsetDateTime.now());
 
     return bookingRepository
         .save(requestedBooking)
@@ -1115,7 +1117,7 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   @Transactional
-  public Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingRequestReference) {
+      OffsetDateTime updatedDateTime = OffsetDateTime.now();
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
         .switchIfEmpty(
@@ -1127,7 +1129,7 @@ public class BookingServiceImpl implements BookingService {
                 Mono.zip(
                     bookingRepository
                         .updateDocumentStatusForCarrierBookingRequestReference(
-                            DocumentStatus.CANC, carrierBookingRequestReference)
+                            DocumentStatus.CANC, carrierBookingRequestReference, updatedDateTime)
                         .flatMap(verifyCancellation),
                     Mono.just(booking)
                         .map(
@@ -1135,8 +1137,6 @@ public class BookingServiceImpl implements BookingService {
                               bkg.setDocumentStatus(DocumentStatus.CANC);
                               return bkg;
                             })))
-        .flatMap(t -> createShipmentEventFromBooking(t.getT2()))
-        .flatMap(t -> Mono.empty());
   }
 
   private Mono<ShipmentEvent> createShipmentEventFromBookingTO(BookingTO bookingTo) {
@@ -1166,7 +1166,6 @@ public class BookingServiceImpl implements BookingService {
         return Mono.just(shipmentEvent);
       };
 
-  private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
       isRecordUpdated -> {
         if (isRecordUpdated) {
           return Mono.just(true);
