@@ -101,23 +101,17 @@ public class BookingServiceImpl implements BookingService {
                     shipment.getBookingID(), documentStatus, pageable)
                 .mapNotNull(
                     ignored -> {
-                      ShipmentSummaryTO shipmentSummaryTO =
-                          new ShipmentSummaryTO();
+                      ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
                       shipmentSummaryTO.setCarrierBookingReference(
                           shipment.getCarrierBookingReference());
-                      shipmentSummaryTO.setConfirmationDateTime(
-                          shipment.getConfirmationDateTime());
-                      shipmentSummaryTO.setTermsAndConditions(
-                          shipment.getTermsAndConditions());
+                      shipmentSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
+                      shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
                       return shipmentSummaryTO;
                     });
           } else {
-            ShipmentSummaryTO shipmentSummaryTO =
-                new ShipmentSummaryTO();
-            shipmentSummaryTO.setCarrierBookingReference(
-                shipment.getCarrierBookingReference());
-            shipmentSummaryTO.setConfirmationDateTime(
-                shipment.getConfirmationDateTime());
+            ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
+            shipmentSummaryTO.setCarrierBookingReference(shipment.getCarrierBookingReference());
+            shipmentSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
             shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
             return Mono.just(shipmentSummaryTO);
           }
@@ -949,13 +943,10 @@ public class BookingServiceImpl implements BookingService {
                         Optional<BookingTO> bookingToOpt = deepObjs.getT6();
                         Optional<List<TransportTO>> transportsToOpt = deepObjs.getT7();
 
-                        shipmentCutOffTimeTOpt.ifPresent(
-                            shipmentTO::setShipmentCutOffTimes);
-                        shipmentLocationsToOpt.ifPresent(
-                            shipmentTO::setShipmentLocations);
+                        shipmentCutOffTimeTOpt.ifPresent(shipmentTO::setShipmentCutOffTimes);
+                        shipmentLocationsToOpt.ifPresent(shipmentTO::setShipmentLocations);
                         carrierClauseToOpt.ifPresent(shipmentTO::setCarrierClauses);
-                        confirmedEquipmentTOOpt.ifPresent(
-                            shipmentTO::setConfirmedEquipments);
+                        confirmedEquipmentTOOpt.ifPresent(shipmentTO::setConfirmedEquipments);
                         chargesToOpt.ifPresent(shipmentTO::setCharges);
                         bookingToOpt.ifPresent(shipmentTO::setBooking);
                         transportsToOpt.ifPresent(shipmentTO::setTransports);
@@ -993,7 +984,8 @@ public class BookingServiceImpl implements BookingService {
 
   private Mono<Optional<LocationTO>> fetchLocationByTransportCallId(String id) {
     if (id == null) return Mono.just(Optional.empty());
-    return transportCallRepository.findById(id)
+    return transportCallRepository
+        .findById(id)
         .flatMap(transportCall -> fetchLocationByID(transportCall.getLocationID()));
   }
 
@@ -1223,28 +1215,53 @@ public class BookingServiceImpl implements BookingService {
         .defaultIfEmpty(Optional.empty());
   }
 
-  private Mono<Optional<Tuple2<TransportEvent, TransportEvent>>> fetchTransportEventByTransportId(UUID transportId) {
-      return transportRepository.findById(transportId).flatMap(x ->
-          Mono.zip(
-                  transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(x.getLoadTransportCallID(), TransportEventTypeCode.ARRI, EventClassifierCode.PLN),
-                  transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(x.getDischargeTransportCallID(), TransportEventTypeCode.DEPA, EventClassifierCode.PLN))
-              .flatMap(y -> Mono.just(Tuples.of(y.getT1(), y.getT2()))))
-              .map(Optional::of)
-              .defaultIfEmpty(Optional.empty());
+  private Mono<Optional<Tuple2<TransportEvent, TransportEvent>>> fetchTransportEventByTransportId(
+      UUID transportId) {
+    return transportRepository
+        .findById(transportId)
+        .flatMap(
+            x ->
+                Mono.zip(
+                        transportEventRepository
+                            .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
+                                x.getLoadTransportCallID(),
+                                TransportEventTypeCode.ARRI,
+                                EventClassifierCode.PLN),
+                        transportEventRepository
+                            .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
+                                x.getDischargeTransportCallID(),
+                                TransportEventTypeCode.DEPA,
+                                EventClassifierCode.PLN))
+                    .flatMap(y -> Mono.just(Tuples.of(y.getT1(), y.getT2()))))
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
   }
 
   private Mono<Optional<Voyage>> fetchExportVoyageByTransportCallId(String transportCallId) {
-      if (transportCallId == null) return Mono.just(Optional.empty());
-      return transportCallRepository.findById(transportCallId).flatMap(x -> voyageRepository.findById(x.getExportVoyageID())).map(Optional::of).defaultIfEmpty(Optional.empty());
-  }
-  private Mono<Optional<Vessel>> fetchVesselByTransportCallId(String transportCallId) {
-      if (transportCallId == null) return Mono.just(Optional.empty());
-      return transportCallRepository.findById(transportCallId).flatMap(x -> vesselRepository.findById(x.getVesselID())).map(Optional::of).defaultIfEmpty(Optional.empty());
+    if (transportCallId == null) return Mono.just(Optional.empty());
+    return transportCallRepository
+        .findById(transportCallId)
+        .flatMap(x -> voyageRepository.findById(x.getExportVoyageID()))
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
   }
 
-  private Mono<Optional<ModeOfTransport>> fetchModeOfTransportByTransportCallId(String transportCallId) {
-      if (transportCallId == null) return Mono.just(Optional.empty());
-      return modeOfTransportRepository.findByTransportCallID(transportCallId).map(Optional::of).defaultIfEmpty(Optional.empty());
+  private Mono<Optional<Vessel>> fetchVesselByTransportCallId(String transportCallId) {
+    if (transportCallId == null) return Mono.just(Optional.empty());
+    return transportCallRepository
+        .findById(transportCallId)
+        .flatMap(x -> vesselRepository.findById(x.getVesselID()))
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
+  }
+
+  private Mono<Optional<ModeOfTransport>> fetchModeOfTransportByTransportCallId(
+      String transportCallId) {
+    if (transportCallId == null) return Mono.just(Optional.empty());
+    return modeOfTransportRepository
+        .findByTransportCallID(transportCallId)
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
   }
 
   private Mono<Optional<List<TransportTO>>> fetchTransports(UUID shipmentId) {
@@ -1258,33 +1275,54 @@ public class BookingServiceImpl implements BookingService {
                         transport ->
                             Mono.zip(
                                     fetchTransportEventByTransportId(transport.getTransportID()),
-                                    fetchLocationByTransportCallId(transport.getLoadTransportCallID()),
-                                    fetchLocationByTransportCallId(transport.getDischargeTransportCallID()),
-                                    fetchModeOfTransportByTransportCallId(transport.getLoadTransportCallID()),
-                                    fetchVesselByTransportCallId(transport.getLoadTransportCallID()),
-                                    fetchExportVoyageByTransportCallId(transport.getLoadTransportCallID()))
+                                    fetchLocationByTransportCallId(
+                                        transport.getLoadTransportCallID()),
+                                    fetchLocationByTransportCallId(
+                                        transport.getDischargeTransportCallID()),
+                                    fetchModeOfTransportByTransportCallId(
+                                        transport.getLoadTransportCallID()),
+                                    fetchVesselByTransportCallId(
+                                        transport.getLoadTransportCallID()),
+                                    fetchExportVoyageByTransportCallId(
+                                        transport.getLoadTransportCallID()))
                                 .map(
                                     x -> {
-                                      TransportTO transportTO = transportMapper.transportToDTO(transport);
-                                      transportTO.setTransportPlanStage(shipmentTransport.getTransportPlanStageCode());
-                                      transportTO.setTransportPlanStageSequenceNumber(shipmentTransport.getTransportPlanStageSequenceNumber());
+                                      TransportTO transportTO =
+                                          transportMapper.transportToDTO(transport);
+                                      transportTO.setTransportPlanStage(
+                                          shipmentTransport.getTransportPlanStageCode());
+                                      transportTO.setTransportPlanStageSequenceNumber(
+                                          shipmentTransport.getTransportPlanStageSequenceNumber());
                                       transportTO.setTransportName(transport.getTransportName());
-                                      transportTO.setTransportReference(transport.getTransportReference());
-                                      transportTO.setIsUnderShippersResponsibility(shipmentTransport.getIsUnderShippersResponsibility());
+                                      transportTO.setTransportReference(
+                                          transport.getTransportReference());
+                                      transportTO.setIsUnderShippersResponsibility(
+                                          shipmentTransport.getIsUnderShippersResponsibility());
 
-                                      x.getT1().ifPresent(t1 -> {
-                                          transportTO.setPlannedDepartureDate(t1.getT1().getEventDateTime());
-                                          transportTO.setPlannedArrivalDate(t1.getT2().getEventDateTime());
-                                      });
+                                      x.getT1()
+                                          .ifPresent(
+                                              t1 -> {
+                                                transportTO.setPlannedDepartureDate(
+                                                    t1.getT1().getEventDateTime());
+                                                transportTO.setPlannedArrivalDate(
+                                                    t1.getT2().getEventDateTime());
+                                              });
 
                                       x.getT2().ifPresent(transportTO::setLoadLocation);
                                       x.getT3().ifPresent(transportTO::setDischargeLocation);
 
-                                      x.getT4().ifPresent(t4 -> transportTO.setModeOfTransport(t4.getDcsaTransportType()));
-                                      x.getT5().ifPresent(t5 -> {
-                                          transportTO.setVesselName(t5.getVesselName());
-                                          transportTO.setVesselIMONumber(t5.getVesselIMONumber());
-                                      });
+                                      x.getT4()
+                                          .ifPresent(
+                                              t4 ->
+                                                  transportTO.setModeOfTransport(
+                                                      t4.getDcsaTransportType()));
+                                      x.getT5()
+                                          .ifPresent(
+                                              t5 -> {
+                                                transportTO.setVesselName(t5.getVesselName());
+                                                transportTO.setVesselIMONumber(
+                                                    t5.getVesselIMONumber());
+                                              });
 
                                       /*
                                         We are using exportVoyage from loadLocation according to the following mail from Christian:
@@ -1295,7 +1333,11 @@ public class BookingServiceImpl implements BookingService {
                                         In other words only one voyage is required on a booking.
                                         The T&T event that is sent to the consignee will mention the voyage number as the “import voyage number”.
                                       */
-                                      x.getT6().ifPresent(t6 -> transportTO.setCarrierVoyageNumber(t6.getCarrierVoyageNumber()));
+                                      x.getT6()
+                                          .ifPresent(
+                                              t6 ->
+                                                  transportTO.setCarrierVoyageNumber(
+                                                      t6.getCarrierVoyageNumber()));
                                       return transportTO;
                                     })))
         .collectList()
@@ -1316,8 +1358,10 @@ public class BookingServiceImpl implements BookingService {
             booking ->
                 Mono.zip(
                     bookingRepository
-                        .updateDocumentStatusForCarrierBookingRequestReference(
-                            DocumentStatus.CANC, carrierBookingRequestReference)
+                        .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
+                            DocumentStatus.CANC,
+                            carrierBookingRequestReference,
+                            OffsetDateTime.now())
                         .flatMap(verifyCancellation),
                     Mono.just(booking)
                         .map(
