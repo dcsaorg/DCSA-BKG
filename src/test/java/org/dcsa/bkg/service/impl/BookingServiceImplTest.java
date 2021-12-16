@@ -2164,11 +2164,11 @@ class BookingServiceImplTest {
   }
 
   @Nested
-  @DisplayName("Tests for the method getBookingConfirmationByCarrierBookingReference(#String)")
-  class BookingConfirmationByCarrierBookingReferenceTest {
+  @DisplayName("Tests for the method getShipmentByCarrierBookingReference(#String)")
+  class ShipmentByCarrierBookingReferenceTest {
     @Test
-    @DisplayName("Method should return shallow confirmed booking for given carrierBookingReference")
-    void testGETBookingConfirmationShallow() {
+    @DisplayName("Method should return shallow shipment for given carrierBookingReference")
+    void testGETShipmentShallow() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -2202,9 +2202,8 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName(
-        "Method should return confirmed booking for given carrierBookingRequestReference with ShipmentLocation and ShipmentCutOffTimes")
-    void testGETBookingConfirmationWithShipmentLocationsAndShipmentCutOffTimes() {
+    @DisplayName("Method should return shipment for given carrierBookingRequestReference with ShipmentLocation and ShipmentCutOffTimes")
+    void testGETShipmentWithShipmentLocationsAndShipmentCutOffTimes() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any()))
@@ -2254,9 +2253,8 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName(
-        "Method should return confirmed booking for given carrierBookingRequestReference with ShipmentLocations, ShipmentCutOffTimes, and CarrierClauses")
-    void testGETBookingConfirmationWithShipmentLocationsAndShipmentCutOffTimesAndCarrierClauses() {
+    @DisplayName("Method should return shipment for given carrierBookingRequestReference with ShipmentLocations, ShipmentCutOffTimes, and CarrierClauses")
+    void testGETShipmentWithShipmentLocationsAndShipmentCutOffTimesAndCarrierClauses() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any()))
@@ -2310,9 +2308,8 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName(
-        "Method should return confirmed booking for given carrierBookingRequestReference with confirmedEquipment")
-    void testGETBookingConfirmationWithConfirmedEquipment() {
+    @DisplayName("Method should return shipment for given carrierBookingRequestReference with confirmedEquipment")
+    void testGETShipmentWithConfirmedEquipment() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -2346,8 +2343,8 @@ class BookingServiceImplTest {
 
     @Test
     @DisplayName(
-        "Method should return confirmed booking for given carrierBookingRequestReference with charges")
-    void testGETBookingConfirmationWithCharges() {
+        "Method should return shipment for given carrierBookingRequestReference with charges")
+    void testGETShipmentWithCharges() {
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -2379,9 +2376,8 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName(
-        "Method should return confirmed booking for given carrierBookingRequestReference with everything")
-    void testGETBookingConfirmationWithTransports() {
+    @DisplayName("Method should return shipment for given carrierBookingRequestReference with everything")
+    void testGETShipmentWithTransports() {
 
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -2481,10 +2477,9 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName(
-        "Method should return confirmed booking for given carrierBookingRequestReference with everything")
-    void testGETBookingConfirmationWithEverything() {
-
+    @DisplayName("Method should return shipment for given carrierBookingRequestReference with everything")
+    void testGETShipmentWithEverything() {
+      
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any()))
           .thenReturn(Flux.just(shipmentLocation));
@@ -2866,6 +2861,66 @@ class BookingServiceImplTest {
               carrierBookingRequestReference.toString(), null, pageRequest);
 
       StepVerifier.create(bookingToResponse).expectComplete().verify();
+    }
+  }
+
+  @Nested
+  @DisplayName("Tests for Shipment summaries")
+  class ShipmentSummaryTests {
+    @Test
+    @DisplayName("Method should return shipment summaries for")
+    void testGETShipmentSummaries() {
+
+      when(shipmentRepository.findAllByCarrierBookingReference(any(), any())).thenReturn(null);
+      when(shipmentRepository.findShipmentsByBookingIDNotNull(any())).thenReturn(Flux.just(shipment));
+      when(bookingRepository.findById((UUID) any())).thenReturn(Mono.just(booking));
+
+      StepVerifier.create(bookingServiceImpl.getShipmentSummaries(null, null, null)).assertNext(
+          shipmentSummary -> {
+            Assertions.assertEquals(shipment.getCarrierBookingReference(), shipmentSummary.getCarrierBookingReference());
+            Assertions.assertEquals(shipment.getTermsAndConditions(), shipmentSummary.getTermsAndConditions());
+            Assertions.assertEquals(shipment.getConfirmationDateTime(), shipmentSummary.getConfirmationDateTime());
+            Assertions.assertEquals(booking.getDocumentStatus(), shipmentSummary.getDocumentStatus());
+            Assertions.assertEquals(booking.getCarrierBookingRequestReference(), shipmentSummary.getCarrierBookingRequestReference());
+          })
+        .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Method should return shipment summaries for documentStatus")
+    void testGETShipmentSummariesWithDocumentStatus() {
+
+      when(shipmentRepository.findAllByCarrierBookingReference(any(), any())).thenReturn(null);
+      when(shipmentRepository.findShipmentsByBookingIDNotNull(any())).thenReturn(Flux.just(shipment));
+      when(bookingRepository.findAllByBookingIDAndDocumentStatus(any(), eq(booking.getDocumentStatus()), any())).thenReturn(Flux.just(booking));
+
+      StepVerifier.create(bookingServiceImpl.getShipmentSummaries(null, booking.getDocumentStatus(), null)).assertNext(
+          shipmentSummary -> {
+            Assertions.assertEquals(shipment.getCarrierBookingReference(), shipmentSummary.getCarrierBookingReference());
+            Assertions.assertEquals(shipment.getTermsAndConditions(), shipmentSummary.getTermsAndConditions());
+            Assertions.assertEquals(shipment.getConfirmationDateTime(), shipmentSummary.getConfirmationDateTime());
+            Assertions.assertEquals(booking.getDocumentStatus(), shipmentSummary.getDocumentStatus());
+            Assertions.assertEquals(booking.getCarrierBookingRequestReference(), shipmentSummary.getCarrierBookingRequestReference());
+          })
+        .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Method should return shipment summaries for carrierBookingReference")
+    void testGETShipmentSummariesWithCarrierBookingReference() {
+
+      when(shipmentRepository.findAllByCarrierBookingReference(any(), any())).thenReturn(Flux.just(shipment));
+      when(bookingRepository.findById((UUID) any())).thenReturn(Mono.just(booking));
+
+      StepVerifier.create(bookingServiceImpl.getShipmentSummaries(shipment.getCarrierBookingReference(), null, null)).assertNext(
+          shipmentSummary -> {
+            Assertions.assertEquals(shipment.getCarrierBookingReference(), shipmentSummary.getCarrierBookingReference());
+            Assertions.assertEquals(shipment.getTermsAndConditions(), shipmentSummary.getTermsAndConditions());
+            Assertions.assertEquals(shipment.getConfirmationDateTime(), shipmentSummary.getConfirmationDateTime());
+            Assertions.assertEquals(booking.getDocumentStatus(), shipmentSummary.getDocumentStatus());
+            Assertions.assertEquals(booking.getCarrierBookingRequestReference(), shipmentSummary.getCarrierBookingRequestReference());
+          })
+        .verifyComplete();
     }
   }
 

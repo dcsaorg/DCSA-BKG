@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
-@DisplayName("Tests for BKG Confirmed Booking Controller")
+@DisplayName("Tests for BKG Shipment Controller")
 @ActiveProfiles("test")
 @WebFluxTest(controllers = {BKGShipmentController.class})
 @Import(value = {GlobalExceptionHandler.class, SecurityConfig.class})
@@ -113,8 +113,8 @@ class BKGShipmentControllerTest {
 
   @Test
   @DisplayName(
-      "Get confirmed bookings should return valid list of booking request summaries for valid request.")
-  void confirmedBookingsShouldReturnListOfBookingConfirmation() {
+      "Get shipments should return valid list of shipment summaries for valid request.")
+  void shipmentShouldReturnListOfShipments() {
 
     Mockito.when(
             bookingService.getShipmentByCarrierBookingReference(
