@@ -1117,6 +1117,7 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   @Transactional
+  public Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingRequestReference) {
       OffsetDateTime updatedDateTime = OffsetDateTime.now();
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
