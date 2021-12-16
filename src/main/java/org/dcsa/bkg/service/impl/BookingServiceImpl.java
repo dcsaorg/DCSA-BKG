@@ -1129,7 +1129,7 @@ public class BookingServiceImpl implements BookingService {
             booking ->
                 Mono.zip(
                     bookingRepository
-                        .updateDocumentStatusForCarrierBookingRequestReference(
+                        .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
                             DocumentStatus.CANC, carrierBookingRequestReference, updatedDateTime)
                         .flatMap(verifyCancellation),
                     Mono.just(booking)

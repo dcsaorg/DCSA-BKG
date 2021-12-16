@@ -2193,7 +2193,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
-      when(bookingRepository.updateDocumentStatusForCarrierBookingRequestReference(
+      when(bookingRepository.updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
               DocumentStatus.CANC, carrierBookingRequestReference, updatedDateTime))
           .thenReturn(Mono.just(false));
 
@@ -2223,7 +2223,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
-      when(bookingRepository.updateDocumentStatusForCarrierBookingRequestReference(
+      when(bookingRepository.updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
               DocumentStatus.CANC, carrierBookingRequestReference, updatedDateTime))
           .thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
