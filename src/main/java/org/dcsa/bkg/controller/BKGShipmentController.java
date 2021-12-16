@@ -1,7 +1,7 @@
 package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.dcsa.bkg.model.transferobjects.BookingConfirmationTO;
+import org.dcsa.bkg.model.transferobjects.ShipmentTO;
 import org.dcsa.bkg.service.BookingService;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -24,7 +24,7 @@ public class BKGShipmentController {
   private final BookingService bookingService;
 
   @GetMapping(path = "{carrierBookingReference}")
-  public Mono<BookingConfirmationTO> getBookingReference(
+  public Mono<ShipmentTO> getBookingReference(
       @PathVariable @Size(max = 35) String carrierBookingReference) {
     // ToDo: adjust this when the IM is ready for booking
     return bookingService.getBookingConfirmationByCarrierBookingReference(carrierBookingReference);

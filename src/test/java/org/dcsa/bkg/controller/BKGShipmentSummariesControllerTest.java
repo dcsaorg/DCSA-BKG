@@ -1,6 +1,6 @@
 package org.dcsa.bkg.controller;
 
-import org.dcsa.bkg.model.transferobjects.BookingConfirmationSummaryTO;
+import org.dcsa.bkg.model.transferobjects.ShipmentSummaryTO;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
@@ -83,13 +83,13 @@ class BKGShipmentSummariesControllerTest {
     OffsetDateTime dateTimeOffset = OffsetDateTime.now();
     String termsAndConditions = "TERMS AND CONDITIONS!";
 
-    BookingConfirmationSummaryTO bookingConfirmationSummaryTO = new BookingConfirmationSummaryTO();
-    bookingConfirmationSummaryTO.setCarrierBookingReference(carrierBookingReference);
-    bookingConfirmationSummaryTO.setConfirmationDateTime(dateTimeOffset);
-    bookingConfirmationSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
+    ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
+    shipmentSummaryTO.setCarrierBookingReference(carrierBookingReference);
+    shipmentSummaryTO.setConfirmationDateTime(dateTimeOffset);
+    shipmentSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
 
     Mockito.when(bookingService.getBookingConfirmationSummaries(any(), any(), any()))
-        .thenReturn(Flux.just(bookingConfirmationSummaryTO));
+        .thenReturn(Flux.just(shipmentSummaryTO));
 
     webTestClient
         .get()

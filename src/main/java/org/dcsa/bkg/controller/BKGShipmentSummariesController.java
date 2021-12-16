@@ -1,7 +1,7 @@
 package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.dcsa.bkg.model.transferobjects.BookingConfirmationSummaryTO;
+import org.dcsa.bkg.model.transferobjects.ShipmentSummaryTO;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +27,7 @@ public class BKGShipmentSummariesController {
   private final BookingService bookingService;
 
   @GetMapping
-  public Flux<BookingConfirmationSummaryTO> getBookingConfirmationSummaries(
+  public Flux<ShipmentSummaryTO> getBookingConfirmationSummaries(
       @RequestParam(value = "carrierBookingReference", required = false) @Size(max = 35)
           String carrierBookingReference,
       @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,

@@ -8,7 +8,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
-public class BookingConfirmationTO {
+public class ShipmentTO {
 
   @NotNull(message = "CarrierBookingReference is required.")
   @Size(max = 35, message = "CarrierBookingReference has a max size of 35.")
