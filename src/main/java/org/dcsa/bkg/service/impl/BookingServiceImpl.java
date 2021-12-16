@@ -1115,7 +1115,8 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   @Transactional
-  public Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingRequestReference) {
+  public Mono<BookingResponseTO> cancelBookingByCarrierBookingReference(String carrierBookingRequestReference) {
+      OffsetDateTime updatedDateTime = OffsetDateTime.now();
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
         .switchIfEmpty(
@@ -1127,7 +1128,7 @@ public class BookingServiceImpl implements BookingService {
                 Mono.zip(
                     bookingRepository
                         .updateDocumentStatusForCarrierBookingRequestReference(
-                            DocumentStatus.CANC, carrierBookingRequestReference)
+                            DocumentStatus.CANC, carrierBookingRequestReference, updatedDateTime)
                         .flatMap(verifyCancellation),
                     Mono.just(booking)
                         .map(
@@ -1135,8 +1136,17 @@ public class BookingServiceImpl implements BookingService {
                               bkg.setDocumentStatus(DocumentStatus.CANC);
                               return bkg;
                             })))
-        .flatMap(t -> createShipmentEventFromBooking(t.getT2()))
-        .flatMap(t -> Mono.empty());
+        .flatMap(
+            t -> {
+              createShipmentEventFromBooking(t.getT2());
+              BookingResponseTO response = new BookingResponseTO();
+              response.setBookingRequestCreatedDateTime(t.getT2().getCreatedDateTime());
+              response.setBookingRequestUpdatedDateTime(t.getT2().getUpdatedDateTime());
+              response.setDocumentStatus(t.getT2().getDocumentStatus());
+              response.setCarrierBookingRequestReference(
+                  t.getT2().getCarrierBookingRequestReference());
+              return Mono.just(response);
+            });
   }
 
   private Mono<ShipmentEvent> createShipmentEventFromBookingTO(BookingTO bookingTo) {
@@ -1166,7 +1176,17 @@ public class BookingServiceImpl implements BookingService {
         return Mono.just(shipmentEvent);
       };
 
-  private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
+    private final Function<Booking, Mono<BookingResponseTO>> bookingResponseFromBooking =
+            booking -> {
+                BookingResponseTO response = new BookingResponseTO();
+                response.setBookingRequestCreatedDateTime(booking.getCreatedDateTime());
+                response.setBookingRequestUpdatedDateTime(booking.getUpdatedDateTime());
+                response.setDocumentStatus(booking.getDocumentStatus());
+                response.setCarrierBookingRequestReference(booking.getCarrierBookingRequestReference());
+                return Mono.just(response);
+            };
+
+    private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
       isRecordUpdated -> {
         if (isRecordUpdated) {
           return Mono.just(true);

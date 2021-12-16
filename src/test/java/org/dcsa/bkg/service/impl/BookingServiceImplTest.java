@@ -2145,7 +2145,7 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
 
-      Mono<Void> cancelBookingResponse =
+      Mono<BookingResponseTO> cancelBookingResponse =
           bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
 
       StepVerifier.create(cancelBookingResponse)
@@ -2167,7 +2167,7 @@ class BookingServiceImplTest {
 
       when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.empty());
 
-      Mono<Void> cancelBookingResponse =
+      Mono<BookingResponseTO> cancelBookingResponse =
           bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
 
       StepVerifier.create(cancelBookingResponse)
@@ -2185,6 +2185,7 @@ class BookingServiceImplTest {
     @DisplayName("Failure of a booking cancellation should result in an error")
     void cancelBookingFailedShouldResultToError() {
 
+      OffsetDateTime updatedDateTime = OffsetDateTime.now();
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
@@ -2193,10 +2194,10 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
       when(bookingRepository.updateDocumentStatusForCarrierBookingRequestReference(
-              DocumentStatus.CANC, carrierBookingRequestReference))
+              DocumentStatus.CANC, carrierBookingRequestReference, updatedDateTime))
           .thenReturn(Mono.just(false));
 
-      Mono<Void> cancelBookingResponse =
+      Mono<BookingResponseTO> cancelBookingResponse =
           bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
 
       StepVerifier.create(cancelBookingResponse)
@@ -2214,6 +2215,7 @@ class BookingServiceImplTest {
 
       ArgumentCaptor<ShipmentEvent> argumentCaptor = ArgumentCaptor.forClass(ShipmentEvent.class);
 
+      OffsetDateTime updatedDateTime = OffsetDateTime.now();
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
@@ -2222,12 +2224,12 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
       when(bookingRepository.updateDocumentStatusForCarrierBookingRequestReference(
-              DocumentStatus.CANC, carrierBookingRequestReference))
+              DocumentStatus.CANC, carrierBookingRequestReference, updatedDateTime))
           .thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
-      Mono<Void> cancelBookingResponse =
+      Mono<BookingResponseTO> cancelBookingResponse =
           bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
 
       StepVerifier.create(cancelBookingResponse).verifyComplete();
