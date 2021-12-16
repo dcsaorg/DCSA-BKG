@@ -110,12 +110,14 @@ public class BookingServiceImpl implements BookingService {
   }
 
   private ShipmentSummaryTO createShipmentSummaryTO(Shipment shipment, Booking booking) {
-    ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
-    shipmentSummaryTO.setCarrierBookingReference(shipment.getCarrierBookingReference());
-    shipmentSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
+    ShipmentSummaryTO shipmentSummaryTO =
+      new ShipmentSummaryTO();
+    shipmentSummaryTO.setCarrierBookingReference(
+      shipment.getCarrierBookingReference());
+    shipmentSummaryTO.setConfirmationDateTime(
+      shipment.getConfirmationDateTime());
     shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
-    shipmentSummaryTO.setCarrierBookingRequestReference(
-        booking.getCarrierBookingRequestReference());
+    shipmentSummaryTO.setCarrierBookingRequestReference(booking.getCarrierBookingRequestReference());
     shipmentSummaryTO.setDocumentStatus(booking.getDocumentStatus());
     return shipmentSummaryTO;
   }
