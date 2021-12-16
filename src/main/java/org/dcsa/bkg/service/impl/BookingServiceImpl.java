@@ -98,7 +98,7 @@ public class BookingServiceImpl implements BookingService {
                 .findAllByBookingIDAndDocumentStatus(
                     shipment.getBookingID(), documentStatus, pageable)
                 .mapNotNull(
-                    ignored -> {
+                    booking -> {
                       ShipmentSummaryTO shipmentSummaryTO =
                           new ShipmentSummaryTO();
                       shipmentSummaryTO.setCarrierBookingReference(
@@ -107,17 +107,25 @@ public class BookingServiceImpl implements BookingService {
                           shipment.getConfirmationDateTime());
                       shipmentSummaryTO.setTermsAndConditions(
                           shipment.getTermsAndConditions());
+                      shipmentSummaryTO.setDocumentStatus(booking.getDocumentStatus());
+                      shipmentSummaryTO.setCarrierBookingRequestReference(booking.getCarrierBookingRequestReference());
                       return shipmentSummaryTO;
                     });
           } else {
-            ShipmentSummaryTO shipmentSummaryTO =
-                new ShipmentSummaryTO();
-            shipmentSummaryTO.setCarrierBookingReference(
-                shipment.getCarrierBookingReference());
-            shipmentSummaryTO.setConfirmationDateTime(
-                shipment.getConfirmationDateTime());
-            shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
-            return Mono.just(shipmentSummaryTO);
+           return bookingRepository.findById(shipment.getBookingID()).mapNotNull(
+              booking -> {
+                ShipmentSummaryTO shipmentSummaryTO =
+                  new ShipmentSummaryTO();
+                shipmentSummaryTO.setCarrierBookingReference(
+                  shipment.getCarrierBookingReference());
+                shipmentSummaryTO.setConfirmationDateTime(
+                  shipment.getConfirmationDateTime());
+                shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+                shipmentSummaryTO.setCarrierBookingRequestReference(booking.getCarrierBookingRequestReference());
+                shipmentSummaryTO.setDocumentStatus(booking.getDocumentStatus());
+                return shipmentSummaryTO;
+              }
+            );
           }
         });
   }
