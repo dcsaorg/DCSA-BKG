@@ -17,9 +17,9 @@ import javax.validation.constraints.Size;
 @RestController
 @Validated
 @RequestMapping(
-    value = "/confirmed-bookings",
+    value = "/shipments",
     produces = {MediaType.APPLICATION_JSON_VALUE})
-public class BKGConfirmedBookingsController {
+public class BKGShipmentController {
 
   private final BookingService bookingService;
 

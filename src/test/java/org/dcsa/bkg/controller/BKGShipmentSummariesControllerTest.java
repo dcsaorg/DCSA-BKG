@@ -25,9 +25,9 @@ import static org.mockito.ArgumentMatchers.any;
 
 @DisplayName("Tests for BKG Confirmation Summaries Controller")
 @ActiveProfiles("test")
-@WebFluxTest(controllers = {BKGConfirmationSummariesController.class})
+@WebFluxTest(controllers = {BKGShipmentSummariesController.class})
 @Import(value = {GlobalExceptionHandler.class, SecurityConfig.class})
-class BKGConfirmationSummariesControllerTest {
+class BKGShipmentSummariesControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
@@ -36,7 +36,7 @@ class BKGConfirmationSummariesControllerTest {
   MockServerHttpResponse serverHttpResponse;
   MockServerHttpRequest serverHttpRequest;
 
-  private final String BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT = "/confirmed-booking-summaries";
+  private final String BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT = "/shipment-summaries";
 
   @Test
   @DisplayName("Get booking summaries should throw bad request for invalid document status.")

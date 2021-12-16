@@ -26,15 +26,15 @@ import java.util.function.Function;
 
 @DisplayName("Tests for BKG Confirmed Booking Controller")
 @ActiveProfiles("test")
-@WebFluxTest(controllers = {BKGConfirmedBookingsController.class})
+@WebFluxTest(controllers = {BKGShipmentController.class})
 @Import(value = {GlobalExceptionHandler.class, SecurityConfig.class})
-class BKGConfirmedBookingsControllerTest {
+class BKGShipmentControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
   @MockBean BookingService bookingService;
 
-  private final String CONFIRMED_BOOKING_ENDPOINT = "/confirmed-bookings";
+  private final String CONFIRMED_BOOKING_ENDPOINT = "/shipments";
 
   private BookingConfirmationTO bookingConfirmationTO;
 
