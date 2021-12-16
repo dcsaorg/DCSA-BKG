@@ -1138,6 +1138,8 @@ public class BookingServiceImpl implements BookingService {
                               bkg.setDocumentStatus(DocumentStatus.CANC);
                               return bkg;
                             })))
+            .flatMap(t -> createShipmentEventFromBooking(t.getT2()))
+            .flatMap(t -> Mono.empty());
   }
 
   private Mono<ShipmentEvent> createShipmentEventFromBookingTO(BookingTO bookingTo) {
@@ -1167,6 +1169,7 @@ public class BookingServiceImpl implements BookingService {
         return Mono.just(shipmentEvent);
       };
 
+    private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
       isRecordUpdated -> {
         if (isRecordUpdated) {
           return Mono.just(true);
