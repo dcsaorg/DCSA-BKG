@@ -80,32 +80,33 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   public Flux<ShipmentSummaryTO> getShipmentSummaries(
-      String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
+    String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
 
     Flux<Shipment> shipmentResponse =
-        shipmentRepository.findAllByCarrierBookingReference(carrierBookingReference, pageable);
+      shipmentRepository.findAllByCarrierBookingReference(carrierBookingReference, pageable);
 
     if (carrierBookingReference == null) {
       shipmentResponse = shipmentRepository.findShipmentsByBookingIDNotNull(pageable);
     }
 
     return shipmentResponse.flatMap(
-        shipment -> {
-          // IF-statement is here so that we *only* make multiple queries if documentStatus is
-          // included as parameter
-          if (documentStatus != null) {
+      shipment -> {
+        // IF-statement is here so that we *only* make multiple queries if documentStatus is
+        // included as parameter
+        if (documentStatus != null) {
 
-            // Potential issue if booking query returns more than the set limit of results
-            return bookingRepository
-                .findAllByBookingIDAndDocumentStatus(
-                    shipment.getBookingID(), documentStatus, pageable)
-                .mapNotNull(booking -> createShipmentSummaryTO(shipment, booking));
-          } else {
-            return bookingRepository
-                .findById(shipment.getBookingID())
-                .mapNotNull(booking -> createShipmentSummaryTO(shipment, booking));
-          }
-        });
+          // Potential issue if booking query returns more than the set limit of results
+          return bookingRepository
+            .findAllByBookingIDAndDocumentStatus(
+              shipment.getBookingID(), documentStatus, pageable)
+            .mapNotNull(
+              booking -> createShipmentSummaryTO(shipment, booking));
+        } else {
+          return bookingRepository.findById(shipment.getBookingID()).mapNotNull(
+            booking -> createShipmentSummaryTO(shipment, booking)
+          );
+        }
+      });
   }
 
   private ShipmentSummaryTO createShipmentSummaryTO(Shipment shipment, Booking booking) {
