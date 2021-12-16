@@ -29,11 +29,10 @@ public class BKGController {
   }
 
   @PutMapping("/{carrierBookingRequestReference}")
-  @ResponseStatus(HttpStatus.ACCEPTED)
+  @ResponseStatus(HttpStatus.OK)
   public Mono<BookingTO> updateBookingByReference(
       @PathVariable @Size(max = 100) String carrierBookingRequestReference,
       @Valid @RequestBody BookingTO bookingRequest) {
-    // ToDo: adjust this when the IM is ready for booking
     return bookingService.updateBookingByReferenceCarrierBookingRequestReference(
         carrierBookingRequestReference, bookingRequest);
   }

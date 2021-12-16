@@ -180,7 +180,7 @@ class BKGControllerTest {
     assertNull(argument.getValue().getDocumentStatus());
     assertNull(argument.getValue().getBookingRequestDateTime());
 
-    checkStatus202.andThen(checkBookingResponseJsonSchema).apply(exchange);
+    checkStatus200.andThen(checkBookingResponseJsonSchema).apply(exchange);
   }
 
   @Test

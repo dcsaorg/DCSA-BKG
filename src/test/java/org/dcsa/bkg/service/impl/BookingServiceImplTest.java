@@ -8,6 +8,7 @@ import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
+import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.UpdateException;
@@ -63,6 +64,7 @@ class BookingServiceImplTest {
   @Mock VoyageRepository voyageRepository;
 
   @Mock ShipmentEventService shipmentEventService;
+  @Mock LocationService locationService;
 
   @InjectMocks BookingServiceImpl bookingServiceImpl;
 
@@ -515,7 +517,7 @@ class BookingServiceImplTest {
 
     @Test
     @DisplayName(
-            "Creation of booking should result in an error if provided vesselName is linked to multiple vessels.")
+        "Creation of booking should result in an error if provided vesselName is linked to multiple vessels.")
     void testCreateBookingShallowWithExistingVesselButNonUniqueVesselNameShouldFail() {
 
       booking.setInvoicePayableAt(null);
@@ -533,17 +535,18 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(vesselRepository.findByVesselNameOrEmpty(any())).thenReturn(Flux.just(vessel, new Vessel()));
+      when(vesselRepository.findByVesselNameOrEmpty(any()))
+          .thenReturn(Flux.just(vessel, new Vessel()));
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
-              .expectErrorSatisfies(
-                      throwable -> {
-                        Assertions.assertTrue(throwable instanceof CreateException);
-                        Assertions.assertEquals(
-                                "Unable to identify unique vessel, please provide a vesselIMONumber.",
-                                throwable.getMessage());
-                      })
-              .verify();
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertEquals(
+                    "Unable to identify unique vessel, please provide a vesselIMONumber.",
+                    throwable.getMessage());
+              })
+          .verify();
     }
 
     @Test
@@ -1012,6 +1015,623 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     bookingTO.getShipmentLocations().get(0).getLocation().getLocationName(),
                     b.getShipmentLocations().get(0).getLocation().getLocationName());
+              })
+          .verifyComplete();
+    }
+  }
+
+  @Nested
+  @DisplayName(
+      "Tests for the method updateBookingByReferenceCarrierBookingRequestReference(#BookingTO)")
+  class UpdateBookingTest {
+
+    BookingTO bookingTO;
+    LocationTO invoicePayableAt;
+    LocationTO placeOfIssue;
+    CommodityTO commodityTO;
+    ReferenceTO referenceTO;
+    ValueAddedServiceRequestTO valueAddedServiceRequestTO;
+    RequestedEquipmentTO requestedEquipmentTO;
+    PartyTO partyTO;
+    PartyTO.IdentifyingCode identifyingCode;
+    PartyContactDetailsTO partyContactDetailsTO;
+    DocumentPartyTO documentPartyTO;
+    ShipmentLocationTO shipmentLocationTO;
+
+    @BeforeEach
+    void init() {
+      bookingTO = new BookingTO();
+      // carrierBookingRequestReference needs to be set for PUT request
+      bookingTO.setCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11");
+
+      invoicePayableAt = new LocationTO();
+      invoicePayableAt.setLocationName(location1.getLocationName());
+
+      bookingTO.setInvoicePayableAt(invoicePayableAt);
+
+      placeOfIssue = new LocationTO();
+      placeOfIssue.setLocationName(location2.getLocationName());
+
+      bookingTO.setPlaceOfIssue(placeOfIssue);
+
+      bookingTO.setVesselName("Rum Runner");
+      bookingTO.setVesselIMONumber("9321483");
+
+      commodityTO = new CommodityTO();
+      commodityTO.setCommodityType(commodity.getCommodityType());
+
+      bookingTO.setCommodities(Collections.singletonList(commodityTO));
+
+      referenceTO = new ReferenceTO();
+      referenceTO.setReferenceValue(reference.getReferenceValue());
+      referenceTO.setReferenceType(reference.getReferenceType());
+
+      bookingTO.setReferences(Collections.singletonList(referenceTO));
+
+      valueAddedServiceRequestTO = new ValueAddedServiceRequestTO();
+      valueAddedServiceRequestTO.setValueAddedServiceCode(
+          valueAddedServiceRequest.getValueAddedServiceCode());
+
+      bookingTO.setValueAddedServiceRequests(Collections.singletonList(valueAddedServiceRequestTO));
+
+      requestedEquipmentTO = new RequestedEquipmentTO();
+      requestedEquipmentTO.setRequestedEquipmentSizetype(
+          requestedEquipment.getRequestedEquipmentSizetype());
+      requestedEquipmentTO.setRequestedEquipmentUnits(
+          requestedEquipment.getRequestedEquipmentUnits());
+
+      bookingTO.setRequestedEquipments(Collections.singletonList(requestedEquipmentTO));
+
+      partyContactDetailsTO = new PartyContactDetailsTO();
+      partyContactDetails.setName("Bit");
+      partyContactDetails.setEmail("coin@gmail.com");
+
+      identifyingCode =
+          PartyTO.IdentifyingCode.builder()
+              .dcsaResponsibleAgencyCode(DCSAResponsibleAgencyCode.ISO)
+              .codeListName("LCL")
+              .partyCode("MSK")
+              .build();
+
+      partyTO = new PartyTO();
+      partyTO.setPartyName("DCSA");
+      partyTO.setAddress(address);
+      partyTO.setPartyContactDetails(Collections.singletonList(partyContactDetailsTO));
+      partyTO.setIdentifyingCodes(Collections.singletonList(identifyingCode));
+
+      documentPartyTO = new DocumentPartyTO();
+      documentPartyTO.setParty(partyTO);
+      documentPartyTO.setPartyFunction(PartyFunction.DDS);
+      documentPartyTO.setDisplayedAddress(
+          Stream.of("test 1", "test 2").collect(Collectors.toList()));
+      documentPartyTO.setIsToBeNotified(true);
+
+      bookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
+
+      shipmentLocationTO = new ShipmentLocationTO();
+      shipmentLocationTO.setDisplayedName("Singapore");
+      shipmentLocationTO.setShipmentLocationTypeCode(LocationType.FCD);
+      shipmentLocationTO.setLocation(locationMapper.locationToDTO(location1));
+
+      bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
+    }
+
+    @Test
+    @DisplayName("Failing to find a booking should result in an error")
+    void testUpdateBookingShouldResultInError() {
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.empty());
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof UpdateException);
+                Assertions.assertEquals(
+                    "No booking found for given carrierBookingRequestReference.",
+                    throwable.getMessage());
+              })
+          .verify();
+    }
+
+    @Test
+    @DisplayName("Method should update and return shallow booking for given booking request")
+    void testUpdateBookingShallow() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setVesselName(null);
+      bookingTO.setVesselIMONumber(null);
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+          .thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertNull(b.getInvoicePayableAt());
+                Assertions.assertNull(b.getPlaceOfIssue());
+                Assertions.assertEquals(0, b.getCommodities().size());
+                Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should update and return shallow booking with existing vessel (IMO exists and name matches) "
+            + "for given booking request")
+    void testUpdateBookingShallowWithExistingVessel() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+          .thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .assertNext(
+              b -> {
+                verify(vesselRepository, times(0))
+                    .save(any()); // verify .switchIfEmpty(Mono.defer(() ->
+                // vesselRepository.save(vessel))) was not
+                // called if vessel is present
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
+                Assertions.assertNull(b.getInvoicePayableAt());
+                Assertions.assertNull(b.getPlaceOfIssue());
+                Assertions.assertEquals(0, b.getCommodities().size());
+                Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Update of booking should result in an error if provided vesselName does not match existing vesselName (based on vesselIMONumber).")
+    void testUpdateBookingShallowWithExistingVesselButWrongVesselNameShouldFail() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setVesselName("Freedom");
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+          .thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertEquals(
+                    "Provided vessel name does not match vessel name of existing vesselIMONumber.",
+                    throwable.getMessage());
+              })
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Update of booking should result in an error if provided vesselName is linked to multiple vessels.")
+    void testUpdateBookingShallowWithExistingVesselButNonUniqueVesselNameShouldFail() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setVesselName("Rum Runner");
+      bookingTO.setVesselIMONumber(null);
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+          .thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselNameOrEmpty(any()))
+          .thenReturn(Flux.just(vessel, new Vessel()));
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertEquals(
+                    "Unable to identify unique vessel, please provide a vesselIMONumber.",
+                    throwable.getMessage());
+              })
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should update and return shallow booking with vessel (by vesselName) for given booking request")
+    void testUpdateBookingShallowWithNewVessel() {
+
+      booking.setInvoicePayableAt(null);
+      booking.setPlaceOfIssueID(null);
+      bookingTO.setVesselIMONumber(null);
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+          .thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselNameOrEmpty(any())).thenReturn(Flux.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
+                Assertions.assertNull(b.getInvoicePayableAt());
+                Assertions.assertNull(b.getPlaceOfIssue());
+                Assertions.assertEquals(0, b.getCommodities().size());
+                Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Method should update and return booking with location for given booking request")
+    void testUpdateBookingWithLocation() {
+
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+          .thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      LocationTO locationTO1 = locationMapper.locationToDTO(location1);
+      LocationTO locationTO2 = locationMapper.locationToDTO(location2);
+      when(locationService.ensureResolvable(bookingTO.getInvoicePayableAt()))
+          .thenReturn(Mono.just(locationTO1));
+      when(locationService.ensureResolvable(bookingTO.getPlaceOfIssue()))
+          .thenReturn(Mono.just(locationTO2));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(0, b.getCommodities().size());
+                Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should update and return booking with location and commodities for given booking request")
+    void testUpdateBookingWithLocationAndCommodities() {
+
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+          .thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      LocationTO locationTO1 = locationMapper.locationToDTO(location1);
+      LocationTO locationTO2 = locationMapper.locationToDTO(location2);
+      when(locationService.ensureResolvable(bookingTO.getInvoicePayableAt()))
+          .thenReturn(Mono.just(locationTO1));
+      when(locationService.ensureResolvable(bookingTO.getPlaceOfIssue()))
+          .thenReturn(Mono.just(locationTO2));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(
+                    "Mobile phones", b.getCommodities().get(0).getCommodityType());
+                Assertions.assertEquals(0, b.getValueAddedServiceRequests().size());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should update and return booking with location, commodities and valueAddedServiceRequests for given booking request")
+    void testUpdateBookingWithLocationAndCommoditiesAndValAddSerReq() {
+
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+          .thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      LocationTO locationTO1 = locationMapper.locationToDTO(location1);
+      LocationTO locationTO2 = locationMapper.locationToDTO(location2);
+      when(locationService.ensureResolvable(bookingTO.getInvoicePayableAt()))
+          .thenReturn(Mono.just(locationTO1));
+      when(locationService.ensureResolvable(bookingTO.getPlaceOfIssue()))
+          .thenReturn(Mono.just(locationTO2));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+
+      when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(valueAddedServiceRequest));
+
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(
+                    "Mobile phones", b.getCommodities().get(0).getCommodityType());
+                Assertions.assertEquals(
+                    ValueAddedServiceCode.CDECL,
+                    b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                Assertions.assertEquals(0, b.getReferences().size());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should update and return booking with location, commodities, valueAddedServiceRequests and references for given booking request")
+    void testUpdateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferences() {
+
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+          .thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      LocationTO locationTO1 = locationMapper.locationToDTO(location1);
+      LocationTO locationTO2 = locationMapper.locationToDTO(location2);
+      when(locationService.ensureResolvable(bookingTO.getInvoicePayableAt()))
+          .thenReturn(Mono.just(locationTO1));
+      when(locationService.ensureResolvable(bookingTO.getPlaceOfIssue()))
+          .thenReturn(Mono.just(locationTO2));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+
+      when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(valueAddedServiceRequest));
+
+      when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(
+                    "Mobile phones", b.getCommodities().get(0).getCommodityType());
+                Assertions.assertEquals(
+                    ValueAddedServiceCode.CDECL,
+                    b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                Assertions.assertEquals(
+                    ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
+                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should update and return booking with location, commodities, valueAddedServiceRequests, references and requestedEquipments for given booking request")
+    void testUpdateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferencesAndReqEquip() {
+
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+          .thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      LocationTO locationTO1 = locationMapper.locationToDTO(location1);
+      LocationTO locationTO2 = locationMapper.locationToDTO(location2);
+      when(locationService.ensureResolvable(bookingTO.getInvoicePayableAt()))
+          .thenReturn(Mono.just(locationTO1));
+      when(locationService.ensureResolvable(bookingTO.getPlaceOfIssue()))
+          .thenReturn(Mono.just(locationTO2));
+      when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
+      when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+
+      when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(valueAddedServiceRequest));
+
+      when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+
+      when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
+          .thenReturn(Flux.just(requestedEquipment));
+
+      when(shipmentEventService.create(any()))
+          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .assertNext(
+              b -> {
+                Assertions.assertEquals(
+                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                Assertions.assertEquals("Rum Runner", b.getVesselName());
+                Assertions.assertEquals(
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
+                Assertions.assertEquals(
+                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                Assertions.assertEquals(
+                    "Mobile phones", b.getCommodities().get(0).getCommodityType());
+                Assertions.assertEquals(
+                    ValueAddedServiceCode.CDECL,
+                    b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                Assertions.assertEquals(
+                    ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
+                Assertions.assertEquals(
+                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
               })
           .verifyComplete();
     }
