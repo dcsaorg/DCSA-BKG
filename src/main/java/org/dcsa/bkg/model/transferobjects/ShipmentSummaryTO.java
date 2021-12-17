@@ -8,7 +8,7 @@ import javax.validation.constraints.Size;
 import java.time.OffsetDateTime;
 
 @Data
-public class BookingConfirmationSummaryTO {
+public class ShipmentSummaryTO {
 
   @Size(max = 35)
   @Column("carrier_booking_reference")

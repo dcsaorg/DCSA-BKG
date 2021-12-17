@@ -1,6 +1,6 @@
 package org.dcsa.bkg.controller;
 
-import org.dcsa.bkg.model.transferobjects.BookingConfirmationSummaryTO;
+import org.dcsa.bkg.model.transferobjects.ShipmentSummaryTO;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
@@ -25,9 +25,9 @@ import static org.mockito.ArgumentMatchers.any;
 
 @DisplayName("Tests for BKG Confirmation Summaries Controller")
 @ActiveProfiles("test")
-@WebFluxTest(controllers = {BKGConfirmationSummariesController.class})
+@WebFluxTest(controllers = {BKGShipmentSummariesController.class})
 @Import(value = {GlobalExceptionHandler.class, SecurityConfig.class})
-class BKGConfirmationSummariesControllerTest {
+class BKGShipmentSummariesControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
@@ -36,7 +36,7 @@ class BKGConfirmationSummariesControllerTest {
   MockServerHttpResponse serverHttpResponse;
   MockServerHttpRequest serverHttpRequest;
 
-  private final String BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT = "/confirmed-booking-summaries";
+  private final String BOOKING_CONFIRMATION_SUMMARIES_ENDPOINT = "/shipment-summaries";
 
   @Test
   @DisplayName("Get booking summaries should throw bad request for invalid document status.")
@@ -83,13 +83,13 @@ class BKGConfirmationSummariesControllerTest {
     OffsetDateTime dateTimeOffset = OffsetDateTime.now();
     String termsAndConditions = "TERMS AND CONDITIONS!";
 
-    BookingConfirmationSummaryTO bookingConfirmationSummaryTO = new BookingConfirmationSummaryTO();
-    bookingConfirmationSummaryTO.setCarrierBookingReference(carrierBookingReference);
-    bookingConfirmationSummaryTO.setConfirmationDateTime(dateTimeOffset);
-    bookingConfirmationSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
+    ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
+    shipmentSummaryTO.setCarrierBookingReference(carrierBookingReference);
+    shipmentSummaryTO.setConfirmationDateTime(dateTimeOffset);
+    shipmentSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
 
-    Mockito.when(bookingService.getBookingConfirmationSummaries(any(), any(), any()))
-        .thenReturn(Flux.just(bookingConfirmationSummaryTO));
+    Mockito.when(bookingService.getShipmentSummaries(any(), any(), any()))
+        .thenReturn(Flux.just(shipmentSummaryTO));
 
     webTestClient
         .get()

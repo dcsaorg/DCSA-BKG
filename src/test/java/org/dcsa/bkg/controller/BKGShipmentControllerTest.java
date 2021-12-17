@@ -26,17 +26,17 @@ import java.util.function.Function;
 
 @DisplayName("Tests for BKG Confirmed Booking Controller")
 @ActiveProfiles("test")
-@WebFluxTest(controllers = {BKGConfirmedBookingsController.class})
+@WebFluxTest(controllers = {BKGShipmentController.class})
 @Import(value = {GlobalExceptionHandler.class, SecurityConfig.class})
-class BKGConfirmedBookingsControllerTest {
+class BKGShipmentControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
   @MockBean BookingService bookingService;
 
-  private final String CONFIRMED_BOOKING_ENDPOINT = "/confirmed-bookings";
+  private final String CONFIRMED_BOOKING_ENDPOINT = "/shipments";
 
-  private BookingConfirmationTO bookingConfirmationTO;
+  private ShipmentTO shipmentTO;
 
   @BeforeEach
   void init() {
@@ -91,15 +91,15 @@ class BKGConfirmedBookingsControllerTest {
     CarrierClauseTO carrierClause = new CarrierClauseTO();
     carrierClause.setClauseContent("ClauseContent");
 
-    bookingConfirmationTO = new BookingConfirmationTO();
-    bookingConfirmationTO.setCarrierBookingReference(carrierBookingReferenceID);
-    bookingConfirmationTO.setTermsAndConditions(termsAndConditions);
-    bookingConfirmationTO.setTransports(List.of(transport));
-    bookingConfirmationTO.setShipmentCutOffTimes(List.of(shipmentCutOffTime));
-    bookingConfirmationTO.setShipmentLocations(List.of(shipmentLocation));
-    bookingConfirmationTO.setConfirmedEquipments(List.of(confirmedEquipment));
-    bookingConfirmationTO.setCharges(List.of(charge));
-    bookingConfirmationTO.setCarrierClauses(List.of(carrierClause));
+    shipmentTO = new ShipmentTO();
+    shipmentTO.setCarrierBookingReference(carrierBookingReferenceID);
+    shipmentTO.setTermsAndConditions(termsAndConditions);
+    shipmentTO.setTransports(List.of(transport));
+    shipmentTO.setShipmentCutOffTimes(List.of(shipmentCutOffTime));
+    shipmentTO.setShipmentLocations(List.of(shipmentLocation));
+    shipmentTO.setConfirmedEquipments(List.of(confirmedEquipment));
+    shipmentTO.setCharges(List.of(charge));
+    shipmentTO.setCarrierClauses(List.of(carrierClause));
   }
 
   private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus200 =
@@ -117,9 +117,9 @@ class BKGConfirmedBookingsControllerTest {
   void confirmedBookingsShouldReturnListOfBookingConfirmation() {
 
     Mockito.when(
-            bookingService.getBookingConfirmationByCarrierBookingReference(
-                bookingConfirmationTO.getCarrierBookingReference()))
-        .thenReturn(Mono.just(bookingConfirmationTO));
+            bookingService.getShipmentByCarrierBookingReference(
+                shipmentTO.getCarrierBookingReference()))
+        .thenReturn(Mono.just(shipmentTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
@@ -127,7 +127,7 @@ class BKGConfirmedBookingsControllerTest {
             .uri(
                 CONFIRMED_BOOKING_ENDPOINT
                     + "/"
-                    + bookingConfirmationTO.getCarrierBookingReference())
+                    + shipmentTO.getCarrierBookingReference())
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
 
