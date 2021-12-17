@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
 import javax.validation.constraints.Min;
-import javax.validation.constraints.Size;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,11 +27,9 @@ public class BKGShipmentSummariesController {
 
   @GetMapping
   public Flux<ShipmentSummaryTO> getBookingConfirmationSummaries(
-      @RequestParam(value = "carrierBookingReference", required = false) @Size(max = 35)
-          String carrierBookingReference,
       @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
       @RequestParam(value = "limit", defaultValue = "${pagination.defaultPageSize}", required = false) @Min(1) int limit,
       @RequestParam(value = "cursor", defaultValue = "0", required = false) String cursor) {
-    return bookingService.getShipmentSummaries(carrierBookingReference, documentStatus, PageRequest.of(Integer.parseInt(cursor), limit));
+    return bookingService.getShipmentSummaries(documentStatus, PageRequest.of(Integer.parseInt(cursor), limit));
   }
 }

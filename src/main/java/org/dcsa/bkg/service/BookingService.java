@@ -23,5 +23,5 @@ public interface BookingService {
 
   Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference);
 
-  Flux<ShipmentSummaryTO> getShipmentSummaries(String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable);
+  Flux<ShipmentSummaryTO> getShipmentSummaries(DocumentStatus documentStatus, Pageable pageable);
 }
