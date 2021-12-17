@@ -64,10 +64,7 @@ class BKGShipmentSummariesControllerTest {
         .get()
         .uri(
             uriBuilder ->
-                uriBuilder
-                    .path(SHIPMENT_SUMMARIES_ENDPOINT)
-                    .queryParam("limit", "0")
-                    .build())
+                uriBuilder.path(SHIPMENT_SUMMARIES_ENDPOINT).queryParam("limit", "0").build())
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectStatus()
@@ -88,7 +85,7 @@ class BKGShipmentSummariesControllerTest {
     shipmentSummaryTO.setConfirmationDateTime(dateTimeOffset);
     shipmentSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
 
-    Mockito.when(bookingService.getShipmentSummaries(any(), any(), any()))
+    Mockito.when(bookingService.getShipmentSummaries(any(), any()))
         .thenReturn(Flux.just(shipmentSummaryTO));
 
     webTestClient
@@ -105,7 +102,6 @@ class BKGShipmentSummariesControllerTest {
         .jsonPath("$.[0].carrierBookingReference")
         .isEqualTo(carrierBookingReference)
         .jsonPath("$.[0].termsAndConditions")
-        .isEqualTo(termsAndConditions)
-    ;
+        .isEqualTo(termsAndConditions);
   }
 }

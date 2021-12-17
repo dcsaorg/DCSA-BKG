@@ -2832,12 +2832,11 @@ class BookingServiceImplTest {
     @DisplayName("Method should return shipment summaries for")
     void testGETShipmentSummaries() {
 
-      when(shipmentRepository.findAllByCarrierBookingReference(any(), any())).thenReturn(null);
       when(shipmentRepository.findShipmentsByBookingIDNotNull(any()))
           .thenReturn(Flux.just(shipment));
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.just(booking));
 
-      StepVerifier.create(bookingServiceImpl.getShipmentSummaries(null, null, null))
+      StepVerifier.create(bookingServiceImpl.getShipmentSummaries(null, null))
           .assertNext(
               shipmentSummary -> {
                 Assertions.assertEquals(
@@ -2860,7 +2859,6 @@ class BookingServiceImplTest {
     @DisplayName("Method should return shipment summaries for documentStatus")
     void testGETShipmentSummariesWithDocumentStatus() {
 
-      when(shipmentRepository.findAllByCarrierBookingReference(any(), any())).thenReturn(null);
       when(shipmentRepository.findShipmentsByBookingIDNotNull(any()))
           .thenReturn(Flux.just(shipment));
       when(bookingRepository.findAllByBookingIDAndDocumentStatus(
@@ -2868,7 +2866,7 @@ class BookingServiceImplTest {
           .thenReturn(Flux.just(booking));
 
       StepVerifier.create(
-              bookingServiceImpl.getShipmentSummaries(null, booking.getDocumentStatus(), null))
+              bookingServiceImpl.getShipmentSummaries(booking.getDocumentStatus(), null))
           .assertNext(
               shipmentSummary -> {
                 Assertions.assertEquals(
@@ -2891,13 +2889,11 @@ class BookingServiceImplTest {
     @DisplayName("Method should return shipment summaries for carrierBookingReference")
     void testGETShipmentSummariesWithCarrierBookingReference() {
 
-      when(shipmentRepository.findAllByCarrierBookingReference(any(), any()))
+      when(shipmentRepository.findShipmentsByBookingIDNotNull(any()))
           .thenReturn(Flux.just(shipment));
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.just(booking));
 
-      StepVerifier.create(
-              bookingServiceImpl.getShipmentSummaries(
-                  shipment.getCarrierBookingReference(), null, null))
+      StepVerifier.create(bookingServiceImpl.getShipmentSummaries(null, null))
           .assertNext(
               shipmentSummary -> {
                 Assertions.assertEquals(

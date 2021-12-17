@@ -80,14 +80,9 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   public Flux<ShipmentSummaryTO> getShipmentSummaries(
-      String carrierBookingReference, DocumentStatus documentStatus, Pageable pageable) {
+      DocumentStatus documentStatus, Pageable pageable) {
 
-    Flux<Shipment> shipmentResponse =
-        shipmentRepository.findAllByCarrierBookingReference(carrierBookingReference, pageable);
-
-    if (carrierBookingReference == null) {
-      shipmentResponse = shipmentRepository.findShipmentsByBookingIDNotNull(pageable);
-    }
+    Flux<Shipment> shipmentResponse = shipmentRepository.findShipmentsByBookingIDNotNull(pageable);
 
     return shipmentResponse.flatMap(
         shipment -> {
@@ -124,8 +119,7 @@ public class BookingServiceImpl implements BookingService {
       DocumentStatus documentStatus, Pageable pageable) {
 
     Flux<Booking> queryResponse =
-        bookingRepository.findAllByDocumentStatus(
-            documentStatus, pageable);
+        bookingRepository.findAllByDocumentStatus(documentStatus, pageable);
 
     return queryResponse.flatMap(
         booking ->
