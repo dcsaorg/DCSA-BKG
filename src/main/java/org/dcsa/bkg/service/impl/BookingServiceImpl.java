@@ -183,11 +183,11 @@ public class BookingServiceImpl implements BookingService {
                               }),
                       createLocationByTO(
                           bookingRequest.getInvoicePayableAt(),
-                          invPayAT -> bookingRepository.setInvoicePayableAtFor(invPayAT, cbReqRef)),
+                          invPayAT -> bookingRepository.setInvoicePayableAtFor(invPayAT, bookingID)),
                       createLocationByTO(
                           bookingRequest.getPlaceOfIssue(),
                           placeOfIss ->
-                              bookingRepository.setPlaceOfIssueIDFor(placeOfIss, cbReqRef)),
+                              bookingRepository.setPlaceOfIssueIDFor(placeOfIss, bookingID)),
                       createCommoditiesByBookingIDAndTOs(
                           bookingID, bookingRequest.getCommodities()),
                       createValueAddedServiceRequestsByBookingIDAndTOs(
