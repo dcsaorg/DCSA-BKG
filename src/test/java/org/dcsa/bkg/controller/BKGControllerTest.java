@@ -130,7 +130,8 @@ class BKGControllerTest {
 
     // these values are only allowed in response and not to be set via request body
     verify(bookingService).createBooking(argument.capture());
-    assertNull(argument.getValue().getCarrierBookingRequestReference());
+    // CarrierBookingRequestReference is set to null in the service implementation, as we need to be
+    // able to set it via request in PUT
     assertNull(argument.getValue().getDocumentStatus());
     assertNull(argument.getValue().getBookingRequestDateTime());
 
@@ -176,7 +177,8 @@ class BKGControllerTest {
     // these values are only allowed in response and not to be set via request body
     verify(bookingService)
         .updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
-    assertNull(argument.getValue().getCarrierBookingRequestReference());
+    // CarrierBookingRequestReference is set to null in the service implementation, as we need to be
+    // able to set it via request in PUT
     assertNull(argument.getValue().getDocumentStatus());
     assertNull(argument.getValue().getBookingRequestDateTime());
 
