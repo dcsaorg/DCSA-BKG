@@ -11,6 +11,7 @@ import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
+import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.UpdateException;
@@ -75,6 +76,7 @@ public class BookingServiceImpl implements BookingService {
 
   // services
   private final ShipmentEventService shipmentEventService;
+  private final LocationService locationService;
 
   @Override
   public Flux<ShipmentSummaryTO> getShipmentSummaries(
@@ -99,23 +101,17 @@ public class BookingServiceImpl implements BookingService {
                     shipment.getBookingID(), documentStatus, pageable)
                 .mapNotNull(
                     ignored -> {
-                      ShipmentSummaryTO shipmentSummaryTO =
-                          new ShipmentSummaryTO();
+                      ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
                       shipmentSummaryTO.setCarrierBookingReference(
                           shipment.getCarrierBookingReference());
-                      shipmentSummaryTO.setConfirmationDateTime(
-                          shipment.getConfirmationDateTime());
-                      shipmentSummaryTO.setTermsAndConditions(
-                          shipment.getTermsAndConditions());
+                      shipmentSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
+                      shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
                       return shipmentSummaryTO;
                     });
           } else {
-            ShipmentSummaryTO shipmentSummaryTO =
-                new ShipmentSummaryTO();
-            shipmentSummaryTO.setCarrierBookingReference(
-                shipment.getCarrierBookingReference());
-            shipmentSummaryTO.setConfirmationDateTime(
-                shipment.getConfirmationDateTime());
+            ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
+            shipmentSummaryTO.setCarrierBookingReference(shipment.getCarrierBookingReference());
+            shipmentSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
             shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
             return Mono.just(shipmentSummaryTO);
           }
@@ -164,7 +160,6 @@ public class BookingServiceImpl implements BookingService {
                 bookingRepository.findById(bookingRefreshed.getId()))
         .flatMap(
             booking -> {
-              final String cbReqRef = booking.getCarrierBookingRequestReference();
               final UUID bookingID = booking.getId();
 
               return Mono.zip(
@@ -181,11 +176,12 @@ public class BookingServiceImpl implements BookingService {
                               }),
                       createLocationByTO(
                           bookingRequest.getInvoicePayableAt(),
-                          invPayAT -> bookingRepository.setInvoicePayableAtFor(invPayAT, cbReqRef)),
+                          invPayAT ->
+                              bookingRepository.setInvoicePayableAtFor(invPayAT, bookingID)),
                       createLocationByTO(
                           bookingRequest.getPlaceOfIssue(),
                           placeOfIss ->
-                              bookingRepository.setPlaceOfIssueIDFor(placeOfIss, cbReqRef)),
+                              bookingRepository.setPlaceOfIssueIDFor(placeOfIss, bookingID)),
                       createCommoditiesByBookingIDAndTOs(
                           bookingID, bookingRequest.getCommodities()),
                       createValueAddedServiceRequestsByBookingIDAndTOs(
@@ -655,9 +651,197 @@ public class BookingServiceImpl implements BookingService {
   }
 
   @Override
+  @Transactional
   public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
       String carrierBookingRequestReference, BookingTO bookingRequest) {
-    return Mono.empty();
+    // precondition:
+    //   [x] match carrierBookingRequestReference in path to carrierBookingRequestReference in body
+    //   [x] check if booking status is CANC
+
+    if (!carrierBookingRequestReference.equals(
+        bookingRequest.getCarrierBookingRequestReference())) {
+      return Mono.error(
+          new UpdateException("carrierBookingRequestReference in path does not match body."));
+    }
+
+    // [x] update booking at a base level
+    // [x] resolve locations or link new ones
+    // [x] unlink vessel and link based on new request
+    // [x] clear linked commodities and create new ones
+    // [x] clear value added services and create new ones
+    // [x] clear references and create new ones
+    // [x] clear request equipment and create new ones
+    // [-] clear document party and create new ones
+    // [-] clear shipment locations and create new ones
+    // [x] create a shipment event for the updated booking
+
+    return bookingRepository
+        .findByCarrierBookingRequestReference(carrierBookingRequestReference)
+        .flatMap(
+            b -> {
+              if (bookingRequest.getDocumentStatus() == DocumentStatus.CANC) {
+                return Mono.error(
+                    new UpdateException(
+                        "Booking in cancelled state, update operation cannot be performed."));
+              }
+              return Mono.just(b);
+            })
+        .flatMap(
+            b -> {
+              // update booking with new booking request
+              Booking booking = bookingMapper.dtoToBooking(bookingRequest);
+              booking.setId(b.getId());
+              return bookingRepository.save(booking).thenReturn(b);
+            })
+        .flatMap(
+            b ->
+                // resolve entities linked to booking
+                Mono.zip(
+                        findVesselAndUpdateBooking(
+                                bookingRequest.getVesselName(),
+                                bookingRequest.getVesselIMONumber(),
+                                b.getId())
+                            .flatMap(
+                                v -> {
+                                  BookingTO bookingTO = bookingToDTOWithNullLocations(b);
+                                  bookingTO.setVesselName(v.getVesselName());
+                                  bookingTO.setVesselIMONumber(v.getVesselIMONumber());
+                                  return Mono.just(bookingTO);
+                                }),
+                        resolveLocationByTO(
+                            bookingRequest.getInvoicePayableAt(),
+                            invPayAT ->
+                                bookingRepository.setInvoicePayableAtFor(invPayAT, b.getId())),
+                        resolveLocationByTO(
+                            bookingRequest.getPlaceOfIssue(),
+                            placeOfIss ->
+                                bookingRepository.setPlaceOfIssueIDFor(placeOfIss, b.getId())),
+                        resolveCommoditiesForBookingID(bookingRequest.getCommodities(), b.getId()),
+                        resolveValueAddedServiceReqForBookingID(
+                            bookingRequest.getValueAddedServiceRequests(), b.getId()),
+                        resolveReferencesForBookingID(bookingRequest.getReferences(), b.getId()),
+                        resolveReqEqForBookingID(
+                            bookingRequest.getRequestedEquipments(), b.getId()),
+                        resolveDocumentPartiesForBookingID(
+                            bookingRequest.getDocumentParties(), b.getId()))
+                    .zipWith(
+                        resolveShipmentLocationsForBookingID(
+                            bookingRequest.getShipmentLocations(), b.getId())))
+        .flatMap(
+            t -> {
+              BookingTO bookingTO = t.getT1().getT1();
+              Optional<LocationTO> invoicePayableAtOpt = t.getT1().getT2();
+              Optional<LocationTO> placeOfIssueOpt = t.getT1().getT3();
+              Optional<List<CommodityTO>> commoditiesOpt = t.getT1().getT4();
+              Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt =
+                  t.getT1().getT5();
+              Optional<List<ReferenceTO>> referencesOpt = t.getT1().getT6();
+              Optional<List<RequestedEquipmentTO>> requestedEquipmentsOpt = t.getT1().getT7();
+              Optional<List<DocumentPartyTO>> documentPartiesOpt = t.getT1().getT8();
+              Optional<List<ShipmentLocationTO>> shipmentLocationsOpt = t.getT2();
+
+              // populate the booking DTO
+              invoicePayableAtOpt.ifPresent(bookingTO::setInvoicePayableAt);
+              placeOfIssueOpt.ifPresent(bookingTO::setPlaceOfIssue);
+              commoditiesOpt.ifPresent(bookingTO::setCommodities);
+              valueAddedServiceRequestsOpt.ifPresent(bookingTO::setValueAddedServiceRequests);
+              referencesOpt.ifPresent(bookingTO::setReferences);
+              requestedEquipmentsOpt.ifPresent(bookingTO::setRequestedEquipments);
+              documentPartiesOpt.ifPresent(bookingTO::setDocumentParties);
+              shipmentLocationsOpt.ifPresent(bookingTO::setShipmentLocations);
+
+              return Mono.just(bookingTO);
+            })
+        .transform(createShipmentEventFromBookingTO)
+        .switchIfEmpty(
+            Mono.defer(
+                () ->
+                    Mono.error(
+                        new UpdateException(
+                            "No booking found for given carrierBookingRequestReference."))));
+  }
+
+  private Mono<Optional<LocationTO>> resolveLocationByTO(
+      LocationTO locationTO, Function<String, Mono<Boolean>> updateBookingCallback) {
+
+    if (Objects.isNull(locationTO)) {
+      return Mono.just(Optional.empty());
+    }
+
+    return locationService
+        .ensureResolvable(locationTO)
+        .flatMap(lTO -> updateBookingCallback.apply(lTO.getId()).thenReturn(lTO))
+        .map(Optional::of);
+  }
+
+  private Mono<Optional<List<CommodityTO>>> resolveCommoditiesForBookingID(
+      List<CommodityTO> commodities, UUID bookingID) {
+
+    if (null == commodities || commodities.isEmpty()) {
+      return Mono.just(Optional.of(Collections.emptyList()));
+    }
+
+    return commodityRepository
+        .deleteByBookingID(bookingID)
+        .then(createCommoditiesByBookingIDAndTOs(bookingID, commodities));
+  }
+
+  private Mono<Optional<List<ValueAddedServiceRequestTO>>> resolveValueAddedServiceReqForBookingID(
+      List<ValueAddedServiceRequestTO> valAddedSerReqs, UUID bookingID) {
+
+    if (null == valAddedSerReqs || valAddedSerReqs.isEmpty()) {
+      return Mono.just(Optional.of(Collections.emptyList()));
+    }
+
+    return valueAddedServiceRequestRepository
+        .deleteByBookingID(bookingID)
+        .then(createValueAddedServiceRequestsByBookingIDAndTOs(bookingID, valAddedSerReqs));
+  }
+
+  private Mono<Optional<List<ReferenceTO>>> resolveReferencesForBookingID(
+      List<ReferenceTO> references, UUID bookingID) {
+
+    if (null == references || references.isEmpty()) {
+      return Mono.just(Optional.of(Collections.emptyList()));
+    }
+
+    return referenceRepository
+        .deleteByBookingID(bookingID)
+        .then(createReferencesByBookingIDAndTOs(bookingID, references));
+  }
+
+  private Mono<Optional<List<RequestedEquipmentTO>>> resolveReqEqForBookingID(
+      List<RequestedEquipmentTO> requestedEquipments, UUID bookingID) {
+
+    if (null == requestedEquipments || requestedEquipments.isEmpty()) {
+      return Mono.just(Optional.of(Collections.emptyList()));
+    }
+
+    return requestedEquipmentRepository
+        .deleteByBookingID(bookingID)
+        .then(createRequestedEquipmentsByBookingIDAndTOs(bookingID, requestedEquipments));
+  }
+
+  private Mono<Optional<List<DocumentPartyTO>>> resolveDocumentPartiesForBookingID(
+      List<DocumentPartyTO> documentPartyTOs, UUID bookingID) {
+
+    if (null == documentPartyTOs || documentPartyTOs.isEmpty()) {
+      return Mono.just(Optional.of(Collections.emptyList()));
+    }
+
+    // TODO: implementation pending
+    return Mono.just(Optional.of(Collections.emptyList()));
+  }
+
+  private Mono<Optional<List<ShipmentLocationTO>>> resolveShipmentLocationsForBookingID(
+      List<ShipmentLocationTO> shipmentLocationTOs, UUID bookingID) {
+
+    if (null == shipmentLocationTOs || shipmentLocationTOs.isEmpty()) {
+      return Mono.just(Optional.of(Collections.emptyList()));
+    }
+
+    // TODO: implementation pending
+    return Mono.just(Optional.of(Collections.emptyList()));
   }
 
   @Override
@@ -759,13 +943,10 @@ public class BookingServiceImpl implements BookingService {
                         Optional<BookingTO> bookingToOpt = deepObjs.getT6();
                         Optional<List<TransportTO>> transportsToOpt = deepObjs.getT7();
 
-                        shipmentCutOffTimeTOpt.ifPresent(
-                            shipmentTO::setShipmentCutOffTimes);
-                        shipmentLocationsToOpt.ifPresent(
-                            shipmentTO::setShipmentLocations);
+                        shipmentCutOffTimeTOpt.ifPresent(shipmentTO::setShipmentCutOffTimes);
+                        shipmentLocationsToOpt.ifPresent(shipmentTO::setShipmentLocations);
                         carrierClauseToOpt.ifPresent(shipmentTO::setCarrierClauses);
-                        confirmedEquipmentTOOpt.ifPresent(
-                            shipmentTO::setConfirmedEquipments);
+                        confirmedEquipmentTOOpt.ifPresent(shipmentTO::setConfirmedEquipments);
                         chargesToOpt.ifPresent(shipmentTO::setCharges);
                         bookingToOpt.ifPresent(shipmentTO::setBooking);
                         transportsToOpt.ifPresent(shipmentTO::setTransports);
@@ -803,7 +984,8 @@ public class BookingServiceImpl implements BookingService {
 
   private Mono<Optional<LocationTO>> fetchLocationByTransportCallId(String id) {
     if (id == null) return Mono.just(Optional.empty());
-    return transportCallRepository.findById(id)
+    return transportCallRepository
+        .findById(id)
         .flatMap(transportCall -> fetchLocationByID(transportCall.getLocationID()));
   }
 
@@ -1033,28 +1215,53 @@ public class BookingServiceImpl implements BookingService {
         .defaultIfEmpty(Optional.empty());
   }
 
-  private Mono<Optional<Tuple2<TransportEvent, TransportEvent>>> fetchTransportEventByTransportId(UUID transportId) {
-      return transportRepository.findById(transportId).flatMap(x ->
-          Mono.zip(
-                  transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(x.getLoadTransportCallID(), TransportEventTypeCode.ARRI, EventClassifierCode.PLN),
-                  transportEventRepository.findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(x.getDischargeTransportCallID(), TransportEventTypeCode.DEPA, EventClassifierCode.PLN))
-              .flatMap(y -> Mono.just(Tuples.of(y.getT1(), y.getT2()))))
-              .map(Optional::of)
-              .defaultIfEmpty(Optional.empty());
+  private Mono<Optional<Tuple2<TransportEvent, TransportEvent>>> fetchTransportEventByTransportId(
+      UUID transportId) {
+    return transportRepository
+        .findById(transportId)
+        .flatMap(
+            x ->
+                Mono.zip(
+                        transportEventRepository
+                            .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
+                                x.getLoadTransportCallID(),
+                                TransportEventTypeCode.ARRI,
+                                EventClassifierCode.PLN),
+                        transportEventRepository
+                            .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
+                                x.getDischargeTransportCallID(),
+                                TransportEventTypeCode.DEPA,
+                                EventClassifierCode.PLN))
+                    .flatMap(y -> Mono.just(Tuples.of(y.getT1(), y.getT2()))))
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
   }
 
   private Mono<Optional<Voyage>> fetchExportVoyageByTransportCallId(String transportCallId) {
-      if (transportCallId == null) return Mono.just(Optional.empty());
-      return transportCallRepository.findById(transportCallId).flatMap(x -> voyageRepository.findById(x.getExportVoyageID())).map(Optional::of).defaultIfEmpty(Optional.empty());
-  }
-  private Mono<Optional<Vessel>> fetchVesselByTransportCallId(String transportCallId) {
-      if (transportCallId == null) return Mono.just(Optional.empty());
-      return transportCallRepository.findById(transportCallId).flatMap(x -> vesselRepository.findById(x.getVesselID())).map(Optional::of).defaultIfEmpty(Optional.empty());
+    if (transportCallId == null) return Mono.just(Optional.empty());
+    return transportCallRepository
+        .findById(transportCallId)
+        .flatMap(x -> voyageRepository.findById(x.getExportVoyageID()))
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
   }
 
-  private Mono<Optional<ModeOfTransport>> fetchModeOfTransportByTransportCallId(String transportCallId) {
-      if (transportCallId == null) return Mono.just(Optional.empty());
-      return modeOfTransportRepository.findByTransportCallID(transportCallId).map(Optional::of).defaultIfEmpty(Optional.empty());
+  private Mono<Optional<Vessel>> fetchVesselByTransportCallId(String transportCallId) {
+    if (transportCallId == null) return Mono.just(Optional.empty());
+    return transportCallRepository
+        .findById(transportCallId)
+        .flatMap(x -> vesselRepository.findById(x.getVesselID()))
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
+  }
+
+  private Mono<Optional<ModeOfTransport>> fetchModeOfTransportByTransportCallId(
+      String transportCallId) {
+    if (transportCallId == null) return Mono.just(Optional.empty());
+    return modeOfTransportRepository
+        .findByTransportCallID(transportCallId)
+        .map(Optional::of)
+        .defaultIfEmpty(Optional.empty());
   }
 
   private Mono<Optional<List<TransportTO>>> fetchTransports(UUID shipmentId) {
@@ -1068,33 +1275,54 @@ public class BookingServiceImpl implements BookingService {
                         transport ->
                             Mono.zip(
                                     fetchTransportEventByTransportId(transport.getTransportID()),
-                                    fetchLocationByTransportCallId(transport.getLoadTransportCallID()),
-                                    fetchLocationByTransportCallId(transport.getDischargeTransportCallID()),
-                                    fetchModeOfTransportByTransportCallId(transport.getLoadTransportCallID()),
-                                    fetchVesselByTransportCallId(transport.getLoadTransportCallID()),
-                                    fetchExportVoyageByTransportCallId(transport.getLoadTransportCallID()))
+                                    fetchLocationByTransportCallId(
+                                        transport.getLoadTransportCallID()),
+                                    fetchLocationByTransportCallId(
+                                        transport.getDischargeTransportCallID()),
+                                    fetchModeOfTransportByTransportCallId(
+                                        transport.getLoadTransportCallID()),
+                                    fetchVesselByTransportCallId(
+                                        transport.getLoadTransportCallID()),
+                                    fetchExportVoyageByTransportCallId(
+                                        transport.getLoadTransportCallID()))
                                 .map(
                                     x -> {
-                                      TransportTO transportTO = transportMapper.transportToDTO(transport);
-                                      transportTO.setTransportPlanStage(shipmentTransport.getTransportPlanStageCode());
-                                      transportTO.setTransportPlanStageSequenceNumber(shipmentTransport.getTransportPlanStageSequenceNumber());
+                                      TransportTO transportTO =
+                                          transportMapper.transportToDTO(transport);
+                                      transportTO.setTransportPlanStage(
+                                          shipmentTransport.getTransportPlanStageCode());
+                                      transportTO.setTransportPlanStageSequenceNumber(
+                                          shipmentTransport.getTransportPlanStageSequenceNumber());
                                       transportTO.setTransportName(transport.getTransportName());
-                                      transportTO.setTransportReference(transport.getTransportReference());
-                                      transportTO.setIsUnderShippersResponsibility(shipmentTransport.getIsUnderShippersResponsibility());
+                                      transportTO.setTransportReference(
+                                          transport.getTransportReference());
+                                      transportTO.setIsUnderShippersResponsibility(
+                                          shipmentTransport.getIsUnderShippersResponsibility());
 
-                                      x.getT1().ifPresent(t1 -> {
-                                          transportTO.setPlannedDepartureDate(t1.getT1().getEventDateTime());
-                                          transportTO.setPlannedArrivalDate(t1.getT2().getEventDateTime());
-                                      });
+                                      x.getT1()
+                                          .ifPresent(
+                                              t1 -> {
+                                                transportTO.setPlannedDepartureDate(
+                                                    t1.getT1().getEventDateTime());
+                                                transportTO.setPlannedArrivalDate(
+                                                    t1.getT2().getEventDateTime());
+                                              });
 
                                       x.getT2().ifPresent(transportTO::setLoadLocation);
                                       x.getT3().ifPresent(transportTO::setDischargeLocation);
 
-                                      x.getT4().ifPresent(t4 -> transportTO.setModeOfTransport(t4.getDcsaTransportType()));
-                                      x.getT5().ifPresent(t5 -> {
-                                          transportTO.setVesselName(t5.getVesselName());
-                                          transportTO.setVesselIMONumber(t5.getVesselIMONumber());
-                                      });
+                                      x.getT4()
+                                          .ifPresent(
+                                              t4 ->
+                                                  transportTO.setModeOfTransport(
+                                                      t4.getDcsaTransportType()));
+                                      x.getT5()
+                                          .ifPresent(
+                                              t5 -> {
+                                                transportTO.setVesselName(t5.getVesselName());
+                                                transportTO.setVesselIMONumber(
+                                                    t5.getVesselIMONumber());
+                                              });
 
                                       /*
                                         We are using exportVoyage from loadLocation according to the following mail from Christian:
@@ -1105,7 +1333,11 @@ public class BookingServiceImpl implements BookingService {
                                         In other words only one voyage is required on a booking.
                                         The T&T event that is sent to the consignee will mention the voyage number as the “import voyage number”.
                                       */
-                                      x.getT6().ifPresent(t6 -> transportTO.setCarrierVoyageNumber(t6.getCarrierVoyageNumber()));
+                                      x.getT6()
+                                          .ifPresent(
+                                              t6 ->
+                                                  transportTO.setCarrierVoyageNumber(
+                                                      t6.getCarrierVoyageNumber()));
                                       return transportTO;
                                     })))
         .collectList()
@@ -1126,8 +1358,10 @@ public class BookingServiceImpl implements BookingService {
             booking ->
                 Mono.zip(
                     bookingRepository
-                        .updateDocumentStatusForCarrierBookingRequestReference(
-                            DocumentStatus.CANC, carrierBookingRequestReference)
+                        .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
+                            DocumentStatus.CANC,
+                            carrierBookingRequestReference,
+                            OffsetDateTime.now())
                         .flatMap(verifyCancellation),
                     Mono.just(booking)
                         .map(
