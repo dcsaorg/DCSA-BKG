@@ -225,15 +225,16 @@ class BKGControllerTest {
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
-            .post()
+            .patch()
             .uri(
                 BOOKING_ENDPOINT
                     + "/"
                     + bookingTO.getCarrierBookingRequestReference()
                     + "/cancellation")
+            .body(BodyInserters.fromValue(DocumentStatus.CANC.toString()))
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
-    checkStatus204.apply(exchange);
+    checkStatus200.apply(exchange);
   }
 
   @Test
@@ -270,12 +271,13 @@ class BKGControllerTest {
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
-            .post()
+            .patch()
             .uri(
                 BOOKING_ENDPOINT
                     + "/"
                     + bookingTO.getCarrierBookingRequestReference()
-                    + "/cancellation")
+                    + "/document-status")
+            .body(BodyInserters.fromValue(DocumentStatus.CANC.toString()))
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
 
