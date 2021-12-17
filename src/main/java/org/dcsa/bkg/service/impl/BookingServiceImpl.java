@@ -121,11 +121,11 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
-      String carrierBookingRequestReference, DocumentStatus documentStatus, Pageable pageable) {
+      DocumentStatus documentStatus, Pageable pageable) {
 
     Flux<Booking> queryResponse =
-        bookingRepository.findAllByCarrierBookingReferenceAndDocumentStatus(
-            carrierBookingRequestReference, documentStatus, pageable);
+        bookingRepository.findAllByDocumentStatus(
+            documentStatus, pageable);
 
     return queryResponse.flatMap(
         booking ->
