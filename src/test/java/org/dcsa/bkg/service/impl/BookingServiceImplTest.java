@@ -2956,23 +2956,20 @@ class BookingServiceImplTest {
 
       ArgumentCaptor<ShipmentEvent> argumentCaptor = ArgumentCaptor.forClass(ShipmentEvent.class);
 
-      OffsetDateTime updatedDateTime = OffsetDateTime.now();
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
+      mockBookingResponse.setBookingRequestDateTime(OffsetDateTime.now());
       mockBookingResponse.setDocumentStatus(DocumentStatus.RECE);
 
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
-      when(bookingRepository
-              .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
-                  eq(DocumentStatus.CANC), eq(carrierBookingRequestReference), any()))
+      when(bookingRepository.updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(eq(DocumentStatus.CANC), eq(carrierBookingRequestReference), any()))
           .thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
-      Mono<BookingResponseTO> cancelBookingResponse =
-          bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
+      Mono<BookingResponseTO> cancelBookingResponse = bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
 
       StepVerifier.create(cancelBookingResponse).verifyComplete();
 

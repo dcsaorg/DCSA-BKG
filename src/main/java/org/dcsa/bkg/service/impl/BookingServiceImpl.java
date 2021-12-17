@@ -144,9 +144,11 @@ public class BookingServiceImpl implements BookingService {
   @Transactional
   public Mono<BookingTO> createBooking(final BookingTO bookingRequest) {
 
+    OffsetDateTime now = OffsetDateTime.now();
     Booking requestedBooking = bookingMapper.dtoToBooking(bookingRequest);
     requestedBooking.setDocumentStatus(DocumentStatus.RECE);
-    requestedBooking.setBookingRequestDateTime(OffsetDateTime.now());
+    requestedBooking.setBookingRequestDateTime(now);
+    requestedBooking.setBookingRequestDateTime(now);
 
     return bookingRepository
         .save(requestedBooking)
@@ -1347,8 +1349,9 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   @Transactional
-  public Mono<BookingResponseTO> cancelBookingByCarrierBookingReference(String carrierBookingRequestReference) {
-      OffsetDateTime updatedDateTime = OffsetDateTime.now();
+  public Mono<BookingResponseTO> cancelBookingByCarrierBookingReference(
+      String carrierBookingRequestReference) {
+    OffsetDateTime updatedDateTime = OffsetDateTime.now();
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
         .switchIfEmpty(
@@ -1360,9 +1363,7 @@ public class BookingServiceImpl implements BookingService {
                 Mono.zip(
                     bookingRepository
                         .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
-                            DocumentStatus.CANC,
-                            carrierBookingRequestReference,
-                            OffsetDateTime.now())
+                            DocumentStatus.CANC, carrierBookingRequestReference, updatedDateTime)
                         .flatMap(verifyCancellation),
                     Mono.just(booking)
                         .map(
@@ -1374,8 +1375,8 @@ public class BookingServiceImpl implements BookingService {
             t -> {
               createShipmentEventFromBooking(t.getT2());
               BookingResponseTO response = new BookingResponseTO();
-              response.setBookingRequestCreatedDateTime(t.getT2().getCreatedDateTime());
-              response.setBookingRequestUpdatedDateTime(t.getT2().getUpdatedDateTime());
+              response.setBookingRequestCreatedDateTime(t.getT2().getBookingRequestDateTime());
+              response.setBookingRequestUpdatedDateTime(updatedDateTime);
               response.setDocumentStatus(t.getT2().getDocumentStatus());
               response.setCarrierBookingRequestReference(
                   t.getT2().getCarrierBookingRequestReference());
@@ -1398,8 +1399,7 @@ public class BookingServiceImpl implements BookingService {
   private final Function<Booking, Mono<ShipmentEvent>> shipmentEventFromBooking =
       booking -> {
         ShipmentEvent shipmentEvent = new ShipmentEvent();
-        shipmentEvent.setShipmentEventTypeCode(
-            ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()));
+        shipmentEvent.setShipmentEventTypeCode(ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()));
         shipmentEvent.setDocumentTypeCode(DocumentTypeCode.CBR);
         shipmentEvent.setEventClassifierCode(EventClassifierCode.ACT);
         shipmentEvent.setEventType(null);
@@ -1410,17 +1410,7 @@ public class BookingServiceImpl implements BookingService {
         return Mono.just(shipmentEvent);
       };
 
-    private final Function<Booking, Mono<BookingResponseTO>> bookingResponseFromBooking =
-            booking -> {
-                BookingResponseTO response = new BookingResponseTO();
-                response.setBookingRequestCreatedDateTime(booking.getCreatedDateTime());
-                response.setBookingRequestUpdatedDateTime(booking.getUpdatedDateTime());
-                response.setDocumentStatus(booking.getDocumentStatus());
-                response.setCarrierBookingRequestReference(booking.getCarrierBookingRequestReference());
-                return Mono.just(response);
-            };
-
-    private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
+  private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
       isRecordUpdated -> {
         if (isRecordUpdated) {
           return Mono.just(true);
