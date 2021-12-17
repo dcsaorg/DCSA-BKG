@@ -7,7 +7,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface BookingService {
-  Flux<BookingSummaryTO> getBookingRequestSummaries(String carrierBookingRequestReference, DocumentStatus documentStatus, Pageable pageable);
+  Flux<BookingSummaryTO> getBookingRequestSummaries(DocumentStatus documentStatus, Pageable pageable);
 
   Mono<BookingTO> createBooking(BookingTO bookingRequest);
 
