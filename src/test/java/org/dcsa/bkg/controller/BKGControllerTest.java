@@ -220,24 +220,6 @@ class BKGControllerTest {
   }
 
   @Test
-  @DisplayName("Cancelling a booking request should return a 204")
-  void bookingsCancelationShouldReturn204() {
-
-    WebTestClient.ResponseSpec exchange =
-        webTestClient
-            .patch()
-            .uri(
-                BOOKING_ENDPOINT
-                    + "/"
-                    + bookingTO.getCarrierBookingRequestReference()
-                    + "/cancellation")
-            .body(BodyInserters.fromValue(DocumentStatus.CANC.toString()))
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange();
-    checkStatus200.apply(exchange);
-  }
-
-  @Test
   @DisplayName("Canceling a booking request should return a 200")
   void confirmedBookingsCancellationShouldReturn200() {
 
