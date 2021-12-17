@@ -756,7 +756,7 @@ public class BookingServiceImpl implements BookingService {
     // locationTO is the location received from the update booking request
     if (Objects.isNull(locationTO)) {
       if (StringUtils.isEmpty(currentLocationIDInBooking)) {
-        // it's possible that there may be no location liked to booking
+        // it's possible that there may be no location linked to booking
         return Mono.just(Optional.empty());
       } else {
         return locationRepository
