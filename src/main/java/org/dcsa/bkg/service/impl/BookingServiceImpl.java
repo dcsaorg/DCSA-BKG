@@ -99,23 +99,24 @@ public class BookingServiceImpl implements BookingService {
             return bookingRepository
                 .findAllByBookingIDAndDocumentStatus(
                     shipment.getBookingID(), documentStatus, pageable)
-                .mapNotNull(
-                    ignored -> {
-                      ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
-                      shipmentSummaryTO.setCarrierBookingReference(
-                          shipment.getCarrierBookingReference());
-                      shipmentSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
-                      shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
-                      return shipmentSummaryTO;
-                    });
+                .mapNotNull(booking -> createShipmentSummaryTO(shipment, booking));
           } else {
-            ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
-            shipmentSummaryTO.setCarrierBookingReference(shipment.getCarrierBookingReference());
-            shipmentSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
-            shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
-            return Mono.just(shipmentSummaryTO);
+            return bookingRepository
+                .findById(shipment.getBookingID())
+                .mapNotNull(booking -> createShipmentSummaryTO(shipment, booking));
           }
         });
+  }
+
+  private ShipmentSummaryTO createShipmentSummaryTO(Shipment shipment, Booking booking) {
+    ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
+    shipmentSummaryTO.setCarrierBookingReference(shipment.getCarrierBookingReference());
+    shipmentSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
+    shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+    shipmentSummaryTO.setCarrierBookingRequestReference(
+        booking.getCarrierBookingRequestReference());
+    shipmentSummaryTO.setDocumentStatus(booking.getDocumentStatus());
+    return shipmentSummaryTO;
   }
 
   @Override
