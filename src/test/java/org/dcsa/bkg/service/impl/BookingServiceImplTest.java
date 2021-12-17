@@ -2954,29 +2954,32 @@ class BookingServiceImplTest {
     @DisplayName("Cancellation of the booking should result in an updated booking")
     void cancelBookingSuccess() {
 
-      ArgumentCaptor<ShipmentEvent> argumentCaptor = ArgumentCaptor.forClass(ShipmentEvent.class);
-
+      OffsetDateTime now = OffsetDateTime.now();
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
-      mockBookingResponse.setBookingRequestDateTime(OffsetDateTime.now());
+      mockBookingResponse.setBookingRequestDateTime(now);
       mockBookingResponse.setDocumentStatus(DocumentStatus.RECE);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
-          .thenReturn(Mono.just(mockBookingResponse));
-      when(bookingRepository.updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(eq(DocumentStatus.CANC), eq(carrierBookingRequestReference), any()))
-          .thenReturn(Mono.just(true));
-      when(shipmentEventService.create(any()))
-          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference)).thenReturn(Mono.just(mockBookingResponse));
+      when(bookingRepository.updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(eq(DocumentStatus.CANC), eq(carrierBookingRequestReference), any())).thenReturn(Mono.just(true));
 
       Mono<BookingResponseTO> cancelBookingResponse = bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
 
-      StepVerifier.create(cancelBookingResponse).verifyComplete();
+      StepVerifier.create(cancelBookingResponse).assertNext(b -> {
+        Assertions.assertEquals(carrierBookingRequestReference, b.getCarrierBookingRequestReference());
+        Assertions.assertEquals(DocumentStatus.CANC, b.getDocumentStatus());
+        Assertions.assertNotNull(b.getBookingRequestCreatedDateTime());
+        Assertions.assertNotNull(b.getBookingRequestUpdatedDateTime());
+        Assertions.assertEquals(now, b.getBookingRequestCreatedDateTime());
+        Assertions.assertTrue(b.getBookingRequestUpdatedDateTime().isAfter(b.getBookingRequestCreatedDateTime()));
+      })
+.verifyComplete();
 
-      verify(shipmentEventService).create(argumentCaptor.capture());
-
-      ShipmentEvent shipmentEvent = argumentCaptor.getValue();
-      Assertions.assertEquals(shipmentEvent.getShipmentEventTypeCode(), ShipmentEventTypeCode.CANC);
+//      verify(shipmentEventService).create(argumentCaptor.capture());
+//
+//      ShipmentEvent shipmentEvent = argumentCaptor.getValue();
+//      Assertions.assertEquals(shipmentEvent.getShipmentEventTypeCode(), ShipmentEventTypeCode.CANC);
     }
   }
 }
