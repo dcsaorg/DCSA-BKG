@@ -2654,6 +2654,9 @@ class BookingServiceImplTest {
                   initializeBookingTestInstance(
                       carrierBookingRequestReference, documentStatus, vesselId)));
 
+      when(bookingRepository.countAllByDocumentStatus(documentStatus))
+        .thenReturn(Mono.just(1L));
+
       when(vesselRepository.findByIdOrEmpty(vesselId))
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
@@ -2691,6 +2694,9 @@ class BookingServiceImplTest {
                   initializeBookingTestInstance(
                       carrierBookingRequestReference, documentStatus, vesselId)));
 
+      when(bookingRepository.countAllByDocumentStatus(documentStatus))
+        .thenReturn(Mono.just(1L));
+
       when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =
@@ -2726,6 +2732,8 @@ class BookingServiceImplTest {
                   initializeBookingTestInstance(
                       carrierBookingRequestReference, documentStatus, vesselId)));
 
+      when(bookingRepository.countAllByDocumentStatus(documentStatus)).thenReturn(Mono.just(1L));
+
       when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =
@@ -2758,6 +2766,8 @@ class BookingServiceImplTest {
           .thenReturn(
               Flux.just(
                   initializeBookingTestInstance(carrierBookingRequestReference, null, vesselId)));
+
+      when(bookingRepository.countAllByDocumentStatus(null)).thenReturn(Mono.just(1L));
 
       Mockito.when(vesselRepository.findByIdOrEmpty(vesselId))
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
@@ -2794,6 +2804,8 @@ class BookingServiceImplTest {
                   initializeBookingTestInstance(
                       carrierBookingRequestReference, documentStatus, vesselId)));
 
+      when(bookingRepository.countAllByDocumentStatus(documentStatus)).thenReturn(Mono.just(1L));
+
       when(vesselRepository.findByIdOrEmpty(vesselId))
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
@@ -2829,6 +2841,8 @@ class BookingServiceImplTest {
                   initializeBookingTestInstance(
                       carrierBookingRequestReference, documentStatus, vesselId)));
 
+      when(bookingRepository.countAllByDocumentStatus(null)).thenReturn(Mono.just(1L));
+
       when(vesselRepository.findByIdOrEmpty(vesselId))
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
@@ -2857,6 +2871,8 @@ class BookingServiceImplTest {
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByDocumentStatus(null, pageRequest)).thenReturn(Flux.empty());
+
+      when(bookingRepository.countAllByDocumentStatus(null)).thenReturn(Mono.just(1L));
 
       Flux<BookingSummaryTO> bookingToResponse =
           bookingServiceImpl
