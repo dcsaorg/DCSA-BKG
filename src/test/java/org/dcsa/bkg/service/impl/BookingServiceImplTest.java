@@ -2654,8 +2654,7 @@ class BookingServiceImplTest {
                   initializeBookingTestInstance(
                       carrierBookingRequestReference, documentStatus, vesselId)));
 
-      when(bookingRepository.countAllByDocumentStatus(documentStatus))
-        .thenReturn(Mono.just(1L));
+      when(bookingRepository.countAllByDocumentStatus(documentStatus)).thenReturn(Mono.just(1L));
 
       when(vesselRepository.findByIdOrEmpty(vesselId))
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
@@ -2694,8 +2693,7 @@ class BookingServiceImplTest {
                   initializeBookingTestInstance(
                       carrierBookingRequestReference, documentStatus, vesselId)));
 
-      when(bookingRepository.countAllByDocumentStatus(documentStatus))
-        .thenReturn(Mono.just(1L));
+      when(bookingRepository.countAllByDocumentStatus(documentStatus)).thenReturn(Mono.just(1L));
 
       when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
 
@@ -2886,15 +2884,32 @@ class BookingServiceImplTest {
   @Nested
   @DisplayName("Tests for Shipment summaries")
   class ShipmentSummaryTests {
+
+    private ShipmentCustomRepository.ShipmentSummary shipmentSummary;
+
+    @BeforeEach
+    public void initShipmentSummary() {
+      this.shipmentSummary = new ShipmentCustomRepository.ShipmentSummary(
+        shipment.getCarrierBookingReference(),
+        shipment.getTermsAndConditions(),
+        shipment.getConfirmationDateTime(),
+        booking.getCarrierBookingRequestReference(),
+        booking.getDocumentStatus());
+    }
     @Test
     @DisplayName("Method should return shipment summaries for")
     void testGETShipmentSummaries() {
 
-      when(shipmentRepository.findShipmentsByBookingIDNotNull(any()))
-          .thenReturn(Flux.just(shipment));
-      when(bookingRepository.findById((UUID) any())).thenReturn(Mono.just(booking));
+      PageRequest pageRequest = PageRequest.of(0, 100);
 
-      StepVerifier.create(bookingServiceImpl.getShipmentSummaries(null, null))
+      when(shipmentRepository.findShipmentsAndBookingsByDocumentStatus(any(), eq(pageRequest)))
+          .thenReturn(Flux.just(shipmentSummary));
+      when(shipmentRepository.countShipmentsByDocumentStatus(any())).thenReturn(Mono.just(1L));
+
+      StepVerifier.create(
+              bookingServiceImpl
+                  .getShipmentSummaries(null, pageRequest)
+                  .flatMapMany(shipmentSummaryTOS -> Flux.fromIterable(shipmentSummaryTOS)))
           .assertNext(
               shipmentSummary -> {
                 Assertions.assertEquals(
@@ -2917,14 +2932,16 @@ class BookingServiceImplTest {
     @DisplayName("Method should return shipment summaries for documentStatus")
     void testGETShipmentSummariesWithDocumentStatus() {
 
-      when(shipmentRepository.findShipmentsByBookingIDNotNull(any()))
-          .thenReturn(Flux.just(shipment));
-      when(bookingRepository.findAllByBookingIDAndDocumentStatus(
-              any(), eq(booking.getDocumentStatus()), any()))
-          .thenReturn(Flux.just(booking));
+      PageRequest pageRequest = PageRequest.of(0, 100);
+
+      when(shipmentRepository.findShipmentsAndBookingsByDocumentStatus(any(), eq(pageRequest)))
+        .thenReturn(Flux.just(shipmentSummary));
+      when(shipmentRepository.countShipmentsByDocumentStatus(booking.getDocumentStatus())).thenReturn(Mono.just(1L));
 
       StepVerifier.create(
-              bookingServiceImpl.getShipmentSummaries(booking.getDocumentStatus(), null))
+              bookingServiceImpl
+                  .getShipmentSummaries(booking.getDocumentStatus(), pageRequest)
+                  .flatMapMany(shipmentSummaryTOS -> Flux.fromIterable(shipmentSummaryTOS)))
           .assertNext(
               shipmentSummary -> {
                 Assertions.assertEquals(
@@ -2947,11 +2964,14 @@ class BookingServiceImplTest {
     @DisplayName("Method should return shipment summaries for carrierBookingReference")
     void testGETShipmentSummariesWithCarrierBookingReference() {
 
-      when(shipmentRepository.findShipmentsByBookingIDNotNull(any()))
-          .thenReturn(Flux.just(shipment));
-      when(bookingRepository.findById((UUID) any())).thenReturn(Mono.just(booking));
+      PageRequest pageRequest = PageRequest.of(0, 100);
 
-      StepVerifier.create(bookingServiceImpl.getShipmentSummaries(null, null))
+      when(shipmentRepository.findShipmentsAndBookingsByDocumentStatus(any(), eq(pageRequest)))
+        .thenReturn(Flux.just(shipmentSummary));
+      when(shipmentRepository.countShipmentsByDocumentStatus(any())).thenReturn(Mono.just(1L));
+
+      StepVerifier.create(bookingServiceImpl.getShipmentSummaries(null, pageRequest)
+          .flatMapMany(shipmentSummaryTOS -> Flux.fromIterable(shipmentSummaryTOS)))
           .assertNext(
               shipmentSummary -> {
                 Assertions.assertEquals(

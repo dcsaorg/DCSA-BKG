@@ -81,38 +81,26 @@ public class BookingServiceImpl implements BookingService {
   private final LocationService locationService;
 
   @Override
-  public Flux<ShipmentSummaryTO> getShipmentSummaries(
+  public Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
       DocumentStatus documentStatus, Pageable pageable) {
 
-    Flux<Shipment> shipmentResponse = shipmentRepository.findShipmentsByBookingIDNotNull(pageable);
-
-    return shipmentResponse.flatMap(
-        shipment -> {
-          // IF-statement is here so that we *only* make multiple queries if documentStatus is
-          // included as parameter
-          if (documentStatus != null) {
-
-            // Potential issue if booking query returns more than the set limit of results
-            return bookingRepository
-                .findAllByBookingIDAndDocumentStatus(
-                    shipment.getBookingID(), documentStatus, pageable)
-                .mapNotNull(booking -> createShipmentSummaryTO(shipment, booking));
-          } else {
-            return bookingRepository
-                .findById(shipment.getBookingID())
-                .mapNotNull(booking -> createShipmentSummaryTO(shipment, booking));
-          }
-        });
+    return shipmentRepository
+        .findShipmentsAndBookingsByDocumentStatus(documentStatus, pageable)
+        .map(this::createShipmentSummaryTO)
+        .collectList()
+        .zipWith(shipmentRepository.countShipmentsByDocumentStatus(documentStatus))
+        .map(objects -> new PageImpl<>(objects.getT1(), pageable, objects.getT2()));
   }
 
-  private ShipmentSummaryTO createShipmentSummaryTO(Shipment shipment, Booking booking) {
+  private ShipmentSummaryTO createShipmentSummaryTO(
+      ShipmentCustomRepository.ShipmentSummary shipmentSummary) {
     ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
-    shipmentSummaryTO.setCarrierBookingReference(shipment.getCarrierBookingReference());
-    shipmentSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
-    shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+    shipmentSummaryTO.setDocumentStatus(shipmentSummary.getDocumentStatus());
+    shipmentSummaryTO.setCarrierBookingReference(shipmentSummary.getCarrierBookingReference());
     shipmentSummaryTO.setCarrierBookingRequestReference(
-        booking.getCarrierBookingRequestReference());
-    shipmentSummaryTO.setDocumentStatus(booking.getDocumentStatus());
+        shipmentSummary.getCarrierBookingRequestReference());
+    shipmentSummaryTO.setTermsAndConditions(shipmentSummary.getTermsAndConditions());
+    shipmentSummaryTO.setConfirmationDateTime(shipmentSummary.getConfirmationDateTime());
     return shipmentSummaryTO;
   }
 
