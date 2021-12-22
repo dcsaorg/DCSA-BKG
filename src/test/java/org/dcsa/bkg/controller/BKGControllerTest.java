@@ -220,63 +220,48 @@ class BKGControllerTest {
   }
 
   @Test
-  @DisplayName(
-    "Cancelling a booking request should return a 204")
-  void bookingsCancelationShouldReturn204() {
+  @DisplayName("Canceling a booking request should return a 200")
+  void confirmedBookingsCancellationShouldReturn200() {
 
     WebTestClient.ResponseSpec exchange =
-      webTestClient
-        .post()
-        .uri(
-          BOOKING_ENDPOINT
-            + "/"
-            + bookingTO.getCarrierBookingRequestReference()
-            + "/cancellation")
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange();
-    checkStatus204.apply(exchange);
+        webTestClient
+            .patch()
+            .uri(
+                BOOKING_ENDPOINT
+                    + "/"
+                    + bookingTO.getCarrierBookingRequestReference()
+                    + "/document-status")
+            .body(BodyInserters.fromValue(DocumentStatus.CANC.toString()))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange();
+
+    checkStatus200.apply(exchange);
   }
 
   @Test
   @DisplayName(
-    "Canceling a booking request should return a 204")
-  void confirmedBookingsCancellationShouldReturn204() {
-
-    WebTestClient.ResponseSpec exchange =
-      webTestClient
-        .post()
-        .uri(
-          BOOKING_ENDPOINT
-            + "/"
-            + bookingTO.getCarrierBookingRequestReference()
-            + "/cancelation")
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange();
-
-    checkStatus204.apply(exchange);
-  }
-
-  @Test
-  @DisplayName("Cancelling of a booking in unallowed status should return a 400 for invalid request")
+      "Cancelling of a booking in unallowed status should return a 400 for invalid request")
   void confirmedBookingsCancellationShouldReturn400() {
 
     Mockito.when(
-        bookingService.cancelBookingByCarrierBookingReference(
-          bookingTO.getCarrierBookingRequestReference()))
-      .thenReturn(Mono.error(
-        new UpdateException(
-          "Cannot Cancel Booking that is not in status RECE, PENU or CONF")));
+            bookingService.cancelBookingByCarrierBookingReference(
+                bookingTO.getCarrierBookingRequestReference()))
+        .thenReturn(
+            Mono.error(
+                new UpdateException(
+                    "Cannot Cancel Booking that is not in status RECE, PENU or CONF")));
 
     WebTestClient.ResponseSpec exchange =
-      webTestClient
-        .post()
-        .uri(
-          BOOKING_ENDPOINT
-            + "/"
-            + bookingTO.getCarrierBookingRequestReference()
-            + "/cancellation")
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange();
+        webTestClient
+            .patch()
+            .uri(
+                BOOKING_ENDPOINT
+                    + "/"
+                    + bookingTO.getCarrierBookingRequestReference()
+                    + "/document-status")
+            .body(BodyInserters.fromValue(DocumentStatus.CANC.toString()))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange();
 
     checkStatus400.apply(exchange);
   }
@@ -288,7 +273,7 @@ class BKGControllerTest {
       (exchange) -> exchange.expectStatus().isAccepted();
 
   private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus204 =
-    (exchange) -> exchange.expectStatus().isNoContent();
+      (exchange) -> exchange.expectStatus().isNoContent();
 
   private final Function<WebTestClient.ResponseSpec, WebTestClient.ResponseSpec> checkStatus400 =
       (exchange) -> exchange.expectStatus().isBadRequest();

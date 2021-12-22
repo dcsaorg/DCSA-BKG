@@ -1,9 +1,6 @@
 package org.dcsa.bkg.service;
 
-import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
-import org.dcsa.bkg.model.transferobjects.BookingTO;
-import org.dcsa.bkg.model.transferobjects.ShipmentSummaryTO;
-import org.dcsa.bkg.model.transferobjects.ShipmentTO;
+import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
@@ -21,7 +18,7 @@ public interface BookingService {
 
   Mono<ShipmentTO> getShipmentByCarrierBookingReference(String carrierBookingReference);
 
-  Mono<Void> cancelBookingByCarrierBookingReference(String carrierBookingReference);
+  Mono<BookingResponseTO> cancelBookingByCarrierBookingReference(String carrierBookingReference);
 
   Flux<ShipmentSummaryTO> getShipmentSummaries(DocumentStatus documentStatus, Pageable pageable);
 }
