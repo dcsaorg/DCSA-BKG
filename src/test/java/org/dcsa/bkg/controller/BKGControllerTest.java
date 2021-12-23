@@ -56,7 +56,7 @@ class BKGControllerTest {
     bookingTO = new BookingTO();
     bookingTO.setCarrierBookingRequestReference(UUID.randomUUID().toString());
     bookingTO.setDocumentStatus(DocumentStatus.PENU);
-    bookingTO.setBookingRequestDateTime(OffsetDateTime.now());
+    bookingTO.setBookingRequestCreatedDateTime(OffsetDateTime.now());
     bookingTO.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingTO.setDeliveryTypeAtDestination(ReceiptDeliveryType.SD);
     bookingTO.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
@@ -132,7 +132,7 @@ class BKGControllerTest {
     verify(bookingService).createBooking(argument.capture());
     assertNull(argument.getValue().getCarrierBookingRequestReference());
     assertNull(argument.getValue().getDocumentStatus());
-    assertNull(argument.getValue().getBookingRequestDateTime());
+    assertNull(argument.getValue().getBookingRequestCreatedDateTime());
 
     checkStatus202.andThen(checkBookingResponseJsonSchema).apply(exchange);
   }
@@ -178,7 +178,7 @@ class BKGControllerTest {
         .updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
     assertNull(argument.getValue().getCarrierBookingRequestReference());
     assertNull(argument.getValue().getDocumentStatus());
-    assertNull(argument.getValue().getBookingRequestDateTime());
+    assertNull(argument.getValue().getBookingRequestCreatedDateTime());
 
     checkStatus200.andThen(checkBookingResponseJsonSchema).apply(exchange);
   }
@@ -288,7 +288,7 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.documentStatus")
                   .hasJsonPath()
-                  .jsonPath("$.bookingRequestDateTime")
+                  .jsonPath("$.bookingRequestCreatedDateTime")
                   .hasJsonPath()
                   .jsonPath("$.receiptTypeAtOrigin")
                   .hasJsonPath()

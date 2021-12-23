@@ -15,9 +15,7 @@ import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.UpdateException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -29,6 +27,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -108,8 +107,10 @@ public class BookingServiceImpl implements BookingService {
   public Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
       DocumentStatus documentStatus, Pageable pageable) {
 
+    Pageable mappedPageRequest = mapSortParameters(pageable);
+
     Flux<Booking> queryResponse =
-        bookingRepository.findAllByDocumentStatus(documentStatus, pageable);
+      bookingRepository.findAllByDocumentStatus(documentStatus, mappedPageRequest);
 
     return queryResponse
         .flatMap(
@@ -127,6 +128,21 @@ public class BookingServiceImpl implements BookingService {
         .collectList()
         .zipWith(bookingRepository.countAllByDocumentStatus(documentStatus))
         .map(objects -> new PageImpl<>(objects.getT1(), pageable, objects.getT2()));
+  }
+
+  private Pageable mapSortParameters(Pageable pageable) {
+    List<Sort.Order> sort = pageable.getSort().get().map(order -> {
+      if(order.getProperty().equals("bookingRequestCreatedDateTime")) {
+       return Sort.Order.by("bookingRequestDateTime").with(order.getDirection());
+      }
+      if(order.getProperty().equals("bookingRequestUpdatedDateTime")) {
+        return Sort.Order.by("updatedDateTime").with(order.getDirection());
+      }
+      return order;
+    }).collect(Collectors.toList());
+
+    Pageable mappedPageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sort));
+    return mappedPageRequest;
   }
 
   @Override

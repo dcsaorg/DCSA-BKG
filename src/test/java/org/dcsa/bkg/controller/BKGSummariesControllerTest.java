@@ -84,7 +84,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setDeliveryTypeAtDestination(ReceiptDeliveryType.CY);
     bookingSummaryTo.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
     bookingSummaryTo.setCargoMovementTypeAtDestination(CargoMovementType.FCL);
-    bookingSummaryTo.setBookingRequestDateTime(OffsetDateTime.now());
+    bookingSummaryTo.setBookingRequestCreatedDateTime(OffsetDateTime.now());
     bookingSummaryTo.setServiceContractReference("234ase3q4");
     bookingSummaryTo.setPaymentTermCode(PaymentTerm.PRE);
     bookingSummaryTo.setIsPartialLoadAllowed(true);

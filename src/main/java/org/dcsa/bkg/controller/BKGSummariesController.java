@@ -41,7 +41,7 @@ public class BKGSummariesController {
       @RequestParam(value = "sort", required = false) String[] sort,
       ServerHttpResponse response) {
 
-    Pagination pagination = new Pagination(Sort.by(Sort.Direction.DESC, "bookingRequestDateTime"));
+    Pagination pagination = new Pagination(Sort.by(Sort.Direction.DESC, "bookingRequestCreatedDateTime"));
     PageRequest pageRequest = pagination.createPageRequest(limit, cursor, sort);
 
     return bookingService
