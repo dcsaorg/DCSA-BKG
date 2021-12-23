@@ -85,7 +85,8 @@ class BKGShipmentSummariesControllerTest {
 
     ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
     shipmentSummaryTO.setCarrierBookingReference(carrierBookingReference);
-    shipmentSummaryTO.setConfirmationDateTime(dateTimeOffset);
+    shipmentSummaryTO.setShipmentCreatedDateTime(dateTimeOffset);
+    shipmentSummaryTO.setShipmentUpdatedDateTime(dateTimeOffset);
     shipmentSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
 
     Mockito.when(bookingService.getShipmentSummaries(any(), any()))

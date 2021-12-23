@@ -1,5 +1,6 @@
 package org.dcsa.bkg.model.transferobjects;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -16,8 +17,11 @@ public class ShipmentTO {
 
   private String termsAndConditions;
 
-  @NotNull(message = "ConfirmedDateTime is required.")
-  private OffsetDateTime confirmationDateTime;
+  @NotNull(message = "ShipmentCreatedDateTime is required.")
+  private OffsetDateTime shipmentCreatedDateTime;
+
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  protected OffsetDateTime shipmentUpdatedDateTime;
 
   private BookingTO booking;
 
