@@ -141,6 +141,8 @@ public class BookingServiceImpl implements BookingService {
 
     OffsetDateTime now = OffsetDateTime.now();
     Booking requestedBooking = bookingMapper.dtoToBooking(bookingRequest);
+    // CarrierBookingRequestReference is not allowed to be set by request
+    requestedBooking.setCarrierBookingRequestReference(null);
     requestedBooking.setDocumentStatus(DocumentStatus.RECE);
     requestedBooking.setBookingRequestDateTime(now);
     requestedBooking.setBookingRequestDateTime(now);
@@ -651,26 +653,12 @@ public class BookingServiceImpl implements BookingService {
   @Transactional
   public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
       String carrierBookingRequestReference, BookingTO bookingRequest) {
-    // precondition:
-    //   [x] match carrierBookingRequestReference in path to carrierBookingRequestReference in body
-    //   [x] check if booking status is CANC
 
     if (!carrierBookingRequestReference.equals(
         bookingRequest.getCarrierBookingRequestReference())) {
       return Mono.error(
           new UpdateException("carrierBookingRequestReference in path does not match body."));
     }
-
-    // [x] update booking at a base level
-    // [x] resolve locations or link new ones
-    // [x] unlink vessel and link based on new request
-    // [x] clear linked commodities and create new ones
-    // [x] clear value added services and create new ones
-    // [x] clear references and create new ones
-    // [x] clear request equipment and create new ones
-    // [-] clear document party and create new ones
-    // [-] clear shipment locations and create new ones
-    // [x] create a shipment event for the updated booking
 
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
@@ -706,10 +694,12 @@ public class BookingServiceImpl implements BookingService {
                                   return Mono.just(bookingTO);
                                 }),
                         resolveLocationByTO(
+                            b.getInvoicePayableAt(),
                             bookingRequest.getInvoicePayableAt(),
                             invPayAT ->
                                 bookingRepository.setInvoicePayableAtFor(invPayAT, b.getId())),
                         resolveLocationByTO(
+                            b.getPlaceOfIssueID(),
                             bookingRequest.getPlaceOfIssue(),
                             placeOfIss ->
                                 bookingRepository.setPlaceOfIssueIDFor(placeOfIss, b.getId())),
@@ -759,24 +749,30 @@ public class BookingServiceImpl implements BookingService {
   }
 
   private Mono<Optional<LocationTO>> resolveLocationByTO(
-      LocationTO locationTO, Function<String, Mono<Boolean>> updateBookingCallback) {
+      String currentLocationIDInBooking,
+      LocationTO locationTO,
+      Function<String, Mono<Boolean>> updateBookingCallback) {
 
+    // locationTO is the location received from the update booking request
     if (Objects.isNull(locationTO)) {
-      return Mono.just(Optional.empty());
+      if (StringUtils.isEmpty(currentLocationIDInBooking)) {
+        // it's possible that there may be no location linked to booking
+        return Mono.just(Optional.empty());
+      } else {
+        return locationRepository
+            .deleteById(currentLocationIDInBooking)
+            .then(Mono.just(Optional.empty()));
+      }
+    } else {
+      return locationService
+          .ensureResolvable(locationTO)
+          .flatMap(lTO -> updateBookingCallback.apply(lTO.getId()).thenReturn(lTO))
+          .map(Optional::of);
     }
-
-    return locationService
-        .ensureResolvable(locationTO)
-        .flatMap(lTO -> updateBookingCallback.apply(lTO.getId()).thenReturn(lTO))
-        .map(Optional::of);
   }
 
   private Mono<Optional<List<CommodityTO>>> resolveCommoditiesForBookingID(
       List<CommodityTO> commodities, UUID bookingID) {
-
-    if (null == commodities || commodities.isEmpty()) {
-      return Mono.just(Optional.of(Collections.emptyList()));
-    }
 
     return commodityRepository
         .deleteByBookingID(bookingID)
@@ -786,10 +782,6 @@ public class BookingServiceImpl implements BookingService {
   private Mono<Optional<List<ValueAddedServiceRequestTO>>> resolveValueAddedServiceReqForBookingID(
       List<ValueAddedServiceRequestTO> valAddedSerReqs, UUID bookingID) {
 
-    if (null == valAddedSerReqs || valAddedSerReqs.isEmpty()) {
-      return Mono.just(Optional.of(Collections.emptyList()));
-    }
-
     return valueAddedServiceRequestRepository
         .deleteByBookingID(bookingID)
         .then(createValueAddedServiceRequestsByBookingIDAndTOs(bookingID, valAddedSerReqs));
@@ -797,10 +789,6 @@ public class BookingServiceImpl implements BookingService {
 
   private Mono<Optional<List<ReferenceTO>>> resolveReferencesForBookingID(
       List<ReferenceTO> references, UUID bookingID) {
-
-    if (null == references || references.isEmpty()) {
-      return Mono.just(Optional.of(Collections.emptyList()));
-    }
 
     return referenceRepository
         .deleteByBookingID(bookingID)
@@ -810,10 +798,6 @@ public class BookingServiceImpl implements BookingService {
   private Mono<Optional<List<RequestedEquipmentTO>>> resolveReqEqForBookingID(
       List<RequestedEquipmentTO> requestedEquipments, UUID bookingID) {
 
-    if (null == requestedEquipments || requestedEquipments.isEmpty()) {
-      return Mono.just(Optional.of(Collections.emptyList()));
-    }
-
     return requestedEquipmentRepository
         .deleteByBookingID(bookingID)
         .then(createRequestedEquipmentsByBookingIDAndTOs(bookingID, requestedEquipments));
@@ -822,23 +806,19 @@ public class BookingServiceImpl implements BookingService {
   private Mono<Optional<List<DocumentPartyTO>>> resolveDocumentPartiesForBookingID(
       List<DocumentPartyTO> documentPartyTOs, UUID bookingID) {
 
-    if (null == documentPartyTOs || documentPartyTOs.isEmpty()) {
-      return Mono.just(Optional.of(Collections.emptyList()));
-    }
-
-    // TODO: implementation pending
-    return Mono.just(Optional.of(Collections.emptyList()));
+    // this will create orphan parties
+    return documentPartyRepository
+        .deleteByBookingID(bookingID)
+        .then(createDocumentPartiesByBookingIDAndTOs(bookingID, documentPartyTOs));
   }
 
   private Mono<Optional<List<ShipmentLocationTO>>> resolveShipmentLocationsForBookingID(
       List<ShipmentLocationTO> shipmentLocationTOs, UUID bookingID) {
 
-    if (null == shipmentLocationTOs || shipmentLocationTOs.isEmpty()) {
-      return Mono.just(Optional.of(Collections.emptyList()));
-    }
-
-    // TODO: implementation pending
-    return Mono.just(Optional.of(Collections.emptyList()));
+    // this will create orphan locations
+    return shipmentLocationRepository
+        .deleteByBookingID(bookingID)
+        .then(createShipmentLocationsByBookingIDAndTOs(bookingID, shipmentLocationTOs));
   }
 
   @Override

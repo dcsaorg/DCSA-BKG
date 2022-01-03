@@ -15,7 +15,6 @@ import java.time.OffsetDateTime;
 @Data
 public abstract class AbstractBookingTO {
 
-  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   protected String carrierBookingRequestReference;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
