@@ -15,7 +15,7 @@ import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.UpdateException;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -27,6 +27,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -79,60 +80,78 @@ public class BookingServiceImpl implements BookingService {
   private final LocationService locationService;
 
   @Override
-  public Flux<ShipmentSummaryTO> getShipmentSummaries(
+  public Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
       DocumentStatus documentStatus, Pageable pageable) {
 
-    Flux<Shipment> shipmentResponse = shipmentRepository.findShipmentsByBookingIDNotNull(pageable);
+    Pageable mappedPageRequest = mapSortParameters(pageable);
 
-    return shipmentResponse.flatMap(
-        shipment -> {
-          // IF-statement is here so that we *only* make multiple queries if documentStatus is
-          // included as parameter
-          if (documentStatus != null) {
-
-            // Potential issue if booking query returns more than the set limit of results
-            return bookingRepository
-                .findAllByBookingIDAndDocumentStatus(
-                    shipment.getBookingID(), documentStatus, pageable)
-                .mapNotNull(booking -> createShipmentSummaryTO(shipment, booking));
-          } else {
-            return bookingRepository
-                .findById(shipment.getBookingID())
-                .mapNotNull(booking -> createShipmentSummaryTO(shipment, booking));
-          }
-        });
+    return shipmentRepository
+        .findShipmentsAndBookingsByDocumentStatus(documentStatus, mappedPageRequest)
+        .map(this::createShipmentSummaryTO)
+        .collectList()
+        .zipWith(shipmentRepository.countShipmentsByDocumentStatus(documentStatus))
+        .map(objects -> new PageImpl<>(objects.getT1(), pageable, objects.getT2()));
   }
 
-  private ShipmentSummaryTO createShipmentSummaryTO(Shipment shipment, Booking booking) {
+  private ShipmentSummaryTO createShipmentSummaryTO(
+      ShipmentCustomRepository.ShipmentSummary shipmentSummary) {
     ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
-    shipmentSummaryTO.setCarrierBookingReference(shipment.getCarrierBookingReference());
-    shipmentSummaryTO.setConfirmationDateTime(shipment.getConfirmationDateTime());
-    shipmentSummaryTO.setTermsAndConditions(shipment.getTermsAndConditions());
+    shipmentSummaryTO.setDocumentStatus(shipmentSummary.getDocumentStatus());
+    shipmentSummaryTO.setCarrierBookingReference(shipmentSummary.getCarrierBookingReference());
     shipmentSummaryTO.setCarrierBookingRequestReference(
-        booking.getCarrierBookingRequestReference());
-    shipmentSummaryTO.setDocumentStatus(booking.getDocumentStatus());
+        shipmentSummary.getCarrierBookingRequestReference());
+    shipmentSummaryTO.setTermsAndConditions(shipmentSummary.getTermsAndConditions());
+    shipmentSummaryTO.setShipmentCreatedDateTime(shipmentSummary.getConfirmationDateTime());
+    shipmentSummaryTO.setShipmentUpdatedDateTime(shipmentSummary.getUpdatedDateTime());
     return shipmentSummaryTO;
   }
 
   @Override
-  public Flux<BookingSummaryTO> getBookingRequestSummaries(
+  public Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
       DocumentStatus documentStatus, Pageable pageable) {
 
-    Flux<Booking> queryResponse =
-        bookingRepository.findAllByDocumentStatus(documentStatus, pageable);
+    Pageable mappedPageRequest = mapSortParameters(pageable);
 
-    return queryResponse.flatMap(
-        booking ->
-            vesselRepository
-                .findByIdOrEmpty(booking.getVesselId())
-                .mapNotNull(
-                    vessel -> {
-                      BookingSummaryTO bookingSummaryTO =
-                          bookingSummaryMapper.bookingSummaryTOFromBooking(booking);
-                      bookingSummaryTO.setVesselIMONumber(vessel.getVesselIMONumber());
-                      return bookingSummaryTO;
-                    })
-                .defaultIfEmpty(bookingSummaryMapper.bookingSummaryTOFromBooking(booking)));
+    Flux<Booking> queryResponse =
+      bookingRepository.findAllByDocumentStatus(documentStatus, mappedPageRequest);
+
+    return queryResponse
+        .flatMap(
+            booking ->
+                vesselRepository
+                    .findByIdOrEmpty(booking.getVesselId())
+                    .mapNotNull(
+                        vessel -> {
+                          BookingSummaryTO bookingSummaryTO =
+                              bookingSummaryMapper.bookingSummaryTOFromBooking(booking);
+                          bookingSummaryTO.setVesselIMONumber(vessel.getVesselIMONumber());
+                          return bookingSummaryTO;
+                        })
+                    .defaultIfEmpty(bookingSummaryMapper.bookingSummaryTOFromBooking(booking)))
+        .collectList()
+        .zipWith(bookingRepository.countAllByDocumentStatus(documentStatus))
+        .map(objects -> new PageImpl<>(objects.getT1(), pageable, objects.getT2()));
+  }
+
+  private Pageable mapSortParameters(Pageable pageable) {
+    List<Sort.Order> sort = pageable.getSort().get().map(order -> {
+      if(order.getProperty().equals("bookingRequestCreatedDateTime")) {
+       return Sort.Order.by("bookingRequestDateTime").with(order.getDirection());
+      }
+      if(order.getProperty().equals("bookingRequestUpdatedDateTime")) {
+        return Sort.Order.by("updatedDateTime").with(order.getDirection());
+      }
+      if(order.getProperty().equals("shipmentCreatedDateTime")) {
+        return Sort.Order.by("confirmationDateTime").with(order.getDirection());
+      }
+      if(order.getProperty().equals("shipmentUpdatedDateTime")) {
+        return Sort.Order.by("updatedDateTime").with(order.getDirection());
+      }
+      return order;
+    }).collect(Collectors.toList());
+
+    Pageable mappedPageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sort));
+    return mappedPageRequest;
   }
 
   @Override

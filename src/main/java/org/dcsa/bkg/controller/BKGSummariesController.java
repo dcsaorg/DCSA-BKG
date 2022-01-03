@@ -1,12 +1,14 @@
 package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.dcsa.bkg.controller.util.Pagination;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.enums.DocumentStatus;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,8 +31,24 @@ public class BKGSummariesController {
   @GetMapping
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
       @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
-      @RequestParam(value = "limit", defaultValue = "${pagination.defaultPageSize}", required = false) @Min(1) int limit,
-      @RequestParam(value = "cursor", defaultValue = "0", required = false) String cursor) {
-    return bookingService.getBookingRequestSummaries(documentStatus, PageRequest.of(Integer.parseInt(cursor), limit, Sort.Direction.DESC, "bookingRequestDateTime"));
+      @RequestParam(
+              value = "limit",
+              defaultValue = "${pagination.defaultPageSize}",
+              required = false)
+          @Min(1)
+          int limit,
+      @RequestParam(value = "cursor", required = false) String cursor,
+      @RequestParam(value = "sort", required = false) String[] sort,
+      ServerHttpResponse response) {
+
+    Pagination pagination = new Pagination(Sort.by(Sort.Direction.DESC, "bookingRequestCreatedDateTime"));
+    PageRequest pageRequest = pagination.createPageRequest(limit, cursor, sort);
+
+    return bookingService
+        .getBookingRequestSummaries(documentStatus, pageRequest)
+        .doOnNext(
+            bookingSummaryTOS ->
+                response.getHeaders().addAll(pagination.setPaginationHeaders(bookingSummaryTOS)))
+        .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
   }
 }

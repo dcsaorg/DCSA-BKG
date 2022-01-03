@@ -33,7 +33,8 @@ class ShipmentTOTest {
     shipmentTO.setConfirmedEquipments(List.of(new ConfirmedEquipmentTO()));
     shipmentTO.setCharges(List.of(new ChargeTO()));
     shipmentTO.setCarrierClauses(List.of(new CarrierClauseTO()));
-    shipmentTO.setConfirmationDateTime(OffsetDateTime.now());
+    shipmentTO.setShipmentCreatedDateTime(OffsetDateTime.now());
+    shipmentTO.setShipmentUpdatedDateTime(OffsetDateTime.now());
   }
 
   @Test

@@ -9,7 +9,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface BookingSummaryMapper {
 
-
-    @Mapping(target = "expectedDepartureDate", ignore = true)
+    @Mapping(source = "communicationChannelCode", target = "communicationChannel")
+    @Mapping(source = "updatedDateTime", target = "bookingRequestUpdatedDateTime")
+    @Mapping(source = "bookingRequestDateTime", target = "bookingRequestCreatedDateTime")
     BookingSummaryTO bookingSummaryTOFromBooking(Booking booking);
 }

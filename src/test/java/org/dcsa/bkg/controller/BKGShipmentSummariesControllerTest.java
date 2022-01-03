@@ -11,14 +11,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.http.server.reactive.MockServerHttpResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -82,11 +85,15 @@ class BKGShipmentSummariesControllerTest {
 
     ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
     shipmentSummaryTO.setCarrierBookingReference(carrierBookingReference);
-    shipmentSummaryTO.setConfirmationDateTime(dateTimeOffset);
+    shipmentSummaryTO.setShipmentCreatedDateTime(dateTimeOffset);
+    shipmentSummaryTO.setShipmentUpdatedDateTime(dateTimeOffset);
     shipmentSummaryTO.setTermsAndConditions("TERMS AND CONDITIONS!");
 
     Mockito.when(bookingService.getShipmentSummaries(any(), any()))
-        .thenReturn(Flux.just(shipmentSummaryTO));
+        .thenReturn(
+            Mono.just(
+                new PageImpl<ShipmentSummaryTO>(
+                    Arrays.asList(shipmentSummaryTO), PageRequest.of(0, 10), 1)));
 
     webTestClient
         .get()

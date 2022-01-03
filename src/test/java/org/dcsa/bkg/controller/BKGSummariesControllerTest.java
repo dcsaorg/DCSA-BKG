@@ -12,13 +12,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -81,7 +84,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setDeliveryTypeAtDestination(ReceiptDeliveryType.CY);
     bookingSummaryTo.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
     bookingSummaryTo.setCargoMovementTypeAtDestination(CargoMovementType.FCL);
-    bookingSummaryTo.setBookingRequestDateTime(OffsetDateTime.now());
+    bookingSummaryTo.setBookingRequestCreatedDateTime(OffsetDateTime.now());
     bookingSummaryTo.setServiceContractReference("234ase3q4");
     bookingSummaryTo.setPaymentTermCode(PaymentTerm.PRE);
     bookingSummaryTo.setIsPartialLoadAllowed(true);
@@ -102,7 +105,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setIsEquipmentSubstitutionAllowed(true);
 
     Mockito.when(bookingService.getBookingRequestSummaries(any(), any()))
-        .thenReturn(Flux.just(bookingSummaryTo));
+        .thenReturn(Mono.just(new PageImpl<BookingSummaryTO>(Arrays.asList(bookingSummaryTo), PageRequest.of(0, 10), 1)));
 
     webTestClient
         .get()

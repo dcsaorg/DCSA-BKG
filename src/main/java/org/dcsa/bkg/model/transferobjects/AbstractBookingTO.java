@@ -22,7 +22,7 @@ public abstract class AbstractBookingTO {
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   @JsonFormat(shape = JsonFormat.Shape.STRING)
-  protected OffsetDateTime bookingRequestDateTime;
+  protected OffsetDateTime bookingRequestCreatedDateTime;
 
   @NotNull(message = "ReceiptTypeAtOrigin is required.")
   protected ReceiptDeliveryType receiptTypeAtOrigin;
@@ -91,4 +91,6 @@ public abstract class AbstractBookingTO {
   protected String exportVoyageNumber;
 
   protected DCSATransportType preCarriageModeOfTransportCode;
+
+  protected OffsetDateTime bookingRequestUpdatedDateTime;
 }
