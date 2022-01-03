@@ -83,8 +83,10 @@ public class BookingServiceImpl implements BookingService {
   public Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
       DocumentStatus documentStatus, Pageable pageable) {
 
+    Pageable mappedPageRequest = mapSortParameters(pageable);
+
     return shipmentRepository
-        .findShipmentsAndBookingsByDocumentStatus(documentStatus, pageable)
+        .findShipmentsAndBookingsByDocumentStatus(documentStatus, mappedPageRequest)
         .map(this::createShipmentSummaryTO)
         .collectList()
         .zipWith(shipmentRepository.countShipmentsByDocumentStatus(documentStatus))
@@ -99,7 +101,8 @@ public class BookingServiceImpl implements BookingService {
     shipmentSummaryTO.setCarrierBookingRequestReference(
         shipmentSummary.getCarrierBookingRequestReference());
     shipmentSummaryTO.setTermsAndConditions(shipmentSummary.getTermsAndConditions());
-    shipmentSummaryTO.setConfirmationDateTime(shipmentSummary.getConfirmationDateTime());
+    shipmentSummaryTO.setShipmentCreatedDateTime(shipmentSummary.getConfirmationDateTime());
+    shipmentSummaryTO.setShipmentUpdatedDateTime(shipmentSummary.getUpdatedDateTime());
     return shipmentSummaryTO;
   }
 
@@ -136,6 +139,12 @@ public class BookingServiceImpl implements BookingService {
        return Sort.Order.by("bookingRequestDateTime").with(order.getDirection());
       }
       if(order.getProperty().equals("bookingRequestUpdatedDateTime")) {
+        return Sort.Order.by("updatedDateTime").with(order.getDirection());
+      }
+      if(order.getProperty().equals("shipmentCreatedDateTime")) {
+        return Sort.Order.by("confirmationDateTime").with(order.getDirection());
+      }
+      if(order.getProperty().equals("shipmentUpdatedDateTime")) {
         return Sort.Order.by("updatedDateTime").with(order.getDirection());
       }
       return order;

@@ -2192,7 +2192,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     shipment.getTermsAndConditions(), b.getTermsAndConditions());
                 Assertions.assertEquals(
-                    shipment.getConfirmationDateTime(), b.getConfirmationDateTime());
+                    shipment.getConfirmationDateTime(), b.getShipmentCreatedDateTime());
                 Assertions.assertNull(b.getBooking());
                 Assertions.assertEquals(0, b.getShipmentLocations().size());
                 Assertions.assertEquals(0, b.getShipmentCutOffTimes().size());
@@ -2371,7 +2371,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     shipment.getTermsAndConditions(), b.getTermsAndConditions());
                 Assertions.assertEquals(
-                    shipment.getConfirmationDateTime(), b.getConfirmationDateTime());
+                    shipment.getConfirmationDateTime(), b.getShipmentCreatedDateTime());
                 Assertions.assertNull(b.getBooking());
                 Assertions.assertNotNull(b.getCharges());
                 Assertions.assertEquals(1, b.getCharges().size());
@@ -2896,6 +2896,7 @@ class BookingServiceImplTest {
         shipment.getCarrierBookingReference(),
         shipment.getTermsAndConditions(),
         shipment.getConfirmationDateTime(),
+        shipment.getUpdatedDateTime(),
         booking.getCarrierBookingRequestReference(),
         booking.getDocumentStatus());
     }
@@ -2921,7 +2922,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     shipment.getTermsAndConditions(), shipmentSummary.getTermsAndConditions());
                 Assertions.assertEquals(
-                    shipment.getConfirmationDateTime(), shipmentSummary.getConfirmationDateTime());
+                    shipment.getConfirmationDateTime(), shipmentSummary.getShipmentCreatedDateTime());
                 Assertions.assertEquals(
                     booking.getDocumentStatus(), shipmentSummary.getDocumentStatus());
                 Assertions.assertEquals(
@@ -2953,7 +2954,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     shipment.getTermsAndConditions(), shipmentSummary.getTermsAndConditions());
                 Assertions.assertEquals(
-                    shipment.getConfirmationDateTime(), shipmentSummary.getConfirmationDateTime());
+                    shipment.getConfirmationDateTime(), shipmentSummary.getShipmentCreatedDateTime());
                 Assertions.assertEquals(
                     booking.getDocumentStatus(), shipmentSummary.getDocumentStatus());
                 Assertions.assertEquals(
@@ -2983,7 +2984,7 @@ class BookingServiceImplTest {
                 Assertions.assertEquals(
                     shipment.getTermsAndConditions(), shipmentSummary.getTermsAndConditions());
                 Assertions.assertEquals(
-                    shipment.getConfirmationDateTime(), shipmentSummary.getConfirmationDateTime());
+                    shipment.getConfirmationDateTime(), shipmentSummary.getShipmentCreatedDateTime());
                 Assertions.assertEquals(
                     booking.getDocumentStatus(), shipmentSummary.getDocumentStatus());
                 Assertions.assertEquals(

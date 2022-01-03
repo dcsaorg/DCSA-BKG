@@ -17,7 +17,10 @@ public class ShipmentSummaryTO {
   private String termsAndConditions;
 
   @JsonFormat(shape = JsonFormat.Shape.STRING)
-  private OffsetDateTime confirmationDateTime;
+  private OffsetDateTime shipmentCreatedDateTime;
+
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  protected OffsetDateTime shipmentUpdatedDateTime;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String carrierBookingRequestReference;

@@ -41,7 +41,7 @@ public class BKGShipmentSummariesController {
       @RequestParam(value = "sort", required = false) String[] sort,
       ServerHttpResponse response) {
 
-    Pagination pagination = new Pagination(Sort.by(Sort.Direction.DESC, "confirmationDateTime"));
+    Pagination pagination = new Pagination(Sort.by(Sort.Direction.DESC, "shipmentCreatedDateTime"));
     PageRequest pageRequest = pagination.createPageRequest(limit, cursor, sort);
 
     return bookingService
