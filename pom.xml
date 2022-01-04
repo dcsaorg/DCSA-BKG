@@ -15,7 +15,7 @@
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>11</java.version>
-		<dcsa.events.version>0.0.48</dcsa.events.version>
+		<dcsa.events.version>0.0.49</dcsa.events.version>
 		<dcsa.core.tag/>
 		<dcsa.event.tag/>
 		<dcsa.artifacttype>-SNAPSHOT</dcsa.artifacttype>
