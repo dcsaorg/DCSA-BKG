@@ -165,7 +165,7 @@ public class BookingServiceImpl implements BookingService {
     requestedBooking.setCarrierBookingRequestReference(null);
     requestedBooking.setDocumentStatus(DocumentStatus.RECE);
     requestedBooking.setBookingRequestDateTime(now);
-    requestedBooking.setBookingRequestDateTime(now);
+    requestedBooking.setUpdatedDateTime(now);
 
     return bookingRepository
         .save(requestedBooking)
