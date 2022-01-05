@@ -1401,7 +1401,7 @@ public class BookingServiceImpl implements BookingService {
         shipmentEvent.setEventType(null);
         shipmentEvent.setCarrierBookingReference(null);
         shipmentEvent.setDocumentID(booking.getCarrierBookingRequestReference());
-        shipmentEvent.setEventDateTime(booking.getBookingRequestDateTime());
+        shipmentEvent.setEventDateTime(booking.getUpdatedDateTime());
         shipmentEvent.setEventCreatedDateTime(OffsetDateTime.now());
         return Mono.just(shipmentEvent);
       };
