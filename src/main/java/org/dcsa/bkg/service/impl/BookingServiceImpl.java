@@ -14,6 +14,7 @@ import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
+import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -846,6 +847,7 @@ public class BookingServiceImpl implements BookingService {
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
         .map(b -> Tuples.of(b.getId(), bookingMapper.bookingToDTO(b)))
+        .switchIfEmpty(Mono.error(new NotFoundException("No booking found with carrier booking request reference: " + carrierBookingRequestReference)))
         .doOnSuccess(
             t -> {
               // the mapper creates a new instance of location even if value of invoicePayableAt is

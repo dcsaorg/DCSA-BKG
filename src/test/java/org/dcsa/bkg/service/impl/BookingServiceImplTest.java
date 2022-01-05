@@ -11,6 +11,7 @@ import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
+import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -2470,6 +2471,19 @@ class BookingServiceImplTest {
                     "Singapore", b.getShipmentLocations().get(0).getDisplayedName());
               })
           .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Method should return shallow booking for given carrierBookingRequestReference")
+    void testGETBookingNotFound() {
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+        .thenReturn(Mono.empty());
+
+      StepVerifier.create(
+          bookingServiceImpl.getBookingByCarrierBookingRequestReference(
+            "IdoNotExist"))
+        .expectError(NotFoundException.class);
     }
   }
 
