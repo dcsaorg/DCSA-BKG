@@ -10,7 +10,7 @@ public interface BookingService {
   Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
       DocumentStatus documentStatus, Pageable pageable);
 
-  Mono<BookingResponseTO> createBooking(BookingTO bookingRequest);
+  Mono<BookingTO> createBooking(BookingTO bookingRequest);
 
   Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
       String carrierBookingRequestReference, BookingTO bookingRequest);
@@ -23,4 +23,16 @@ public interface BookingService {
 
   Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
       DocumentStatus documentStatus, Pageable pageable);
+
+  default Mono<BookingResponseTO> toBookingResponseTO(Mono<BookingTO> bookingTO) {
+    return bookingTO.flatMap(
+        bTO -> {
+          BookingResponseTO response = new BookingResponseTO();
+          response.setCarrierBookingRequestReference(bTO.getCarrierBookingRequestReference());
+          response.setDocumentStatus(bTO.getDocumentStatus());
+          response.setBookingRequestCreatedDateTime(bTO.getBookingRequestCreatedDateTime());
+          response.setBookingRequestUpdatedDateTime(bTO.getBookingRequestUpdatedDateTime());
+          return Mono.just(response);
+        });
+  }
 }

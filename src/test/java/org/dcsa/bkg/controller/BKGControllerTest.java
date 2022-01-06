@@ -125,7 +125,7 @@ class BKGControllerTest {
     ArgumentCaptor<BookingTO> argument = ArgumentCaptor.forClass(BookingTO.class);
 
     // mock service method call
-    when(bookingService.createBooking(any())).thenReturn(Mono.just(bookingResponseTO));
+    when(bookingService.createBooking(any())).thenReturn(Mono.just(bookingTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
