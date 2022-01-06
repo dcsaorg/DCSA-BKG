@@ -27,7 +27,7 @@ public class BKGController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.ACCEPTED)
-  public Mono<BookingTO> createBooking(@Valid @RequestBody BookingTO bookingRequest) {
+  public Mono<BookingResponseTO> createBooking(@Valid @RequestBody BookingTO bookingRequest) {
     return bookingService.createBooking(bookingRequest);
   }
 

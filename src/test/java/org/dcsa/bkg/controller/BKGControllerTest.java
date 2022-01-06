@@ -49,11 +49,13 @@ class BKGControllerTest {
   private final String BOOKING_ENDPOINT = "/bookings";
 
   private BookingTO bookingTO;
+  private BookingResponseTO bookingResponseTO;
 
   @BeforeEach
   void init() {
     // populate DTO with relevant objects to verify json schema returned
     bookingTO = new BookingTO();
+    bookingResponseTO = new BookingResponseTO();
     bookingTO.setCarrierBookingRequestReference(UUID.randomUUID().toString());
     bookingTO.setDocumentStatus(DocumentStatus.PENU);
     bookingTO.setBookingRequestCreatedDateTime(OffsetDateTime.now());
@@ -109,6 +111,11 @@ class BKGControllerTest {
     shipmentLocationTO.setShipmentLocationTypeCode(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
+
+    bookingResponseTO.setCarrierBookingRequestReference(bookingTO.getCarrierBookingRequestReference());
+    bookingResponseTO.setDocumentStatus(bookingTO.getDocumentStatus());
+    bookingResponseTO.setBookingRequestCreatedDateTime(bookingTO.getBookingRequestCreatedDateTime());
+    bookingResponseTO.setBookingRequestUpdatedDateTime(bookingTO.getBookingRequestUpdatedDateTime());
   }
 
   @Test
@@ -118,7 +125,7 @@ class BKGControllerTest {
     ArgumentCaptor<BookingTO> argument = ArgumentCaptor.forClass(BookingTO.class);
 
     // mock service method call
-    when(bookingService.createBooking(any())).thenReturn(Mono.just(bookingTO));
+    when(bookingService.createBooking(any())).thenReturn(Mono.just(bookingResponseTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
