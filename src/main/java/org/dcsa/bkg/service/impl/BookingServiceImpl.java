@@ -310,8 +310,8 @@ public class BookingServiceImpl implements BookingService {
           .map(locationMapper::locationToDTO)
           .map(Optional::of);
     } else {
-      return addressRepository
-          .save(locationTO.getAddress())
+      return addressService
+          .ensureResolvable(locationTO.getAddress())
           .flatMap(
               a -> {
                 location.setAddressID(a.getId());
@@ -628,8 +628,8 @@ public class BookingServiceImpl implements BookingService {
                           return Tuples.of(lTO, shipmentLocation);
                         });
               } else {
-                return addressRepository
-                    .save(slTO.getLocation().getAddress())
+                return addressService
+                    .ensureResolvable(slTO.getLocation().getAddress())
                     .flatMap(
                         a -> {
                           location.setAddressID(a.getId());
