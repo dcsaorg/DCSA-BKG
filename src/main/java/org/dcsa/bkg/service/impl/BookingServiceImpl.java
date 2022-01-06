@@ -165,7 +165,7 @@ public class BookingServiceImpl implements BookingService {
     requestedBooking.setCarrierBookingRequestReference(null);
     requestedBooking.setDocumentStatus(DocumentStatus.RECE);
     requestedBooking.setBookingRequestDateTime(now);
-    requestedBooking.setBookingRequestDateTime(now);
+    requestedBooking.setUpdatedDateTime(now);
 
     return bookingRepository
         .save(requestedBooking)
@@ -1401,7 +1401,7 @@ public class BookingServiceImpl implements BookingService {
         shipmentEvent.setEventType(null);
         shipmentEvent.setCarrierBookingReference(null);
         shipmentEvent.setDocumentID(booking.getCarrierBookingRequestReference());
-        shipmentEvent.setEventDateTime(booking.getBookingRequestDateTime());
+        shipmentEvent.setEventDateTime(booking.getUpdatedDateTime());
         shipmentEvent.setEventCreatedDateTime(OffsetDateTime.now());
         return Mono.just(shipmentEvent);
       };
