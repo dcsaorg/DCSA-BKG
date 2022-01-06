@@ -16,6 +16,7 @@ import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
+import org.dcsa.core.util.MappingUtils;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1364,19 +1365,17 @@ public class BookingServiceImpl implements BookingService {
                         .map(
                             bkg -> {
                               bkg.setDocumentStatus(DocumentStatus.CANC);
+                              bkg.setUpdatedDateTime(updatedDateTime);
                               return bkg;
                             })))
         .flatMap(
             t -> {
               createShipmentEventFromBooking(t.getT2());
-              BookingResponseTO response = new BookingResponseTO();
-              response.setBookingRequestCreatedDateTime(t.getT2().getBookingRequestDateTime());
-              response.setBookingRequestUpdatedDateTime(updatedDateTime);
-              response.setDocumentStatus(t.getT2().getDocumentStatus());
-              response.setCarrierBookingRequestReference(
-                  t.getT2().getCarrierBookingRequestReference());
-              return Mono.just(response);
-            });
+              BookingTO booking = bookingMapper.bookingToDTO(t.getT2());
+              booking.setBookingRequestCreatedDateTime(t.getT2().getBookingRequestDateTime());
+              return Mono.just(booking);
+            })
+        .flatMap(this::toBookingResponseTO);
   }
 
   private Mono<ShipmentEvent> createShipmentEventFromBookingTO(BookingTO bookingTo) {
