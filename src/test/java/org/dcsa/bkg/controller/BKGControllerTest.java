@@ -55,7 +55,6 @@ class BKGControllerTest {
   void init() {
     // populate DTO with relevant objects to verify json schema returned
     bookingTO = new BookingTO();
-    bookingResponseTO = new BookingResponseTO();
     bookingTO.setCarrierBookingRequestReference(UUID.randomUUID().toString());
     bookingTO.setDocumentStatus(DocumentStatus.PENU);
     bookingTO.setBookingRequestCreatedDateTime(OffsetDateTime.now());
@@ -112,6 +111,7 @@ class BKGControllerTest {
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
 
+    bookingResponseTO = new BookingResponseTO();
     bookingResponseTO.setCarrierBookingRequestReference(bookingTO.getCarrierBookingRequestReference());
     bookingResponseTO.setDocumentStatus(bookingTO.getDocumentStatus());
     bookingResponseTO.setBookingRequestCreatedDateTime(bookingTO.getBookingRequestCreatedDateTime());
@@ -125,7 +125,8 @@ class BKGControllerTest {
     ArgumentCaptor<BookingTO> argument = ArgumentCaptor.forClass(BookingTO.class);
 
     // mock service method call
-//    when(bookingService.createBooking(any())).thenReturn(Mono.just(bookingTO));
+    when(bookingService.createBooking(any())).thenReturn(Mono.just(bookingTO));
+    when(bookingService.toBookingResponseTO(any())).thenReturn(Mono.just(bookingResponseTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
@@ -136,14 +137,14 @@ class BKGControllerTest {
             .exchange();
 
     // these values are only allowed in response and not to be set via request body
-//    verify(bookingService).createBooking(argument.capture());
+    verify(bookingService).createBooking(argument.capture());
 
     // CarrierBookingRequestReference is set to null in the service implementation, as we need to be
     // able to set it via request in PUT
     assertNull(argument.getValue().getDocumentStatus());
     assertNull(argument.getValue().getBookingRequestCreatedDateTime());
 
-    checkStatus202.andThen(checkBookingResponseJsonSchema2).apply(exchange);
+    checkStatus202.andThen(checkBookingResponseTOJsonSchema).apply(exchange);
   }
 
   @Test
@@ -434,7 +435,7 @@ class BKGControllerTest {
                   .hasJsonPath();
 
   private final Function<WebTestClient.ResponseSpec, WebTestClient.BodyContentSpec>
-      checkBookingResponseJsonSchema2 =
+      checkBookingResponseTOJsonSchema =
           (exchange) ->
               exchange
                   .expectBody()
