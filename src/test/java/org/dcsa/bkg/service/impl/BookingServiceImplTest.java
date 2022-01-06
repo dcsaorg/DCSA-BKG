@@ -8,6 +8,7 @@ import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
+import org.dcsa.core.events.service.AddressService;
 import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
@@ -69,6 +70,7 @@ class BookingServiceImplTest {
 
   @Mock ShipmentEventService shipmentEventService;
   @Mock LocationService locationService;
+  @Mock AddressService addressService;
 
   @InjectMocks BookingServiceImpl bookingServiceImpl;
 
@@ -890,7 +892,7 @@ class BookingServiceImplTest {
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
       when(requestedEquipmentRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(requestedEquipment));
-      when(addressRepository.save(any())).thenReturn(Mono.just(address));
+      when(addressService.ensureResolvable(any())).thenReturn(Mono.just(address));
       when(partyRepository.save(any())).thenReturn(Mono.just(party));
       when(partyContactDetailsRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(partyContactDetails));
@@ -965,7 +967,7 @@ class BookingServiceImplTest {
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
       when(requestedEquipmentRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(requestedEquipment));
-      when(addressRepository.save(any())).thenReturn(Mono.just(address));
+      when(addressService.ensureResolvable(any())).thenReturn(Mono.just(address));
       when(partyRepository.save(any())).thenReturn(Mono.just(party));
       when(partyContactDetailsRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(partyContactDetails));
@@ -1791,7 +1793,7 @@ class BookingServiceImplTest {
           .thenReturn(Flux.just(requestedEquipment));
 
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
-      when(addressRepository.save(any())).thenReturn(Mono.just(address));
+      when(addressService.ensureResolvable(any())).thenReturn(Mono.just(address));
       when(partyRepository.save(any())).thenReturn(Mono.just(party));
       when(partyContactDetailsRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(partyContactDetails));
@@ -1885,7 +1887,7 @@ class BookingServiceImplTest {
           .thenReturn(Flux.just(requestedEquipment));
 
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
-      when(addressRepository.save(any())).thenReturn(Mono.just(address));
+      when(addressService.ensureResolvable(any())).thenReturn(Mono.just(address));
       when(partyRepository.save(any())).thenReturn(Mono.just(party));
       when(partyContactDetailsRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(partyContactDetails));

@@ -11,6 +11,7 @@ import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
+import org.dcsa.core.events.service.AddressService;
 import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
@@ -78,6 +79,7 @@ public class BookingServiceImpl implements BookingService {
   // services
   private final ShipmentEventService shipmentEventService;
   private final LocationService locationService;
+  private final AddressService addressService;
 
   @Override
   public Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
@@ -308,8 +310,8 @@ public class BookingServiceImpl implements BookingService {
           .map(locationMapper::locationToDTO)
           .map(Optional::of);
     } else {
-      return addressRepository
-          .save(locationTO.getAddress())
+      return addressService
+          .ensureResolvable(locationTO.getAddress())
           .flatMap(
               a -> {
                 location.setAddressID(a.getId());
@@ -523,8 +525,7 @@ public class BookingServiceImpl implements BookingService {
     } else {
       // if there is an address connected to the party, we need to create it first.
       partyMap =
-          addressRepository
-              .save(partyTO.getAddress())
+          addressService.ensureResolvable(partyTO.getAddress())
               .flatMap(
                   a -> {
                     Party party = partyMapper.dtoToParty(partyTO);
@@ -627,8 +628,8 @@ public class BookingServiceImpl implements BookingService {
                           return Tuples.of(lTO, shipmentLocation);
                         });
               } else {
-                return addressRepository
-                    .save(slTO.getLocation().getAddress())
+                return addressService
+                    .ensureResolvable(slTO.getLocation().getAddress())
                     .flatMap(
                         a -> {
                           location.setAddressID(a.getId());
