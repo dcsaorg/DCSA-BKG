@@ -174,6 +174,7 @@ class BKGControllerTest {
     // mock service method call
     when(bookingService.updateBookingByReferenceCarrierBookingRequestReference(any(), any()))
         .thenReturn(Mono.just(bookingTO));
+    when(bookingService.toBookingResponseTO(any())).thenReturn(Mono.just(bookingResponseTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
@@ -191,7 +192,7 @@ class BKGControllerTest {
     assertNull(argument.getValue().getDocumentStatus());
     assertNull(argument.getValue().getBookingRequestCreatedDateTime());
 
-    checkStatus200.andThen(checkBookingResponseJsonSchema).apply(exchange);
+    checkStatus200.andThen(checkBookingResponseTOJsonSchema).apply(exchange);
   }
 
   @Test
