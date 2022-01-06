@@ -916,6 +916,7 @@ public class BookingServiceImpl implements BookingService {
       String carrierBookingRequestReference) {
     return shipmentRepository
         .findByCarrierBookingReference(carrierBookingRequestReference)
+        .switchIfEmpty(Mono.error(new NotFoundException("No booking found with carrier booking reference: " + carrierBookingRequestReference)))
         .map(b -> Tuples.of(b, shipmentMapper.shipmentToDTO(b)))
         .flatMap(
             t -> {
@@ -1239,7 +1240,12 @@ public class BookingServiceImpl implements BookingService {
     if (transportCallId == null) return Mono.just(Optional.empty());
     return transportCallRepository
         .findById(transportCallId)
-        .flatMap(x -> voyageRepository.findById(x.getExportVoyageID()))
+        .flatMap(x -> {
+            if(x.getExportVoyageID() == null){
+                return Mono.empty();
+            }
+            return voyageRepository.findById(x.getExportVoyageID());
+        })
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
   }
