@@ -27,7 +27,6 @@ import reactor.util.function.Tuples;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -451,12 +450,6 @@ public class BookingServiceImpl implements BookingService {
         .map(Optional::of);
   }
 
-  private final UnaryOperator<Mono<BookingTO>> createShipmentEventFromBookingTO =
-      bookingTOMono ->
-          bookingTOMono
-              .flatMap(BookingServiceImpl.this::createShipmentEventFromBookingTO)
-              .flatMap(shipmentEvent -> bookingTOMono);
-
   private Mono<Optional<List<DocumentPartyTO>>> createDocumentPartiesByBookingIDAndTOs(
       final UUID bookingID, List<DocumentPartyTO> documentParties) {
 
@@ -759,7 +752,7 @@ public class BookingServiceImpl implements BookingService {
 
               return Mono.just(bookingTO);
             })
-        .transform(createShipmentEventFromBookingTO)
+        .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO))
         .switchIfEmpty(
             Mono.defer(
                 () ->
