@@ -239,7 +239,7 @@ public class BookingServiceImpl implements BookingService {
 
               return Mono.just(bookingTO);
             })
-        .transform(createShipmentEventFromBookingTO);
+            .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO));
   }
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
