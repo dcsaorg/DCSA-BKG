@@ -28,7 +28,7 @@ public class BKGController {
   @PostMapping
   @ResponseStatus(HttpStatus.ACCEPTED)
   public Mono<BookingResponseTO> createBooking(@Valid @RequestBody BookingTO bookingRequest) {
-    return bookingService.toBookingResponseTO(bookingService.createBooking(bookingRequest));
+    return bookingService.createBooking(bookingRequest).flatMap(bookingService::toBookingResponseTO);
   }
 
   @PutMapping("/{carrierBookingRequestReference}")
