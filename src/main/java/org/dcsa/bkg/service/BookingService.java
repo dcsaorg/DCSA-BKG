@@ -10,7 +10,7 @@ public interface BookingService {
   Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
       DocumentStatus documentStatus, Pageable pageable);
 
-  Mono<BookingTO> createBooking(BookingTO bookingRequest);
+  Mono<BookingResponseTO> createBooking(BookingTO bookingRequest);
 
   Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
       String carrierBookingRequestReference, BookingTO bookingRequest);

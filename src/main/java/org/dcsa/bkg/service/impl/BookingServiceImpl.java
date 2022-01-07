@@ -159,7 +159,7 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   @Transactional
-  public Mono<BookingTO> createBooking(final BookingTO bookingRequest) {
+  public Mono<BookingResponseTO> createBooking(final BookingTO bookingRequest) {
 
     OffsetDateTime now = OffsetDateTime.now();
     Booking requestedBooking = bookingMapper.dtoToBooking(bookingRequest);
@@ -241,7 +241,8 @@ public class BookingServiceImpl implements BookingService {
 
               return Mono.just(bookingTO);
             })
-            .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO));
+            .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO))
+            .flatMap(this::toBookingResponseTO);
   }
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
