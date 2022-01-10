@@ -1280,7 +1280,13 @@ public class BookingServiceImpl implements BookingService {
     if (transportCallId == null) return Mono.just(Optional.empty());
     return transportCallRepository
         .findById(transportCallId)
-        .flatMap(x -> vesselRepository.findById(x.getVesselID()))
+        .flatMap(
+                x -> {
+                    if (x.getVesselID() == null) {
+                        return Mono.empty();
+                    }
+                    return vesselRepository.findById(x.getVesselID());
+                })
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
   }
