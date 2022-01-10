@@ -1381,7 +1381,8 @@ public class BookingServiceImpl implements BookingService {
   @Override
   @Transactional
   public Mono<BookingResponseTO> cancelBookingByCarrierBookingReference(
-      String carrierBookingRequestReference) {
+      String carrierBookingRequestReference,
+      BookingCancellationRequestTO bookingCancellationRequestTO) {
     OffsetDateTime updatedDateTime = OffsetDateTime.now();
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
@@ -1394,7 +1395,9 @@ public class BookingServiceImpl implements BookingService {
                 Mono.zip(
                     bookingRepository
                         .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
-                            DocumentStatus.CANC, carrierBookingRequestReference, updatedDateTime)
+                            bookingCancellationRequestTO.getDocumentStatus(),
+                            carrierBookingRequestReference,
+                            updatedDateTime)
                         .flatMap(verifyCancellation),
                     Mono.just(booking)
                         .map(
@@ -1404,7 +1407,7 @@ public class BookingServiceImpl implements BookingService {
                             })))
         .flatMap(
             t -> {
-              createShipmentEventFromBooking(t.getT2());
+              createShipmentEventFromBookingCancellation(t.getT2(), bookingCancellationRequestTO);
               BookingResponseTO response = new BookingResponseTO();
               response.setBookingRequestCreatedDateTime(t.getT2().getBookingRequestDateTime());
               response.setBookingRequestUpdatedDateTime(updatedDateTime);
@@ -1415,32 +1418,43 @@ public class BookingServiceImpl implements BookingService {
             });
   }
 
-  private Mono<ShipmentEvent> createShipmentEventFromBookingTO(BookingTO bookingTo) {
-    return createShipmentEventFromBooking(bookingMapper.dtoToBooking(bookingTo));
-  }
-
-  private Mono<ShipmentEvent> createShipmentEventFromBooking(Booking booking) {
-    return shipmentEventFromBooking
-        .apply(booking)
+  private Mono<ShipmentEvent> createShipmentEventFromBookingCancellation(
+      Booking booking, BookingCancellationRequestTO bookingCancellationRequestTO) {
+    return shipmentEventFromBooking(booking, bookingCancellationRequestTO.getReason())
         .flatMap(shipmentEventService::create)
         .switchIfEmpty(
             Mono.error(new CreateException("Failed to create shipment event for Booking.")));
   }
 
-  private final Function<Booking, Mono<ShipmentEvent>> shipmentEventFromBooking =
-      booking -> {
-        ShipmentEvent shipmentEvent = new ShipmentEvent();
-        shipmentEvent.setShipmentEventTypeCode(
-            ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()));
-        shipmentEvent.setDocumentTypeCode(DocumentTypeCode.CBR);
-        shipmentEvent.setEventClassifierCode(EventClassifierCode.ACT);
-        shipmentEvent.setEventType(null);
-        shipmentEvent.setCarrierBookingReference(null);
-        shipmentEvent.setDocumentID(booking.getCarrierBookingRequestReference());
-        shipmentEvent.setEventDateTime(booking.getUpdatedDateTime());
-        shipmentEvent.setEventCreatedDateTime(OffsetDateTime.now());
-        return Mono.just(shipmentEvent);
-      };
+  private Mono<ShipmentEvent> createShipmentEventFromBookingTO(BookingTO bookingTo) {
+    return createShipmentEvent(shipmentEventFromBooking(bookingMapper.dtoToBooking(bookingTo)));
+  }
+
+  private Mono<ShipmentEvent> createShipmentEvent(Mono<ShipmentEvent> shipmentEventMono) {
+    return shipmentEventMono
+        .flatMap(shipmentEventService::create)
+        .switchIfEmpty(
+            Mono.error(new CreateException("Failed to create shipment event for Booking.")));
+  }
+
+  private Mono<ShipmentEvent> shipmentEventFromBooking(Booking booking) {
+    return shipmentEventFromBooking(booking, null);
+  }
+
+  private Mono<ShipmentEvent> shipmentEventFromBooking(Booking booking, String reason) {
+    ShipmentEvent shipmentEvent = new ShipmentEvent();
+    shipmentEvent.setShipmentEventTypeCode(
+        ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()));
+    shipmentEvent.setDocumentTypeCode(DocumentTypeCode.CBR);
+    shipmentEvent.setEventClassifierCode(EventClassifierCode.ACT);
+    shipmentEvent.setEventType(null);
+    shipmentEvent.setCarrierBookingReference(null);
+    shipmentEvent.setDocumentID(booking.getCarrierBookingRequestReference());
+    shipmentEvent.setEventDateTime(booking.getUpdatedDateTime());
+    shipmentEvent.setEventCreatedDateTime(OffsetDateTime.now());
+    shipmentEvent.setReason(reason);
+    return Mono.just(shipmentEvent);
+  }
 
   private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
       isRecordUpdated -> {

@@ -49,6 +49,7 @@ class BKGControllerTest {
   private final String BOOKING_ENDPOINT = "/bookings";
 
   private BookingTO bookingTO;
+  private BookingCancellationRequestTO bookingCancellationRequestTO;
 
   @BeforeEach
   void init() {
@@ -109,6 +110,10 @@ class BKGControllerTest {
     shipmentLocationTO.setShipmentLocationTypeCode(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
+
+    bookingCancellationRequestTO = new BookingCancellationRequestTO();
+    bookingCancellationRequestTO.setDocumentStatus(DocumentStatus.CANC);
+    bookingCancellationRequestTO.setReason("Booking Cancelled");
   }
 
   @Test
@@ -231,9 +236,8 @@ class BKGControllerTest {
             .uri(
                 BOOKING_ENDPOINT
                     + "/"
-                    + bookingTO.getCarrierBookingRequestReference()
-                    + "/document-status")
-            .body(BodyInserters.fromValue(DocumentStatus.CANC.toString()))
+                    + bookingTO.getCarrierBookingRequestReference())
+            .body(BodyInserters.fromValue(bookingCancellationRequestTO))
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
 
@@ -247,7 +251,7 @@ class BKGControllerTest {
 
     Mockito.when(
             bookingService.cancelBookingByCarrierBookingReference(
-                bookingTO.getCarrierBookingRequestReference()))
+                bookingTO.getCarrierBookingRequestReference(), bookingCancellationRequestTO))
         .thenReturn(
             Mono.error(
                 new UpdateException(
@@ -259,9 +263,8 @@ class BKGControllerTest {
             .uri(
                 BOOKING_ENDPOINT
                     + "/"
-                    + bookingTO.getCarrierBookingRequestReference()
-                    + "/document-status")
-            .body(BodyInserters.fromValue(DocumentStatus.CANC.toString()))
+                    + bookingTO.getCarrierBookingRequestReference())
+            .body(BodyInserters.fromValue(bookingCancellationRequestTO))
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
 
