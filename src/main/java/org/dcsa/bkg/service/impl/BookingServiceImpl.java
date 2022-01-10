@@ -284,7 +284,7 @@ public class BookingServiceImpl implements BookingService {
           .flatMap(v -> bookingRepository.setVesselIDFor(v.getId(), bookingID).thenReturn(v));
     } else if (!StringUtils.isEmpty(vesselName)) {
       return vesselRepository
-          .findByVesselNameOrEmpty(vesselIMONumber)
+          .findByVesselNameOrEmpty(vesselName)
           .collectList()
           .flatMap(
               vs -> {
