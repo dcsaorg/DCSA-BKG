@@ -126,6 +126,7 @@ class BookingServiceImplTest {
   Vessel vessel;
   TransportEvent departureTransportEvent;
   TransportEvent arrivalTransportEvent;
+  BookingCancellationRequestTO bookingCancellationRequestTO;
 
   @BeforeEach
   void init() {
@@ -318,6 +319,10 @@ class BookingServiceImplTest {
     arrivalTransportEvent.setTransportCallID(dischargeTransportCall.getTransportCallID());
     arrivalTransportEvent.setEventDateTime(OffsetDateTime.now());
     arrivalTransportEvent.setEventCreatedDateTime(OffsetDateTime.now().plusHours(1));
+
+    bookingCancellationRequestTO = new BookingCancellationRequestTO();
+    bookingCancellationRequestTO.setReason("Booking Cancelled");
+    bookingCancellationRequestTO.setDocumentStatus(DocumentStatus.CANC);
   }
 
   @Nested
@@ -3416,13 +3421,14 @@ class BookingServiceImplTest {
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
-      mockBookingResponse.setDocumentStatus(DocumentStatus.PENC);
+      mockBookingResponse.setDocumentStatus(DocumentStatus.CANC);
 
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
 
       Mono<BookingResponseTO> cancelBookingResponse =
-          bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
+          bookingServiceImpl.cancelBookingByCarrierBookingReference(
+              carrierBookingRequestReference, bookingCancellationRequestTO);
 
       StepVerifier.create(cancelBookingResponse)
           .expectErrorSatisfies(
@@ -3444,7 +3450,8 @@ class BookingServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.empty());
 
       Mono<BookingResponseTO> cancelBookingResponse =
-          bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
+          bookingServiceImpl.cancelBookingByCarrierBookingReference(
+              carrierBookingRequestReference, bookingCancellationRequestTO);
 
       StepVerifier.create(cancelBookingResponse)
           .expectErrorSatisfies(
@@ -3461,7 +3468,6 @@ class BookingServiceImplTest {
     @DisplayName("Failure of a booking cancellation should result in an error")
     void cancelBookingFailedShouldResultToError() {
 
-      OffsetDateTime updatedDateTime = OffsetDateTime.now();
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
@@ -3475,7 +3481,8 @@ class BookingServiceImplTest {
           .thenReturn(Mono.just(false));
 
       Mono<BookingResponseTO> cancelBookingResponse =
-          bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
+          bookingServiceImpl.cancelBookingByCarrierBookingReference(
+              carrierBookingRequestReference, bookingCancellationRequestTO);
 
       StepVerifier.create(cancelBookingResponse)
           .expectErrorSatisfies(
@@ -3505,7 +3512,8 @@ class BookingServiceImplTest {
           .thenReturn(Mono.just(true));
 
       Mono<BookingResponseTO> cancelBookingResponse =
-          bookingServiceImpl.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
+          bookingServiceImpl.cancelBookingByCarrierBookingReference(
+              carrierBookingRequestReference, bookingCancellationRequestTO);
 
       StepVerifier.create(cancelBookingResponse)
           .assertNext(
@@ -3521,12 +3529,6 @@ class BookingServiceImplTest {
                         .isAfter(b.getBookingRequestCreatedDateTime()));
               })
           .verifyComplete();
-
-      //      verify(shipmentEventService).create(argumentCaptor.capture());
-      //
-      //      ShipmentEvent shipmentEvent = argumentCaptor.getValue();
-      //      Assertions.assertEquals(shipmentEvent.getShipmentEventTypeCode(),
-      // ShipmentEventTypeCode.CANC);
     }
   }
 }

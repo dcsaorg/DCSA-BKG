@@ -116,7 +116,7 @@ public class BookingServiceImpl implements BookingService {
     Pageable mappedPageRequest = mapSortParameters(pageable);
 
     Flux<Booking> queryResponse =
-      bookingRepository.findAllByDocumentStatus(documentStatus, mappedPageRequest);
+        bookingRepository.findAllByDocumentStatus(documentStatus, mappedPageRequest);
 
     return queryResponse
         .flatMap(
@@ -137,23 +137,30 @@ public class BookingServiceImpl implements BookingService {
   }
 
   private Pageable mapSortParameters(Pageable pageable) {
-    List<Sort.Order> sort = pageable.getSort().get().map(order -> {
-      if(order.getProperty().equals("bookingRequestCreatedDateTime")) {
-       return Sort.Order.by("bookingRequestDateTime").with(order.getDirection());
-      }
-      if(order.getProperty().equals("bookingRequestUpdatedDateTime")) {
-        return Sort.Order.by("updatedDateTime").with(order.getDirection());
-      }
-      if(order.getProperty().equals("shipmentCreatedDateTime")) {
-        return Sort.Order.by("confirmationDateTime").with(order.getDirection());
-      }
-      if(order.getProperty().equals("shipmentUpdatedDateTime")) {
-        return Sort.Order.by("updatedDateTime").with(order.getDirection());
-      }
-      return order;
-    }).collect(Collectors.toList());
+    List<Sort.Order> sort =
+        pageable
+            .getSort()
+            .get()
+            .map(
+                order -> {
+                  if (order.getProperty().equals("bookingRequestCreatedDateTime")) {
+                    return Sort.Order.by("bookingRequestDateTime").with(order.getDirection());
+                  }
+                  if (order.getProperty().equals("bookingRequestUpdatedDateTime")) {
+                    return Sort.Order.by("updatedDateTime").with(order.getDirection());
+                  }
+                  if (order.getProperty().equals("shipmentCreatedDateTime")) {
+                    return Sort.Order.by("confirmationDateTime").with(order.getDirection());
+                  }
+                  if (order.getProperty().equals("shipmentUpdatedDateTime")) {
+                    return Sort.Order.by("updatedDateTime").with(order.getDirection());
+                  }
+                  return order;
+                })
+            .collect(Collectors.toList());
 
-    Pageable mappedPageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sort));
+    Pageable mappedPageRequest =
+        PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sort));
     return mappedPageRequest;
   }
 
@@ -241,8 +248,8 @@ public class BookingServiceImpl implements BookingService {
 
               return Mono.just(bookingTO);
             })
-            .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO))
-            .flatMap(this::toBookingResponseTO);
+        .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO))
+        .flatMap(this::toBookingResponseTO);
   }
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
@@ -527,7 +534,8 @@ public class BookingServiceImpl implements BookingService {
     } else {
       // if there is an address connected to the party, we need to create it first.
       partyMap =
-          addressService.ensureResolvable(partyTO.getAddress())
+          addressService
+              .ensureResolvable(partyTO.getAddress())
               .flatMap(
                   a -> {
                     Party party = partyMapper.dtoToParty(partyTO);
@@ -840,15 +848,19 @@ public class BookingServiceImpl implements BookingService {
   @Override
   public Mono<BookingTO> getBookingByCarrierBookingRequestReference(
       String carrierBookingRequestReference) {
+    BookingTO booking2TO = new BookingTO();
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
-        .map(b -> Tuples.of(b.getId(), bookingMapper.bookingToDTO(b)))
-        .switchIfEmpty(Mono.error(new NotFoundException("No booking found with carrier booking request reference: " + carrierBookingRequestReference)))
+        .map(b -> Tuples.of(b.getId(), bookingMapper.bookingToDTO(b), b))
+        .switchIfEmpty(
+            Mono.error(
+                new NotFoundException(
+                    "No booking found with carrier booking request reference: "
+                        + carrierBookingRequestReference)))
         .doOnSuccess(
             t -> {
-              // the mapper creates a new instance of location even if value of invoicePayableAt is
-              // null in booking
-              // hence we set it to null if its a null object
+              // the mapper creates a new instance of location even if value of invoicePayableAt
+              // is null in booking hence we set it to null if it's a null object
               if (t.getT2().getInvoicePayableAt().getId() == null) {
                 t.getT2().setInvoicePayableAt(null);
               }
@@ -871,8 +883,8 @@ public class BookingServiceImpl implements BookingService {
                       : bookingTO.getPlaceOfIssue().getId();
 
               return Mono.zip(
-                      fetchLocationByID(invoicePayableAtLocID),
-                      fetchLocationByID(placeOfIssueLocID),
+                      fetchLocationTupleByID(invoicePayableAtLocID, placeOfIssueLocID),
+                      fetchVesselByVesselID(t.getT3().getVesselId()),
                       fetchCommoditiesByBookingID(t.getT1()),
                       fetchValueAddedServiceRequestsByBookingID(t.getT1()),
                       fetchReferencesByBookingID(t.getT1()),
@@ -881,8 +893,9 @@ public class BookingServiceImpl implements BookingService {
                       fetchShipmentLocationsByBookingID(t.getT1()))
                   .doOnSuccess(
                       deepObjs -> {
-                        Optional<LocationTO> locationToOpt1 = deepObjs.getT1();
-                        Optional<LocationTO> locationToOpt2 = deepObjs.getT2();
+                        Optional<LocationTO> locationToOpt1 = deepObjs.getT1().getT1();
+                        Optional<LocationTO> locationToOpt2 = deepObjs.getT1().getT2();
+                        Optional<Vessel> vesselOptional = deepObjs.getT2();
                         Optional<List<CommodityTO>> commoditiesToOpt = deepObjs.getT3();
                         Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsToOpt =
                             deepObjs.getT4();
@@ -895,6 +908,12 @@ public class BookingServiceImpl implements BookingService {
 
                         locationToOpt1.ifPresent(bookingTO::setInvoicePayableAt);
                         locationToOpt2.ifPresent(bookingTO::setPlaceOfIssue);
+                        vesselOptional.ifPresent(
+                            x -> {
+                              bookingTO.setVesselName(x.getVesselName());
+
+                              bookingTO.setVesselIMONumber(x.getVesselIMONumber());
+                            });
                         commoditiesToOpt.ifPresent(bookingTO::setCommodities);
                         valueAddedServiceRequestsToOpt.ifPresent(
                             bookingTO::setValueAddedServiceRequests);
@@ -912,7 +931,11 @@ public class BookingServiceImpl implements BookingService {
       String carrierBookingRequestReference) {
     return shipmentRepository
         .findByCarrierBookingReference(carrierBookingRequestReference)
-        .switchIfEmpty(Mono.error(new NotFoundException("No booking found with carrier booking reference: " + carrierBookingRequestReference)))
+        .switchIfEmpty(
+            Mono.error(
+                new NotFoundException(
+                    "No booking found with carrier booking reference: "
+                        + carrierBookingRequestReference)))
         .map(b -> Tuples.of(b, shipmentMapper.shipmentToDTO(b)))
         .flatMap(
             t -> {
@@ -949,6 +972,12 @@ public class BookingServiceImpl implements BookingService {
                       })
                   .thenReturn(shipmentTO);
             });
+  }
+
+  private Mono<Tuple2<Optional<LocationTO>, Optional<LocationTO>>> fetchLocationTupleByID(
+      String invoicePayableAtLocID, String placeOfIssueLocID) {
+    return Mono.zip(fetchLocationByID(invoicePayableAtLocID), fetchLocationByID(placeOfIssueLocID))
+        .map(deepObjs -> Tuples.of(deepObjs.getT1(), deepObjs.getT2()));
   }
 
   private Mono<Optional<LocationTO>> fetchLocationByID(String id) {
@@ -1236,12 +1265,13 @@ public class BookingServiceImpl implements BookingService {
     if (transportCallId == null) return Mono.just(Optional.empty());
     return transportCallRepository
         .findById(transportCallId)
-        .flatMap(x -> {
-            if(x.getExportVoyageID() == null){
+        .flatMap(
+            x -> {
+              if (x.getExportVoyageID() == null) {
                 return Mono.empty();
-            }
-            return voyageRepository.findById(x.getExportVoyageID());
-        })
+              }
+              return voyageRepository.findById(x.getExportVoyageID());
+            })
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
   }
@@ -1253,6 +1283,11 @@ public class BookingServiceImpl implements BookingService {
         .flatMap(x -> vesselRepository.findById(x.getVesselID()))
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
+  }
+
+  private Mono<Optional<Vessel>> fetchVesselByVesselID(UUID vesselID) {
+    if (vesselID == null) return Mono.just(Optional.empty());
+    return vesselRepository.findById(vesselID).map(Optional::of).defaultIfEmpty(Optional.empty());
   }
 
   private Mono<Optional<ModeOfTransport>> fetchModeOfTransportByTransportCallId(
@@ -1348,7 +1383,8 @@ public class BookingServiceImpl implements BookingService {
   @Override
   @Transactional
   public Mono<BookingResponseTO> cancelBookingByCarrierBookingReference(
-      String carrierBookingRequestReference) {
+      String carrierBookingRequestReference,
+      BookingCancellationRequestTO bookingCancellationRequestTO) {
     OffsetDateTime updatedDateTime = OffsetDateTime.now();
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
@@ -1361,7 +1397,9 @@ public class BookingServiceImpl implements BookingService {
                 Mono.zip(
                     bookingRepository
                         .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
-                            DocumentStatus.CANC, carrierBookingRequestReference, updatedDateTime)
+                            bookingCancellationRequestTO.getDocumentStatus(),
+                            carrierBookingRequestReference,
+                            updatedDateTime)
                         .flatMap(verifyCancellation),
                     Mono.just(booking)
                         .map(
@@ -1372,39 +1410,54 @@ public class BookingServiceImpl implements BookingService {
                             })))
         .flatMap(
             t -> {
-              createShipmentEventFromBooking(t.getT2());
-              BookingTO booking = bookingMapper.bookingToDTO(t.getT2());
-              booking.setBookingRequestCreatedDateTime(t.getT2().getBookingRequestDateTime());
-              return Mono.just(booking);
-            })
-        .flatMap(this::toBookingResponseTO);
+              createShipmentEventFromBookingCancellation(t.getT2(), bookingCancellationRequestTO);
+              BookingResponseTO response = new BookingResponseTO();
+              response.setBookingRequestCreatedDateTime(t.getT2().getBookingRequestDateTime());
+              response.setBookingRequestUpdatedDateTime(updatedDateTime);
+              response.setDocumentStatus(t.getT2().getDocumentStatus());
+              response.setCarrierBookingRequestReference(
+                  t.getT2().getCarrierBookingRequestReference());
+              return Mono.just(response);
+            });
   }
 
-  private Mono<ShipmentEvent> createShipmentEventFromBookingTO(BookingTO bookingTo) {
-    return createShipmentEventFromBooking(bookingMapper.dtoToBooking(bookingTo));
-  }
-
-  private Mono<ShipmentEvent> createShipmentEventFromBooking(Booking booking) {
-    return shipmentEventFromBooking
-        .apply(booking)
+  private Mono<ShipmentEvent> createShipmentEventFromBookingCancellation(
+      Booking booking, BookingCancellationRequestTO bookingCancellationRequestTO) {
+    return shipmentEventFromBooking(booking, bookingCancellationRequestTO.getReason())
         .flatMap(shipmentEventService::create)
         .switchIfEmpty(
             Mono.error(new CreateException("Failed to create shipment event for Booking.")));
   }
 
-  private final Function<Booking, Mono<ShipmentEvent>> shipmentEventFromBooking =
-      booking -> {
-        ShipmentEvent shipmentEvent = new ShipmentEvent();
-        shipmentEvent.setShipmentEventTypeCode(ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()));
-        shipmentEvent.setDocumentTypeCode(DocumentTypeCode.CBR);
-        shipmentEvent.setEventClassifierCode(EventClassifierCode.ACT);
-        shipmentEvent.setEventType(null);
-        shipmentEvent.setCarrierBookingReference(null);
-        shipmentEvent.setDocumentID(booking.getCarrierBookingRequestReference());
-        shipmentEvent.setEventDateTime(booking.getUpdatedDateTime());
-        shipmentEvent.setEventCreatedDateTime(OffsetDateTime.now());
-        return Mono.just(shipmentEvent);
-      };
+  private Mono<ShipmentEvent> createShipmentEventFromBookingTO(BookingTO bookingTo) {
+    return createShipmentEvent(shipmentEventFromBooking(bookingMapper.dtoToBooking(bookingTo)));
+  }
+
+  private Mono<ShipmentEvent> createShipmentEvent(Mono<ShipmentEvent> shipmentEventMono) {
+    return shipmentEventMono
+        .flatMap(shipmentEventService::create)
+        .switchIfEmpty(
+            Mono.error(new CreateException("Failed to create shipment event for Booking.")));
+  }
+
+  private Mono<ShipmentEvent> shipmentEventFromBooking(Booking booking) {
+    return shipmentEventFromBooking(booking, null);
+  }
+
+  private Mono<ShipmentEvent> shipmentEventFromBooking(Booking booking, String reason) {
+    ShipmentEvent shipmentEvent = new ShipmentEvent();
+    shipmentEvent.setShipmentEventTypeCode(
+        ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()));
+    shipmentEvent.setDocumentTypeCode(DocumentTypeCode.CBR);
+    shipmentEvent.setEventClassifierCode(EventClassifierCode.ACT);
+    shipmentEvent.setEventType(null);
+    shipmentEvent.setCarrierBookingReference(null);
+    shipmentEvent.setDocumentID(booking.getCarrierBookingRequestReference());
+    shipmentEvent.setEventDateTime(booking.getUpdatedDateTime());
+    shipmentEvent.setEventCreatedDateTime(OffsetDateTime.now());
+    shipmentEvent.setReason(reason);
+    return Mono.just(shipmentEvent);
+  }
 
   private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
       isRecordUpdated -> {

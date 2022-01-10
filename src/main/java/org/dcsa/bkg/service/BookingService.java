@@ -19,7 +19,7 @@ public interface BookingService {
 
   Mono<ShipmentTO> getShipmentByCarrierBookingReference(String carrierBookingReference);
 
-  Mono<BookingResponseTO> cancelBookingByCarrierBookingReference(String carrierBookingReference);
+  Mono<BookingResponseTO> cancelBookingByCarrierBookingReference(String carrierBookingReference, BookingCancellationRequestTO bookingCancellationRequestTO);
 
   Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
       DocumentStatus documentStatus, Pageable pageable);

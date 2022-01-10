@@ -1,6 +1,7 @@
 package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
 import org.dcsa.bkg.model.transferobjects.BookingResponseTO;
 import org.dcsa.bkg.model.transferobjects.BookingTO;
 import org.dcsa.bkg.service.BookingService;
@@ -48,13 +49,13 @@ public class BKGController {
         carrierBookingRequestReference);
   }
 
-  @PatchMapping(path = "{carrierBookingRequestReference}/document-status")
+  @PatchMapping("{carrierBookingRequestReference}")
   @ResponseStatus(HttpStatus.OK)
   public Mono<BookingResponseTO> bookingCancellation(
-          @PathVariable @Size(max = 100) String carrierBookingRequestReference, @RequestBody String documentStatus) {
-    if (!DocumentStatus.CANC.toString().equals(documentStatus)) {
-      return Mono.error(new CreateException("documentStatus '" + documentStatus + "' not equal to '" + DocumentStatus.CANC));
+          @PathVariable @Size(max = 100) String carrierBookingRequestReference, @RequestBody BookingCancellationRequestTO bookingCancellationRequestTO) {
+    if (!DocumentStatus.CANC.equals(bookingCancellationRequestTO.getDocumentStatus())) {
+      return Mono.error(new CreateException("documentStatus '" + bookingCancellationRequestTO.getDocumentStatus().getValue() + "' not equal to '" + DocumentStatus.CANC));
     }
-    return bookingService.cancelBookingByCarrierBookingReference(carrierBookingRequestReference);
+    return bookingService.cancelBookingByCarrierBookingReference(carrierBookingRequestReference, bookingCancellationRequestTO);
   }
 }
