@@ -532,7 +532,8 @@ public class BookingServiceImpl implements BookingService {
     } else {
       // if there is an address connected to the party, we need to create it first.
       partyMap =
-          addressService.ensureResolvable(partyTO.getAddress())
+          addressService
+              .ensureResolvable(partyTO.getAddress())
               .flatMap(
                   a -> {
                     Party party = partyMapper.dtoToParty(partyTO);
@@ -845,9 +846,10 @@ public class BookingServiceImpl implements BookingService {
   @Override
   public Mono<BookingTO> getBookingByCarrierBookingRequestReference(
       String carrierBookingRequestReference) {
+    BookingTO booking2TO = new BookingTO();
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
-        .map(b -> Tuples.of(b.getId(), bookingMapper.bookingToDTO(b)))
+        .map(b -> Tuples.of(b.getId(), bookingMapper.bookingToDTO(b), b))
         .switchIfEmpty(
             Mono.error(
                 new NotFoundException(
@@ -855,9 +857,8 @@ public class BookingServiceImpl implements BookingService {
                         + carrierBookingRequestReference)))
         .doOnSuccess(
             t -> {
-              // the mapper creates a new instance of location even if value of invoicePayableAt is
-              // null in booking
-              // hence we set it to null if its a null object
+              // the mapper creates a new instance of location even if value of invoicePayableAt
+              // is null in booking hence we set it to null if it's a null object
               if (t.getT2().getInvoicePayableAt().getId() == null) {
                 t.getT2().setInvoicePayableAt(null);
               }
@@ -880,8 +881,8 @@ public class BookingServiceImpl implements BookingService {
                       : bookingTO.getPlaceOfIssue().getId();
 
               return Mono.zip(
-                      fetchLocationByID(invoicePayableAtLocID),
-                      fetchLocationByID(placeOfIssueLocID),
+                      fetchLocationTupleByID(invoicePayableAtLocID, placeOfIssueLocID),
+                      fetchVesselByVesselID(t.getT3().getVesselId()),
                       fetchCommoditiesByBookingID(t.getT1()),
                       fetchValueAddedServiceRequestsByBookingID(t.getT1()),
                       fetchReferencesByBookingID(t.getT1()),
@@ -890,8 +891,9 @@ public class BookingServiceImpl implements BookingService {
                       fetchShipmentLocationsByBookingID(t.getT1()))
                   .doOnSuccess(
                       deepObjs -> {
-                        Optional<LocationTO> locationToOpt1 = deepObjs.getT1();
-                        Optional<LocationTO> locationToOpt2 = deepObjs.getT2();
+                        Optional<LocationTO> locationToOpt1 = deepObjs.getT1().getT1();
+                        Optional<LocationTO> locationToOpt2 = deepObjs.getT1().getT2();
+                        Optional<Vessel> vesselOptional = deepObjs.getT2();
                         Optional<List<CommodityTO>> commoditiesToOpt = deepObjs.getT3();
                         Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsToOpt =
                             deepObjs.getT4();
@@ -904,6 +906,12 @@ public class BookingServiceImpl implements BookingService {
 
                         locationToOpt1.ifPresent(bookingTO::setInvoicePayableAt);
                         locationToOpt2.ifPresent(bookingTO::setPlaceOfIssue);
+                        vesselOptional.ifPresent(
+                            x -> {
+                              bookingTO.setVesselName(x.getVesselName());
+
+                              bookingTO.setVesselIMONumber(x.getVesselIMONumber());
+                            });
                         commoditiesToOpt.ifPresent(bookingTO::setCommodities);
                         valueAddedServiceRequestsToOpt.ifPresent(
                             bookingTO::setValueAddedServiceRequests);
@@ -962,6 +970,12 @@ public class BookingServiceImpl implements BookingService {
                       })
                   .thenReturn(shipmentTO);
             });
+  }
+
+  private Mono<Tuple2<Optional<LocationTO>, Optional<LocationTO>>> fetchLocationTupleByID(
+      String invoicePayableAtLocID, String placeOfIssueLocID) {
+    return Mono.zip(fetchLocationByID(invoicePayableAtLocID), fetchLocationByID(placeOfIssueLocID))
+        .map(deepObjs -> Tuples.of(deepObjs.getT1(), deepObjs.getT2()));
   }
 
   private Mono<Optional<LocationTO>> fetchLocationByID(String id) {
@@ -1267,6 +1281,11 @@ public class BookingServiceImpl implements BookingService {
         .flatMap(x -> vesselRepository.findById(x.getVesselID()))
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
+  }
+
+  private Mono<Optional<Vessel>> fetchVesselByVesselID(UUID vesselID) {
+    if (vesselID == null) return Mono.just(Optional.empty());
+    return vesselRepository.findById(vesselID).map(Optional::of).defaultIfEmpty(Optional.empty());
   }
 
   private Mono<Optional<ModeOfTransport>> fetchModeOfTransportByTransportCallId(
