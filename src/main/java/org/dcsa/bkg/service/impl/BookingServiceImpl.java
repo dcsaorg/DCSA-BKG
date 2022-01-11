@@ -1284,6 +1284,7 @@ public class BookingServiceImpl implements BookingService {
   private Mono<Optional<Map<String, String>>> fetchImportExportVoyageNumberByTransportCallId(
       TransportCall transportCall) {
     if (transportCall == null) return Mono.just(Optional.empty());
+    if(transportCall.getImportVoyageID() == null) return Mono.just(Optional.empty());
 
     return voyageRepository
         .findById(transportCall.getImportVoyageID())
