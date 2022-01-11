@@ -26,7 +26,6 @@ public class BKGShipmentController {
   @GetMapping(path = "{carrierBookingReference}")
   public Mono<ShipmentTO> getBookingReference(
       @PathVariable @Size(max = 35) String carrierBookingReference) {
-    // ToDo: adjust this when the IM is ready for booking
     return bookingService.getShipmentByCarrierBookingReference(carrierBookingReference);
   }
 

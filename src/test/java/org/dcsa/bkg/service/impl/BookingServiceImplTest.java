@@ -272,7 +272,7 @@ class BookingServiceImplTest {
 
     voyage = new Voyage();
     voyage.setId(UUID.randomUUID());
-    voyage.setCarrierVoyageNumber("SOME RANDOM BULLSHIT");
+    voyage.setCarrierVoyageNumber("CarrierVoyageNumber");
 
     loadTransportCall = new TransportCall();
     loadTransportCall.setTransportCallID(UUID.randomUUID().toString());
@@ -2783,7 +2783,10 @@ class BookingServiceImplTest {
                     b.getTransports().get(0).getPlannedArrivalDate());
                 Assertions.assertEquals(
                     voyage.getCarrierVoyageNumber(),
-                    b.getTransports().get(0).getCarrierVoyageNumber());
+                    b.getTransports().get(0).getExportVoyageNumber());
+                Assertions.assertEquals(
+                  voyage.getCarrierVoyageNumber(),
+                  b.getTransports().get(0).getImportVoyageNumber());
                 Assertions.assertEquals(
                     vessel.getVesselName(), b.getTransports().get(0).getVesselName());
                 Assertions.assertEquals(
@@ -2807,6 +2810,118 @@ class BookingServiceImplTest {
                     b.getTransports().get(0).getTransportReference());
               })
           .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+      "Method should return shipment for given carrierBookingRequestReference with different import and export voyages")
+    void testGETShipmentWithTransportsWithDifferentVoyages() {
+
+      Voyage exportVoyage = new Voyage();
+      exportVoyage.setId(UUID.randomUUID());
+      exportVoyage.setCarrierVoyageNumber("exportCarrierVoyageNumber");
+
+      loadTransportCall.setExportVoyageID(exportVoyage.getId());
+
+      when(bookingRepository.findById((UUID) any())).thenReturn(Mono.empty());
+      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentCarrierClausesRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(chargeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+
+      when(transportCallRepository.findById(loadTransportCall.getTransportCallID()))
+        .thenReturn(Mono.just(loadTransportCall));
+      when(transportCallRepository.findById(dischargeTransportCall.getTransportCallID()))
+        .thenReturn(Mono.just(dischargeTransportCall));
+
+      when(locationRepository.findById(location1.getId())).thenReturn(Mono.just(location1));
+      when(locationRepository.findById(location2.getId())).thenReturn(Mono.just(location2));
+
+      when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
+      when(facilityRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(facility));
+
+      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(addressRepository.findByIdOrEmpty(any())).thenReturn(Mono.just(address));
+      when(shipmentTransportRepository.findAllByShipmentID(any()))
+        .thenReturn(Flux.just(shipmentTransport));
+      when(transportRepository.findById(transport.getTransportID()))
+        .thenReturn(Mono.just(transport));
+      when(transportRepository.findAllById(Collections.singleton(any())))
+        .thenReturn(Flux.just(transport));
+      when(modeOfTransportRepository.findByTransportCallID(any()))
+        .thenReturn(Mono.just(modeOfTransport));
+      when(vesselRepository.findById((UUID) any())).thenReturn(Mono.just(vessel));
+      when(voyageRepository.findById(voyage.getId())).thenReturn(Mono.just(voyage));
+      when(voyageRepository.findById(exportVoyage.getId())).thenReturn(Mono.just(exportVoyage));
+      when(transportEventRepository
+        .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
+          transport.getLoadTransportCallID(),
+          TransportEventTypeCode.ARRI,
+          EventClassifierCode.PLN))
+        .thenReturn(Mono.just(departureTransportEvent));
+      when(transportEventRepository
+        .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
+          transport.getDischargeTransportCallID(),
+          TransportEventTypeCode.DEPA,
+          EventClassifierCode.PLN))
+        .thenReturn(Mono.just(arrivalTransportEvent));
+
+      StepVerifier.create(
+          bookingServiceImpl.getShipmentByCarrierBookingReference(
+            shipment.getCarrierBookingReference()))
+        .assertNext(
+          b -> {
+            Assertions.assertEquals(
+              shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
+            Assertions.assertEquals(1, b.getTransports().size());
+            Assertions.assertNotNull(b.getTransports().get(0).getDischargeLocation());
+            Assertions.assertNotNull(b.getTransports().get(0).getLoadLocation());
+            Assertions.assertEquals(
+              location1.getId(), b.getTransports().get(0).getLoadLocation().getId());
+            Assertions.assertEquals(
+              location2.getId(), b.getTransports().get(0).getDischargeLocation().getId());
+            Assertions.assertEquals(
+              address.getId(),
+              b.getTransports().get(0).getDischargeLocation().getAddressID());
+            Assertions.assertEquals(
+              facility.getFacilityID(),
+              b.getTransports().get(0).getDischargeLocation().getFacilityID());
+            Assertions.assertEquals(
+              departureTransportEvent.getEventDateTime(),
+              b.getTransports().get(0).getPlannedDepartureDate());
+            Assertions.assertEquals(
+              arrivalTransportEvent.getEventDateTime(),
+              b.getTransports().get(0).getPlannedArrivalDate());
+            Assertions.assertEquals(
+              exportVoyage.getCarrierVoyageNumber(),
+              b.getTransports().get(0).getExportVoyageNumber());
+            Assertions.assertEquals(
+              voyage.getCarrierVoyageNumber(),
+              b.getTransports().get(0).getImportVoyageNumber());
+            Assertions.assertEquals(
+              vessel.getVesselName(), b.getTransports().get(0).getVesselName());
+            Assertions.assertEquals(
+              vessel.getVesselIMONumber(), b.getTransports().get(0).getVesselIMONumber());
+            Assertions.assertEquals(
+              modeOfTransport.getDcsaTransportType(),
+              b.getTransports().get(0).getModeOfTransport());
+            Assertions.assertEquals(
+              shipmentTransport.getIsUnderShippersResponsibility(),
+              b.getTransports().get(0).getIsUnderShippersResponsibility());
+            Assertions.assertEquals(
+              shipmentTransport.getTransportPlanStageCode(),
+              b.getTransports().get(0).getTransportPlanStage());
+            Assertions.assertEquals(
+              shipmentTransport.getTransportPlanStageSequenceNumber(),
+              b.getTransports().get(0).getTransportPlanStageSequenceNumber());
+            Assertions.assertEquals(
+              transport.getTransportName(), b.getTransports().get(0).getTransportName());
+            Assertions.assertEquals(
+              transport.getTransportReference(),
+              b.getTransports().get(0).getTransportReference());
+          })
+        .verifyComplete();
     }
 
     @Test
