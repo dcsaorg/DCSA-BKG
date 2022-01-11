@@ -63,7 +63,8 @@ class BKGShipmentControllerTest {
     transport.setPlannedArrivalDate(OffsetDateTime.now());
     transport.setVesselName("VesselName");
     transport.setVesselIMONumber("1234567");
-    transport.setCarrierVoyageNumber("CarrierVoyageNumber");
+    transport.setImportVoyageNumber("ImportVoyageNumber");
+    transport.setExportVoyageNumber("ExportVoyageNumber");
 
     ShipmentCutOffTimeTO shipmentCutOffTime = new ShipmentCutOffTimeTO();
     shipmentCutOffTime.setCutOffDateTime(dateTimeOffset);
@@ -172,7 +173,9 @@ class BKGShipmentControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.transports.[0].vesselIMONumber")
                   .hasJsonPath()
-                  .jsonPath("$.transports.[0].carrierVoyageNumber")
+                  .jsonPath("$.transports.[0].importVoyageNumber")
+                  .hasJsonPath()
+                  .jsonPath("$.transports.[0].exportVoyageNumber")
                   .hasJsonPath()
                   .jsonPath("$.shipmentCutOffTimes.[0].cutOffDateTimeCode")
                   .hasJsonPath()
