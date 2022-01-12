@@ -117,7 +117,7 @@ class BKGControllerTest {
     bookingResponseTO.setDocumentStatus(bookingTO.getDocumentStatus());
     bookingResponseTO.setBookingRequestCreatedDateTime(bookingTO.getBookingRequestCreatedDateTime());
     bookingResponseTO.setBookingRequestUpdatedDateTime(bookingTO.getBookingRequestUpdatedDateTime());
-    
+
     bookingCancellationRequestTO = new BookingCancellationRequestTO();
     bookingCancellationRequestTO.setDocumentStatus(DocumentStatus.CANC);
     bookingCancellationRequestTO.setReason("Booking Cancelled");
@@ -178,7 +178,7 @@ class BKGControllerTest {
     // mock service method call
     when(bookingService.updateBookingByReferenceCarrierBookingRequestReference(any(), any()))
         .thenReturn(Mono.just(bookingTO));
-    when(bookingService.toBookingResponseTO(any())).thenReturn(Mono.just(bookingResponseTO));
+//    when(bookingService.toBookingResponseTO(any())).thenReturn(Mono.just(bookingResponseTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
@@ -189,8 +189,7 @@ class BKGControllerTest {
             .exchange();
 
     // these values are only allowed in response and not to be set via request body
-    verify(bookingService)
-        .updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
+    verify(bookingService).updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
     // CarrierBookingRequestReference is set to null in the service implementation, as we need to be
     // able to set it via request in PUT
     assertNull(argument.getValue().getDocumentStatus());

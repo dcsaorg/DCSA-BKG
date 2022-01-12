@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Mono;
 
+import java.time.OffsetDateTime;
+
 public interface BookingService {
   Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
       DocumentStatus documentStatus, Pageable pageable);
@@ -24,12 +26,13 @@ public interface BookingService {
   Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
       DocumentStatus documentStatus, Pageable pageable);
 
-  default Mono<BookingResponseTO> toBookingResponseTO(BookingTO bookingTO) {
-    BookingResponseTO response = new BookingResponseTO();
-    response.setCarrierBookingRequestReference(bookingTO.getCarrierBookingRequestReference());
-    response.setDocumentStatus(bookingTO.getDocumentStatus());
-    response.setBookingRequestCreatedDateTime(bookingTO.getBookingRequestCreatedDateTime());
-    response.setBookingRequestUpdatedDateTime(bookingTO.getBookingRequestUpdatedDateTime());
-    return Mono.just(response);
-  }
+//  default Mono<BookingResponseTO> toBookingResponseTO(BookingTO bookingTO) {
+//    System.out.println("Greetings from toBookingResponseTO!");
+//    BookingResponseTO response = new BookingResponseTO();
+//    response.setCarrierBookingRequestReference(bookingTO.getCarrierBookingRequestReference());
+//    response.setDocumentStatus(bookingTO.getDocumentStatus());
+//    response.setBookingRequestCreatedDateTime(bookingTO.getBookingRequestCreatedDateTime());
+//    response.setBookingRequestUpdatedDateTime(bookingTO.getBookingRequestUpdatedDateTime());
+//    return Mono.just(response);
+//  }
 }

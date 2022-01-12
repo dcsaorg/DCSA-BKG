@@ -34,11 +34,11 @@ public class BKGController {
 
   @PutMapping("/{carrierBookingRequestReference}")
   @ResponseStatus(HttpStatus.OK)
-  public Mono<BookingResponseTO> updateBookingByReference(
+  public Mono<BookingTO> updateBookingByReference(
       @PathVariable @Size(max = 100) String carrierBookingRequestReference,
       @Valid @RequestBody BookingTO bookingRequest) {
     return bookingService.updateBookingByReferenceCarrierBookingRequestReference(
-        carrierBookingRequestReference, bookingRequest).flatMap(bookingService::toBookingResponseTO);
+        carrierBookingRequestReference, bookingRequest);
   }
 
   @GetMapping("/{carrierBookingRequestReference}")

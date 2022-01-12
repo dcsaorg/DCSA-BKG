@@ -229,8 +229,7 @@ public class BookingServiceImpl implements BookingService {
               Optional<LocationTO> invoicePayableAtOpt = t.getT1().getT2();
               Optional<LocationTO> placeOfIssueOpt = t.getT1().getT3();
               Optional<List<CommodityTO>> commoditiesOpt = t.getT1().getT4();
-              Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt =
-                  t.getT1().getT5();
+              Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt = t.getT1().getT5();
               Optional<List<ReferenceTO>> referencesOpt = t.getT1().getT6();
               Optional<List<RequestedEquipmentTO>> requestedEquipmentsOpt = t.getT1().getT7();
               Optional<List<DocumentPartyTO>> documentPartiesOpt = t.getT1().getT8();
@@ -249,7 +248,7 @@ public class BookingServiceImpl implements BookingService {
               return Mono.just(bookingTO);
             })
         .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO))
-        .flatMap(this::toBookingResponseTO);
+        .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
@@ -848,7 +847,6 @@ public class BookingServiceImpl implements BookingService {
   @Override
   public Mono<BookingTO> getBookingByCarrierBookingRequestReference(
       String carrierBookingRequestReference) {
-    BookingTO booking2TO = new BookingTO();
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
         .map(b -> Tuples.of(b.getId(), bookingMapper.bookingToDTO(b), b))
@@ -1417,13 +1415,7 @@ public class BookingServiceImpl implements BookingService {
         .flatMap(
             t -> {
               createShipmentEventFromBookingCancellation(t.getT2(), bookingCancellationRequestTO);
-              BookingResponseTO response = new BookingResponseTO();
-              response.setBookingRequestCreatedDateTime(t.getT2().getBookingRequestDateTime());
-              response.setBookingRequestUpdatedDateTime(updatedDateTime);
-              response.setDocumentStatus(t.getT2().getDocumentStatus());
-              response.setCarrierBookingRequestReference(
-                  t.getT2().getCarrierBookingRequestReference());
-              return Mono.just(response);
+              return Mono.just(bookingMapper.bookingToBookingResponseTO(t.getT2()));
             });
   }
 
