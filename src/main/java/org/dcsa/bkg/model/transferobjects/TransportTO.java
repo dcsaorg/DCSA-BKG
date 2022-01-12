@@ -41,16 +41,17 @@ public class TransportTO {
 
   private DCSATransportType modeOfTransport;
 
-  @NotNull(message = "VesselName is required.")
   @Size(max = 35, message = "VesselName has a max size of 35.")
   private String vesselName;
 
   @ValidVesselIMONumber(allowNull = true, message = "VesselIMONumber is invalid.")
   private String vesselIMONumber;
 
-  @NotNull(message = "CarrierVoyageNumber is required.")
-  @Size(max = 50, message = "CarrierVoyageNumber has a max size of 50.")
-  private String carrierVoyageNumber;
+  @Size(max = 50, message = "ImportVoyageNumber has a max size of 50.")
+  private String importVoyageNumber;
+
+  @Size(max = 50, message = "ExportVoyageNumber has a max size of 50.")
+  private String exportVoyageNumber;
 
   private Boolean isUnderShippersResponsibility;
 }

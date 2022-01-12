@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.dcsa.bkg.model.enums.TransportPlanStage;
 import org.dcsa.core.events.model.enums.TransportPlanStageCode;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.junit.jupiter.api.Assertions;
@@ -17,7 +16,6 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
@@ -42,7 +40,8 @@ class TransportTOTest {
     transportTO.setPlannedDepartureDate(OffsetDateTime.now());
     transportTO.setPlannedArrivalDate(OffsetDateTime.now().plusDays(2));
     transportTO.setVesselName("x".repeat(35));
-    transportTO.setCarrierVoyageNumber("x".repeat(50));
+    transportTO.setImportVoyageNumber("x".repeat(50));
+    transportTO.setExportVoyageNumber("x".repeat(50));
     transportTO.setIsUnderShippersResponsibility(true);
   }
 
@@ -104,13 +103,24 @@ class TransportTOTest {
 
   @Test
   @DisplayName(
-      "TransportTO should throw error if CarrierVoyageNumber length exceeds max size of 50.")
-  void testToVerifyConfirmedEquipmentSizeTypeIsNotAllowedToExceed50() {
-    transportTO.setCarrierVoyageNumber("x".repeat(51));
+      "TransportTO should throw error if ImportVoyageNumber length exceeds max size of 50.")
+  void testToVerifyImportVoyageNumberTypeIsNotAllowedToExceed50() {
+    transportTO.setImportVoyageNumber("x".repeat(51));
     Set<ConstraintViolation<TransportTO>> violations = validator.validate(transportTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "CarrierVoyageNumber has a max size of 50.".equals(v.getMessage())));
+            .anyMatch(v -> "ImportVoyageNumber has a max size of 50.".equals(v.getMessage())));
+  }
+
+  @Test
+  @DisplayName(
+    "TransportTO should throw error if ExportVoyageNumber length exceeds max size of 50.")
+  void testToVerifyExportVoyageNumberTypeIsNotAllowedToExceed50() {
+    transportTO.setExportVoyageNumber("x".repeat(51));
+    Set<ConstraintViolation<TransportTO>> violations = validator.validate(transportTO);
+    Assertions.assertTrue(
+      violations.stream()
+        .anyMatch(v -> "ExportVoyageNumber has a max size of 50.".equals(v.getMessage())));
   }
 
   @Test

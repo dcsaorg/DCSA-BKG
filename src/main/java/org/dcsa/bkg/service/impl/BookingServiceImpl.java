@@ -1259,32 +1259,51 @@ public class BookingServiceImpl implements BookingService {
         .defaultIfEmpty(Optional.empty());
   }
 
-  private Mono<Optional<Voyage>> fetchExportVoyageByTransportCallId(String transportCallId) {
+  private Mono<Optional<Vessel>> fetchVesselByTransportCallId(String transportCallId) {
+
     if (transportCallId == null) return Mono.just(Optional.empty());
     return transportCallRepository
         .findById(transportCallId)
         .flatMap(
             x -> {
-              if (x.getExportVoyageID() == null) {
+              if (x.getVesselID() == null) {
                 return Mono.empty();
               }
-              return voyageRepository.findById(x.getExportVoyageID());
+              return vesselRepository.findById(x.getVesselID());
             })
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
   }
 
-  private Mono<Optional<Vessel>> fetchVesselByTransportCallId(String transportCallId) {
-    if (transportCallId == null) return Mono.just(Optional.empty());
-    return transportCallRepository
-        .findById(transportCallId)
+  private Mono<TransportCall> fetchTransportCallById(String transportCallId) {
+    if (transportCallId == null) return Mono.empty();
+    return transportCallRepository.findById(transportCallId);
+  }
+
+  private Mono<Optional<Map<String, String>>> fetchImportExportVoyageNumberByTransportCallId(
+      TransportCall transportCall) {
+    if (transportCall == null) return Mono.just(Optional.empty());
+    if (transportCall.getImportVoyageID() == null) return Mono.just(Optional.empty());
+
+    return voyageRepository
+        .findById(transportCall.getImportVoyageID())
         .flatMap(
-                x -> {
-                    if (x.getVesselID() == null) {
-                        return Mono.empty();
-                    }
-                    return vesselRepository.findById(x.getVesselID());
-                })
+            voyage -> {
+              Mono<Voyage> exportVoyage;
+              if (!transportCall.getExportVoyageID().equals(transportCall.getImportVoyageID())) {
+                exportVoyage = voyageRepository.findById(transportCall.getExportVoyageID());
+              } else {
+                exportVoyage = Mono.just(voyage);
+              }
+              return Mono.zip(Mono.just(voyage), exportVoyage);
+            })
+        .map(
+            voyages ->
+                Map.of(
+                    "importVoyageNumber",
+                    voyages.getT1().getCarrierVoyageNumber(),
+                    "exportVoyageNumber",
+                    voyages.getT2().getCarrierVoyageNumber()))
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
   }
@@ -1313,19 +1332,28 @@ public class BookingServiceImpl implements BookingService {
                     .flatMap(
                         transport ->
                             Mono.zip(
-                                    fetchTransportEventByTransportId(transport.getTransportID()),
+                                Mono.just(transport),
+                                fetchTransportCallById(transport.getLoadTransportCallID())))
+                    .flatMap(
+                        transportAndTransportCall ->
+                            Mono.zip(
+                                    fetchTransportEventByTransportId(
+                                        transportAndTransportCall.getT1().getTransportID()),
                                     fetchLocationByTransportCallId(
-                                        transport.getLoadTransportCallID()),
+                                        transportAndTransportCall.getT1().getLoadTransportCallID()),
                                     fetchLocationByTransportCallId(
-                                        transport.getDischargeTransportCallID()),
+                                        transportAndTransportCall
+                                            .getT1()
+                                            .getDischargeTransportCallID()),
                                     fetchModeOfTransportByTransportCallId(
-                                        transport.getLoadTransportCallID()),
+                                        transportAndTransportCall.getT1().getLoadTransportCallID()),
                                     fetchVesselByTransportCallId(
-                                        transport.getLoadTransportCallID()),
-                                    fetchExportVoyageByTransportCallId(
-                                        transport.getLoadTransportCallID()))
+                                        transportAndTransportCall.getT2().getTransportCallID()),
+                                    fetchImportExportVoyageNumberByTransportCallId(
+                                        transportAndTransportCall.getT2()))
                                 .map(
                                     x -> {
+                                      Transport transport = transportAndTransportCall.getT1();
                                       TransportTO transportTO =
                                           transportMapper.transportToDTO(transport);
                                       transportTO.setTransportPlanStage(
@@ -1363,20 +1391,16 @@ public class BookingServiceImpl implements BookingService {
                                                     t5.getVesselIMONumber());
                                               });
 
-                                      /*
-                                        We are using exportVoyage from loadLocation according to the following mail from Christian:
-
-                                        The voyage number on a booking is always the Export voyage number (the shipment is leaving the origin).
-                                        This voyage number will remain the same until the shipment arrives at destination,
-                                        but will then be the import voyage number of the arriving vessel.
-                                        In other words only one voyage is required on a booking.
-                                        The T&T event that is sent to the consignee will mention the voyage number as the “import voyage number”.
-                                      */
                                       x.getT6()
                                           .ifPresent(
-                                              t6 ->
-                                                  transportTO.setCarrierVoyageNumber(
-                                                      t6.getCarrierVoyageNumber()));
+                                              carrierVoyageNumberMap -> {
+                                                transportTO.setImportVoyageNumber(
+                                                    carrierVoyageNumberMap.get(
+                                                        "importVoyageNumber"));
+                                                transportTO.setExportVoyageNumber(
+                                                    carrierVoyageNumberMap.get(
+                                                        "exportVoyageNumber"));
+                                              });
                                       return transportTO;
                                     })))
         .collectList()
@@ -1398,24 +1422,31 @@ public class BookingServiceImpl implements BookingService {
         .flatMap(checkBookingStatus)
         .flatMap(
             booking ->
-                Mono.zip(
-                    bookingRepository
-                        .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
-                            bookingCancellationRequestTO.getDocumentStatus(),
-                            carrierBookingRequestReference,
-                            updatedDateTime)
-                        .flatMap(verifyCancellation),
-                    Mono.just(booking)
-                        .map(
-                            bkg -> {
-                              bkg.setDocumentStatus(DocumentStatus.CANC);
-                              bkg.setUpdatedDateTime(updatedDateTime);
-                              return bkg;
-                            })))
+                bookingRepository
+                    .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
+                        bookingCancellationRequestTO.getDocumentStatus(),
+                        carrierBookingRequestReference,
+                        updatedDateTime)
+                    .flatMap(verifyCancellation)
+                    .thenReturn(booking))
+        .map(
+            booking -> {
+              booking.setDocumentStatus(DocumentStatus.CANC);
+              return booking;
+            })
         .flatMap(
-            t -> {
-              createShipmentEventFromBookingCancellation(t.getT2(), bookingCancellationRequestTO);
-              return Mono.just(bookingMapper.bookingToBookingResponseTO(t.getT2()));
+            booking ->
+                createShipmentEventFromBookingCancellation(booking, bookingCancellationRequestTO)
+                    .thenReturn(booking))
+        .map(
+            booking -> {
+              BookingResponseTO response = new BookingResponseTO();
+              response.setBookingRequestCreatedDateTime(booking.getBookingRequestDateTime());
+              response.setBookingRequestUpdatedDateTime(updatedDateTime);
+              response.setDocumentStatus(booking.getDocumentStatus());
+              response.setCarrierBookingRequestReference(
+                  booking.getCarrierBookingRequestReference());
+              return response;
             });
   }
 
