@@ -429,8 +429,12 @@ class BookingServiceImplTest {
     @DisplayName("Method should save and return shallow booking for given booking request")
     void testCreateBookingShallow() {
 
+      OffsetDateTime now = OffsetDateTime.now();
       booking.setInvoicePayableAt(null);
       booking.setPlaceOfIssueID(null);
+      booking.setBookingRequestDateTime(now);
+      booking.setUpdatedDateTime(now);
+
       bookingTO.setVesselName(null);
       bookingTO.setVesselIMONumber(null);
       bookingTO.setInvoicePayableAt(null);
@@ -444,37 +448,27 @@ class BookingServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
-          .thenReturn(Mono.just(booking));
-      when(shipmentEventService.create(any()))
-          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
-      when(commodityRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(valueAddedServiceRequestRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(referenceRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(documentPartyRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
-                assertEquals(
-                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
-              })
-          .verifyComplete();
+                assertEquals("ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                assertEquals("Received", b.getDocumentStatus().getValue());
+                assertNotNull(b.getBookingRequestCreatedDateTime());
+                assertNotNull(b.getBookingRequestUpdatedDateTime());
 
-      StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference(
-                  booking.getCarrierBookingRequestReference()))
-          .assertNext(
-              b -> {
-                Assertions.assertNull(b.getInvoicePayableAt());
-                Assertions.assertNull(b.getPlaceOfIssue());
-                assertEquals(0, b.getCommodities().size());
-                assertEquals(0, b.getValueAddedServiceRequests().size());
-                assertEquals(0, b.getReferences().size());
-                assertEquals(0, b.getRequestedEquipments().size());
+                // Since the response type of createBooking has changed
+                // we capture the bookingTO -> bookingResponseTO mapping argument
+                verify(bookingMapper).dtoToBookingResponseTO(argumentCaptor.capture());
+                assertNull(argumentCaptor.getValue().getInvoicePayableAt());
+                assertNull(argumentCaptor.getValue().getPlaceOfIssue());
+                assertEquals(0, argumentCaptor.getValue().getCommodities().size());
+                assertEquals(0, argumentCaptor.getValue().getValueAddedServiceRequests().size());
+                assertEquals(0, argumentCaptor.getValue().getReferences().size());
+                assertEquals(0, argumentCaptor.getValue().getRequestedEquipments().size());
               })
           .verifyComplete();
     }
@@ -644,7 +638,7 @@ class BookingServiceImplTest {
                 assertNotNull(b.getBookingRequestUpdatedDateTime());
 
                 // Since the response type of createBooking has changed
-                // we capture the bookingTO -> bookingResponseTO argument mapping
+                // we capture the bookingTO -> bookingResponseTO mapping argument
                 verify(bookingMapper).dtoToBookingResponseTO(argumentCaptor.capture());
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertNull(argumentCaptor.getValue().getInvoicePayableAt());
@@ -699,7 +693,8 @@ class BookingServiceImplTest {
                 assertNotNull(b.getBookingRequestCreatedDateTime());
                 assertNotNull(b.getBookingRequestUpdatedDateTime());
 
-                // Since the response type of createBooking has changed, we capture the bookingTO -> bookingResponseTO mapping
+                // Since the response type of createBooking has changed
+                // we capture the bookingTO -> bookingResponseTO mapping argument
                 verify(bookingMapper).dtoToBookingResponseTO(argumentCaptor.capture());
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals("c703277f-84ca-4816-9ccf-fad8e202d3b6", argumentCaptor.getValue().getInvoicePayableAt().getId());
@@ -717,6 +712,10 @@ class BookingServiceImplTest {
         "Method should save and return booking with location and commodities for given booking request")
     void testCreateBookingWithLocationAndCommodities() {
 
+      OffsetDateTime now = OffsetDateTime.now();
+      booking.setBookingRequestDateTime(now);
+      booking.setUpdatedDateTime(now);
+
       bookingTO.setValueAddedServiceRequests(null);
       bookingTO.setReferences(null);
       bookingTO.setRequestedEquipments(null);
@@ -729,34 +728,34 @@ class BookingServiceImplTest {
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
-      when(shipmentEventService.create(any()))
-          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
-      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
-          .thenReturn(Mono.just(location1));
-      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
-          .thenReturn(Mono.just(location2));
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt))).thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue))).thenReturn(Mono.just(location2));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+
+      ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
-                assertEquals(
-                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
-                //                Assertions.assertEquals("Rum Runner", b.getVesselName());
-                //                Assertions.assertEquals(
-                //                    "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                // b.getInvoicePayableAt().getId());
-                //                Assertions.assertEquals(
-                //                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                // b.getPlaceOfIssue().getId());
-                //                Assertions.assertEquals(
-                //                    "Mobile phones",
-                // b.getCommodities().get(0).getCommodityType());
-                //                Assertions.assertEquals(0,
-                // b.getValueAddedServiceRequests().size());
-                //                Assertions.assertEquals(0, b.getReferences().size());
-                //                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+                verify(locationRepository, times(2)).save(any());
+                verify(commodityRepository).saveAll(any(Flux.class));
+                assertEquals("ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                assertEquals("Received", b.getDocumentStatus().getValue());
+                assertNotNull(b.getBookingRequestCreatedDateTime());
+                assertNotNull(b.getBookingRequestUpdatedDateTime());
+
+                // Since the response type of createBooking has changed
+                // we capture the bookingTO -> bookingResponseTO mapping argument
+                verify(bookingMapper).dtoToBookingResponseTO(argumentCaptor.capture());
+                assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
+                assertEquals("c703277f-84ca-4816-9ccf-fad8e202d3b6", argumentCaptor.getValue().getInvoicePayableAt().getId());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", argumentCaptor.getValue().getPlaceOfIssue().getId());
+                assertEquals("Mobile phones", argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
+                assertEquals(0, argumentCaptor.getValue().getValueAddedServiceRequests().size());
+                assertEquals(0, argumentCaptor.getValue().getReferences().size());
+                assertEquals(0, argumentCaptor.getValue().getRequestedEquipments().size());
               })
           .verifyComplete();
     }
@@ -765,6 +764,10 @@ class BookingServiceImplTest {
     @DisplayName(
         "Method should save and return booking with location, commodities and valueAddedServiceRequests for given booking request")
     void testCreateBookingWithLocationAndCommoditiesAndValAddSerReq() {
+
+      OffsetDateTime now = OffsetDateTime.now();
+      booking.setBookingRequestDateTime(now);
+      booking.setUpdatedDateTime(now);
 
       bookingTO.setReferences(null);
       bookingTO.setRequestedEquipments(null);
@@ -777,38 +780,36 @@ class BookingServiceImplTest {
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
-      when(shipmentEventService.create(any()))
-          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
-      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
-          .thenReturn(Mono.just(location1));
-      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
-          .thenReturn(Mono.just(location2));
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt))).thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue))).thenReturn(Mono.just(location2));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(valueAddedServiceRequest));
+
+      ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
-                assertEquals(
-                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
-                //                Assertions.assertEquals("Rum Runner", b.getVesselName());
-                //                Assertions.assertEquals(
-                //                    "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                // b.getInvoicePayableAt().getId());
-                //                Assertions.assertEquals(
-                //                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                // b.getPlaceOfIssue().getId());
-                //                Assertions.assertEquals(
-                //                    "Mobile phones",
-                // b.getCommodities().get(0).getCommodityType());
-                //                Assertions.assertEquals(
-                //                    ValueAddedServiceCode.CDECL,
-                //
-                // b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
-                //                Assertions.assertEquals(0, b.getReferences().size());
-                //                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+                verify(locationRepository, times(2)).save(any());
+                verify(commodityRepository).saveAll(any(Flux.class));
+                verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
+                assertEquals("ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                assertEquals("Received", b.getDocumentStatus().getValue());
+                assertNotNull(b.getBookingRequestCreatedDateTime());
+                assertNotNull(b.getBookingRequestUpdatedDateTime());
+
+                // Since the response type of createBooking has changed
+                // we capture the bookingTO -> bookingResponseTO mapping argument
+                verify(bookingMapper).dtoToBookingResponseTO(argumentCaptor.capture());
+                assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
+                assertEquals("c703277f-84ca-4816-9ccf-fad8e202d3b6", argumentCaptor.getValue().getInvoicePayableAt().getId());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", argumentCaptor.getValue().getPlaceOfIssue().getId());
+                assertEquals("Mobile phones", argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
+                assertEquals(ValueAddedServiceCode.CDECL, argumentCaptor.getValue().getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                assertEquals(0, argumentCaptor.getValue().getReferences().size());
+                assertEquals(0, argumentCaptor.getValue().getRequestedEquipments().size());
               })
           .verifyComplete();
     }
@@ -817,6 +818,10 @@ class BookingServiceImplTest {
     @DisplayName(
         "Method should save and return booking with location, commodities, valueAddedServiceRequests and references for given booking request")
     void testCreateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferences() {
+
+      OffsetDateTime now = OffsetDateTime.now();
+      booking.setBookingRequestDateTime(now);
+      booking.setUpdatedDateTime(now);
 
       bookingTO.setRequestedEquipments(null);
       bookingTO.setDocumentParties(null);
@@ -829,40 +834,37 @@ class BookingServiceImplTest {
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
 
-      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
-          .thenReturn(Mono.just(location1));
-      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
-          .thenReturn(Mono.just(location2));
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt))).thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue))).thenReturn(Mono.just(location2));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(valueAddedServiceRequest));
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
-      when(shipmentEventService.create(any()))
-          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
-                assertEquals(
-                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
-                //                Assertions.assertEquals("Rum Runner", b.getVesselName());
-                //                Assertions.assertEquals(
-                //                    "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                // b.getInvoicePayableAt().getId());
-                //                Assertions.assertEquals(
-                //                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                // b.getPlaceOfIssue().getId());
-                //                Assertions.assertEquals(
-                //                    "Mobile phones",
-                // b.getCommodities().get(0).getCommodityType());
-                //                Assertions.assertEquals(
-                //                    ValueAddedServiceCode.CDECL,
-                //
-                // b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
-                //                Assertions.assertEquals(
-                //                    ReferenceTypeCode.FF,
-                // b.getReferences().get(0).getReferenceType());
-                //                Assertions.assertEquals(0, b.getRequestedEquipments().size());
+                verify(locationRepository, times(2)).save(any());
+                verify(commodityRepository).saveAll(any(Flux.class));
+                verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
+                verify(referenceRepository).saveAll(any(Flux.class));
+                assertEquals("ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                assertEquals("Received", b.getDocumentStatus().getValue());
+                assertNotNull(b.getBookingRequestCreatedDateTime());
+                assertNotNull(b.getBookingRequestUpdatedDateTime());
+
+                // Since the response type of createBooking has changed
+                // we capture the bookingTO -> bookingResponseTO mapping argument
+                verify(bookingMapper).dtoToBookingResponseTO(argumentCaptor.capture());
+                assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
+                assertEquals("c703277f-84ca-4816-9ccf-fad8e202d3b6", argumentCaptor.getValue().getInvoicePayableAt().getId());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", argumentCaptor.getValue().getPlaceOfIssue().getId());
+                assertEquals("Mobile phones", argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
+                assertEquals(ValueAddedServiceCode.CDECL, argumentCaptor.getValue().getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                assertEquals(ReferenceTypeCode.FF, argumentCaptor.getValue().getReferences().get(0).getReferenceType());
+                assertEquals(0, argumentCaptor.getValue().getRequestedEquipments().size());
               })
           .verifyComplete();
     }
@@ -872,6 +874,9 @@ class BookingServiceImplTest {
         "Method should save and return booking with location, commodities, valueAddedServiceRequests, references and requestedEquipments for given booking request")
     void testCreateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferencesAndReqEquip() {
 
+      OffsetDateTime now = OffsetDateTime.now();
+      booking.setBookingRequestDateTime(now);
+      booking.setUpdatedDateTime(now);
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
@@ -890,36 +895,34 @@ class BookingServiceImplTest {
       when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(valueAddedServiceRequest));
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
-      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(requestedEquipment));
-      when(shipmentEventService.create(any()))
-          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(requestedEquipmentRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(requestedEquipment));
+      when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
-                assertEquals(
-                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
-                //                Assertions.assertEquals("Rum Runner", b.getVesselName());
-                //                Assertions.assertEquals(
-                //                    "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                // b.getInvoicePayableAt().getId());
-                //                Assertions.assertEquals(
-                //                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                // b.getPlaceOfIssue().getId());
-                //                Assertions.assertEquals(
-                //                    "Mobile phones",
-                // b.getCommodities().get(0).getCommodityType());
-                //                Assertions.assertEquals(
-                //                    ValueAddedServiceCode.CDECL,
-                //
-                // b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
-                //                Assertions.assertEquals(
-                //                    ReferenceTypeCode.FF,
-                // b.getReferences().get(0).getReferenceType());
-                //                Assertions.assertEquals(
-                //                    "22GP",
-                // b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
+                verify(locationRepository, times(2)).save(any());
+                verify(commodityRepository).saveAll(any(Flux.class));
+                verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
+                verify(referenceRepository).saveAll(any(Flux.class));
+                verify(requestedEquipmentRepository).saveAll(any(Flux.class));
+                assertEquals("ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                assertEquals("Received", b.getDocumentStatus().getValue());
+                assertNotNull(b.getBookingRequestCreatedDateTime());
+                assertNotNull(b.getBookingRequestUpdatedDateTime());
+
+                // Since the response type of createBooking has changed
+                // we capture the bookingTO -> bookingResponseTO mapping argument
+                verify(bookingMapper).dtoToBookingResponseTO(argumentCaptor.capture());
+                assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
+                assertEquals("c703277f-84ca-4816-9ccf-fad8e202d3b6", argumentCaptor.getValue().getInvoicePayableAt().getId());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", argumentCaptor.getValue().getPlaceOfIssue().getId());
+                assertEquals("Mobile phones", argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
+                assertEquals(ValueAddedServiceCode.CDECL, argumentCaptor.getValue().getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                assertEquals(ReferenceTypeCode.FF, argumentCaptor.getValue().getReferences().get(0).getReferenceType());
+                assertEquals("22GP", argumentCaptor.getValue().getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
               })
           .verifyComplete();
     }
@@ -962,6 +965,10 @@ class BookingServiceImplTest {
     void
         testCreateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferencesAndReqEquipAndDocParties() {
 
+      OffsetDateTime now = OffsetDateTime.now();
+      booking.setBookingRequestDateTime(now);
+      booking.setUpdatedDateTime(now);
+
       bookingTO.setShipmentLocations(null);
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
@@ -971,73 +978,62 @@ class BookingServiceImplTest {
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
 
-      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
-          .thenReturn(Mono.just(location1));
-      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
-          .thenReturn(Mono.just(location2));
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt))).thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue))).thenReturn(Mono.just(location2));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(valueAddedServiceRequest));
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
-      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(requestedEquipment));
+      when(requestedEquipmentRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(requestedEquipment));
       when(addressService.ensureResolvable(any())).thenReturn(Mono.just(address));
       when(partyRepository.save(any())).thenReturn(Mono.just(party));
-      when(partyContactDetailsRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(partyContactDetails));
-      when(partyIdentifyingCodeRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(partyIdentifyingCode));
+      when(partyContactDetailsRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(partyContactDetails));
+      when(partyIdentifyingCodeRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(partyIdentifyingCode));
       when(documentPartyRepository.save(any())).thenReturn(Mono.just(documentParty));
-      when(displayedAddressRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(displayedAddress));
-      when(shipmentEventService.create(any()))
-          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(displayedAddressRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(displayedAddress));
+      when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
-                assertEquals(
-                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
-                //                Assertions.assertEquals("Rum Runner", b.getVesselName());
-                //                Assertions.assertEquals(
-                //                    "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                // b.getInvoicePayableAt().getId());
-                //                Assertions.assertEquals(
-                //                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                // b.getPlaceOfIssue().getId());
-                //                Assertions.assertEquals(
-                //                    "Mobile phones",
-                // b.getCommodities().get(0).getCommodityType());
-                //                Assertions.assertEquals(
-                //                    ValueAddedServiceCode.CDECL,
-                //
-                // b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
-                //                Assertions.assertEquals(
-                //                    ReferenceTypeCode.FF,
-                // b.getReferences().get(0).getReferenceType());
-                //                Assertions.assertEquals(
-                //                    "22GP",
-                // b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
-                //                Assertions.assertEquals(
-                //                    "DCSA",
-                // b.getDocumentParties().get(0).getParty().getPartyName());
-                //                Assertions.assertEquals(
-                //                    "coin@gmail.com",
-                //                    b.getDocumentParties()
-                //                        .get(0)
-                //                        .getParty()
-                //                        .getPartyContactDetails()
-                //                        .get(0)
-                //                        .getEmail());
-                //                Assertions.assertEquals(
-                //                    "København",
-                // b.getDocumentParties().get(0).getParty().getAddress().getCity());
-                //                Assertions.assertEquals(
-                //                    "Javastraat",
-                // b.getDocumentParties().get(0).getDisplayedAddress().get(0));
-                //                Assertions.assertEquals(
-                //                    PartyFunction.DDS,
-                // b.getDocumentParties().get(0).getPartyFunction());
+                verify(locationRepository, times(2)).save(any());
+                verify(commodityRepository).saveAll(any(Flux.class));
+                verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
+                verify(referenceRepository).saveAll(any(Flux.class));
+                verify(requestedEquipmentRepository).saveAll(any(Flux.class));
+                verify(addressService).ensureResolvable(any());
+                verify(partyRepository).save(any());
+                verify(partyContactDetailsRepository).saveAll(any(Flux.class));
+                verify(partyIdentifyingCodeRepository).saveAll(any(Flux.class));
+                verify(documentPartyRepository).save(any());
+                verify(displayedAddressRepository).saveAll(any(Flux.class));
+                assertEquals("ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                assertEquals("Received", b.getDocumentStatus().getValue());
+                assertNotNull(b.getBookingRequestCreatedDateTime());
+                assertNotNull(b.getBookingRequestUpdatedDateTime());
+
+                // Since the response type of createBooking has changed
+                // we capture the bookingTO -> bookingResponseTO mapping argument
+                verify(bookingMapper).dtoToBookingResponseTO(argumentCaptor.capture());
+                assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
+                assertEquals("c703277f-84ca-4816-9ccf-fad8e202d3b6", argumentCaptor.getValue().getInvoicePayableAt().getId());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", argumentCaptor.getValue().getPlaceOfIssue().getId());
+                assertEquals("Mobile phones", argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
+                assertEquals(ValueAddedServiceCode.CDECL, argumentCaptor.getValue().getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                assertEquals(ReferenceTypeCode.FF, argumentCaptor.getValue().getReferences().get(0).getReferenceType());
+                assertEquals("22GP", argumentCaptor.getValue().getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
+
+                assertEquals("DCSA", argumentCaptor.getValue().getDocumentParties().get(0).getParty().getPartyName());
+                assertEquals("coin@gmail.com", argumentCaptor.getValue().getDocumentParties()
+                                        .get(0)
+                                        .getParty()
+                                        .getPartyContactDetails()
+                                        .get(0)
+                                        .getEmail());
+                assertEquals("København", argumentCaptor.getValue().getDocumentParties().get(0).getParty().getAddress().getCity());
+                assertEquals("Javastraat", argumentCaptor.getValue().getDocumentParties().get(0).getDisplayedAddress().get(0));
+                assertEquals(PartyFunction.DDS, argumentCaptor.getValue().getDocumentParties().get(0).getPartyFunction());
               })
           .verifyComplete();
     }
@@ -1048,6 +1044,10 @@ class BookingServiceImplTest {
             + " requestedEquipments, documentParties and shipmentLocations for given booking request")
     void
         testCreateBookingWithLocationAndCommoditiesAndValAddSerReqAndReferencesAndReqEquipAndDocPartiesAndShipmentLocations() {
+
+      OffsetDateTime now = OffsetDateTime.now();
+      booking.setBookingRequestDateTime(now);
+      booking.setUpdatedDateTime(now);
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
@@ -1080,64 +1080,51 @@ class BookingServiceImplTest {
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
+      ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
+
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
-                assertEquals(
-                    "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
-                //                Assertions.assertEquals("Rum Runner", b.getVesselName());
-                //                Assertions.assertEquals(
-                //                    "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                // b.getInvoicePayableAt().getId());
-                //                Assertions.assertEquals(
-                //                    "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                // b.getPlaceOfIssue().getId());
-                //                Assertions.assertEquals(
-                //                    "Mobile phones",
-                // b.getCommodities().get(0).getCommodityType());
-                //                Assertions.assertEquals(
-                //                    ValueAddedServiceCode.CDECL,
-                //
-                // b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
-                //                Assertions.assertEquals(
-                //                    ReferenceTypeCode.FF,
-                // b.getReferences().get(0).getReferenceType());
-                //                Assertions.assertEquals(
-                //                    "22GP",
-                // b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
-                //                Assertions.assertEquals(
-                //                    "DCSA",
-                // b.getDocumentParties().get(0).getParty().getPartyName());
-                //                Assertions.assertEquals(
-                //                    "coin@gmail.com",
-                //                    b.getDocumentParties()
-                //                        .get(0)
-                //                        .getParty()
-                //                        .getPartyContactDetails()
-                //                        .get(0)
-                //                        .getEmail());
-                //                Assertions.assertEquals(
-                //                    "København",
-                // b.getDocumentParties().get(0).getParty().getAddress().getCity());
-                //                Assertions.assertEquals(
-                //                    "Javastraat",
-                // b.getDocumentParties().get(0).getDisplayedAddress().get(0));
-                //                Assertions.assertEquals(
-                //                    PartyFunction.DDS,
-                // b.getDocumentParties().get(0).getPartyFunction());
-                //                Assertions.assertEquals(
-                //                    bookingTO.getShipmentLocations().get(0).getDisplayedName(),
-                //                    b.getShipmentLocations().get(0).getDisplayedName());
-                //                Assertions.assertEquals(
-                //
-                // bookingTO.getShipmentLocations().get(0).getShipmentLocationTypeCode(),
-                //
-                // b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
-                //                Assertions.assertEquals(
-                //
-                // bookingTO.getShipmentLocations().get(0).getLocation().getLocationName(),
-                //
-                // b.getShipmentLocations().get(0).getLocation().getLocationName());
+                verify(locationRepository, times(3)).save(any());
+                verify(commodityRepository).saveAll(any(Flux.class));
+                verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
+                verify(referenceRepository).saveAll(any(Flux.class));
+                verify(requestedEquipmentRepository).saveAll(any(Flux.class));
+                verify(addressService).ensureResolvable(any());
+                verify(partyRepository).save(any());
+                verify(partyContactDetailsRepository).saveAll(any(Flux.class));
+                verify(partyIdentifyingCodeRepository).saveAll(any(Flux.class));
+                verify(documentPartyRepository).save(any());
+                verify(displayedAddressRepository).saveAll(any(Flux.class));
+                assertEquals("ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
+                assertEquals("Received", b.getDocumentStatus().getValue());
+                assertNotNull(b.getBookingRequestCreatedDateTime());
+                assertNotNull(b.getBookingRequestUpdatedDateTime());
+
+                // Since the response type of createBooking has changed
+                // we capture the bookingTO -> bookingResponseTO mapping argument
+                verify(bookingMapper).dtoToBookingResponseTO(argumentCaptor.capture());
+                assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
+                assertEquals("c703277f-84ca-4816-9ccf-fad8e202d3b6", argumentCaptor.getValue().getInvoicePayableAt().getId());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", argumentCaptor.getValue().getPlaceOfIssue().getId());
+                assertEquals("Mobile phones", argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
+                assertEquals(ValueAddedServiceCode.CDECL, argumentCaptor.getValue().getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
+                assertEquals(ReferenceTypeCode.FF, argumentCaptor.getValue().getReferences().get(0).getReferenceType());
+                assertEquals("22GP", argumentCaptor.getValue().getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
+
+                assertEquals("DCSA", argumentCaptor.getValue().getDocumentParties().get(0).getParty().getPartyName());
+                assertEquals("coin@gmail.com", argumentCaptor.getValue().getDocumentParties()
+                        .get(0)
+                        .getParty()
+                        .getPartyContactDetails()
+                        .get(0)
+                        .getEmail());
+                assertEquals("København", argumentCaptor.getValue().getDocumentParties().get(0).getParty().getAddress().getCity());
+                assertEquals("Javastraat", argumentCaptor.getValue().getDocumentParties().get(0).getDisplayedAddress().get(0));
+                assertEquals(PartyFunction.DDS, argumentCaptor.getValue().getDocumentParties().get(0).getPartyFunction());
+                assertEquals(bookingTO.getShipmentLocations().get(0).getDisplayedName(), argumentCaptor.getValue().getShipmentLocations().get(0).getDisplayedName());
+                assertEquals(bookingTO.getShipmentLocations().get(0).getShipmentLocationTypeCode(), argumentCaptor.getValue().getShipmentLocations().get(0).getShipmentLocationTypeCode());
+                assertEquals(bookingTO.getShipmentLocations().get(0).getLocation().getLocationName(), argumentCaptor.getValue().getShipmentLocations().get(0).getLocation().getLocationName());
               })
           .verifyComplete();
     }

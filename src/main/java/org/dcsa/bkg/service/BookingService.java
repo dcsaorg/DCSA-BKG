@@ -21,18 +21,9 @@ public interface BookingService {
 
   Mono<ShipmentTO> getShipmentByCarrierBookingReference(String carrierBookingReference);
 
-  Mono<BookingResponseTO> cancelBookingByCarrierBookingReference(String carrierBookingReference, BookingCancellationRequestTO bookingCancellationRequestTO);
+  Mono<BookingResponseTO> cancelBookingByCarrierBookingReference(
+      String carrierBookingReference, BookingCancellationRequestTO bookingCancellationRequestTO);
 
   Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
       DocumentStatus documentStatus, Pageable pageable);
-
-//  default Mono<BookingResponseTO> toBookingResponseTO(BookingTO bookingTO) {
-//    System.out.println("Greetings from toBookingResponseTO!");
-//    BookingResponseTO response = new BookingResponseTO();
-//    response.setCarrierBookingRequestReference(bookingTO.getCarrierBookingRequestReference());
-//    response.setDocumentStatus(bookingTO.getDocumentStatus());
-//    response.setBookingRequestCreatedDateTime(bookingTO.getBookingRequestCreatedDateTime());
-//    response.setBookingRequestUpdatedDateTime(bookingTO.getBookingRequestUpdatedDateTime());
-//    return Mono.just(response);
-//  }
 }
