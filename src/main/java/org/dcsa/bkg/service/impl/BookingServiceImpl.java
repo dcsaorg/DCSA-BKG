@@ -1265,16 +1265,15 @@ public class BookingServiceImpl implements BookingService {
     return transportCallRepository
         .findById(transportCallId)
         .flatMap(
-                x -> {
-                    if (x.getVesselID() == null) {
-                        return Mono.empty();
-                    }
-                    return vesselRepository.findById(x.getVesselID());
-                })
+            x -> {
+              if (x.getVesselID() == null) {
+                return Mono.empty();
+              }
+              return vesselRepository.findById(x.getVesselID());
+            })
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
   }
-
 
   private Mono<TransportCall> fetchTransportCallById(String transportCallId) {
     if (transportCallId == null) return Mono.empty();
@@ -1284,7 +1283,7 @@ public class BookingServiceImpl implements BookingService {
   private Mono<Optional<Map<String, String>>> fetchImportExportVoyageNumberByTransportCallId(
       TransportCall transportCall) {
     if (transportCall == null) return Mono.just(Optional.empty());
-    if(transportCall.getImportVoyageID() == null) return Mono.just(Optional.empty());
+    if (transportCall.getImportVoyageID() == null) return Mono.just(Optional.empty());
 
     return voyageRepository
         .findById(transportCall.getImportVoyageID())
@@ -1307,7 +1306,6 @@ public class BookingServiceImpl implements BookingService {
                     voyages.getT2().getCarrierVoyageNumber()))
         .map(Optional::of)
         .defaultIfEmpty(Optional.empty());
-
   }
 
   private Mono<Optional<Vessel>> fetchVesselByVesselID(UUID vesselID) {
@@ -1424,29 +1422,31 @@ public class BookingServiceImpl implements BookingService {
         .flatMap(checkBookingStatus)
         .flatMap(
             booking ->
-                Mono.zip(
-                    bookingRepository
-                        .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
-                            bookingCancellationRequestTO.getDocumentStatus(),
-                            carrierBookingRequestReference,
-                            updatedDateTime)
-                        .flatMap(verifyCancellation),
-                    Mono.just(booking)
-                        .map(
-                            bkg -> {
-                              bkg.setDocumentStatus(DocumentStatus.CANC);
-                              return bkg;
-                            })))
+                bookingRepository
+                    .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
+                        bookingCancellationRequestTO.getDocumentStatus(),
+                        carrierBookingRequestReference,
+                        updatedDateTime)
+                    .flatMap(verifyCancellation)
+                    .thenReturn(booking))
+        .map(
+            booking -> {
+              booking.setDocumentStatus(DocumentStatus.CANC);
+              return booking;
+            })
         .flatMap(
-            t -> {
-              createShipmentEventFromBookingCancellation(t.getT2(), bookingCancellationRequestTO);
+            booking ->
+                createShipmentEventFromBookingCancellation(booking, bookingCancellationRequestTO)
+                    .thenReturn(booking))
+        .map(
+            booking -> {
               BookingResponseTO response = new BookingResponseTO();
-              response.setBookingRequestCreatedDateTime(t.getT2().getBookingRequestDateTime());
+              response.setBookingRequestCreatedDateTime(booking.getBookingRequestDateTime());
               response.setBookingRequestUpdatedDateTime(updatedDateTime);
-              response.setDocumentStatus(t.getT2().getDocumentStatus());
+              response.setDocumentStatus(booking.getDocumentStatus());
               response.setCarrierBookingRequestReference(
-                  t.getT2().getCarrierBookingRequestReference());
-              return Mono.just(response);
+                  booking.getCarrierBookingRequestReference());
+              return response;
             });
   }
 

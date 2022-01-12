@@ -3544,6 +3544,7 @@ class BookingServiceImplTest {
               .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
                   eq(DocumentStatus.CANC), eq(carrierBookingRequestReference), any()))
           .thenReturn(Mono.just(true));
+      when(shipmentEventService.create(any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
       Mono<BookingResponseTO> cancelBookingResponse =
           bookingServiceImpl.cancelBookingByCarrierBookingReference(
