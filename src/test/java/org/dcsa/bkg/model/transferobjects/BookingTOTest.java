@@ -306,7 +306,7 @@ class BookingTOTest {
     validBookingTO.setCommodities(null);
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "The property commodities is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "The attribute commodities is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -315,7 +315,7 @@ class BookingTOTest {
     validBookingTO.setCommodities(Collections.emptyList());
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "The property commodities is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "The attribute commodities is required.".equals(v.getMessage())));
   }
 
   @Test
