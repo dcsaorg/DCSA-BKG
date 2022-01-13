@@ -68,6 +68,11 @@ class BKGControllerTest {
     bookingTO.setExpectedDepartureDate(LocalDate.now());
     bookingTO.setInvoicePayableAt(new LocationTO());
 
+    bookingTO.setIsExportDeclarationRequired(true);
+    bookingTO.setIsPartialLoadAllowed(true);
+    bookingTO.setIsImportLicenseRequired(true);
+    bookingTO.setIsEquipmentSubstitutionAllowed(false);
+
     CommodityTO commodityTO = new CommodityTO();
     commodityTO.setCommodityType("x".repeat(20));
     commodityTO.setHsCode("x".repeat(10));
@@ -180,8 +185,7 @@ class BKGControllerTest {
             .exchange();
 
     // these values are only allowed in response and not to be set via request body
-    verify(bookingService)
-        .updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
+    verify(bookingService).updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
     // CarrierBookingRequestReference is set to null in the service implementation, as we need to be
     // able to set it via request in PUT
     assertNull(argument.getValue().getDocumentStatus());
