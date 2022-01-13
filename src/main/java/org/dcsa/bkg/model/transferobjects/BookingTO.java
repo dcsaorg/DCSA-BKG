@@ -17,7 +17,7 @@ public class BookingTO extends AbstractBookingTO {
   private LocationTO placeOfIssue;
 
   @Valid
-  @NotEmpty(message = "Commodities are required.")
+  @NotEmpty(message = "The property commodities is required.")
   private List<CommodityTO> commodities;
 
   @Valid private List<ValueAddedServiceRequestTO> valueAddedServiceRequests;
