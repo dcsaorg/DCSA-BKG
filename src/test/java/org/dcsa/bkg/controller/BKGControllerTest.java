@@ -69,6 +69,11 @@ class BKGControllerTest {
     bookingTO.setExpectedDepartureDate(LocalDate.now());
     bookingTO.setInvoicePayableAt(new LocationTO());
 
+    bookingTO.setIsExportDeclarationRequired(true);
+    bookingTO.setIsPartialLoadAllowed(true);
+    bookingTO.setIsImportLicenseRequired(true);
+    bookingTO.setIsEquipmentSubstitutionAllowed(false);
+
     CommodityTO commodityTO = new CommodityTO();
     commodityTO.setCommodityType("x".repeat(20));
     commodityTO.setHsCode("x".repeat(10));
