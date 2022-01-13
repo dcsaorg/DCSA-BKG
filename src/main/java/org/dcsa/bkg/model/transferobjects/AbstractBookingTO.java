@@ -42,18 +42,22 @@ public abstract class AbstractBookingTO {
 
   protected PaymentTerm paymentTermCode;
 
+  @NotNull(message = "IsPartialLoadAllowed is required.")
   protected Boolean isPartialLoadAllowed;
 
+  @NotNull(message = "IsExportDeclarationRequired is required.")
   protected Boolean isExportDeclarationRequired;
 
   protected String exportDeclarationReference;
 
+  @NotNull(message = "IsImportLicenseRequired is required.")
   protected Boolean isImportLicenseRequired;
 
   @Size(max = 35, message = "ImportLicenseReference has a max size of 35.")
   protected String importLicenseReference;
 
   @JsonFormat(shape = JsonFormat.Shape.STRING)
+  @NotNull(message = "SubmissionDateTime is required.")
   protected OffsetDateTime submissionDateTime;
 
   protected Boolean isAMSACIFilingRequired;
@@ -79,6 +83,7 @@ public abstract class AbstractBookingTO {
   @NotNull(message = "CommunicationChannel is required.")
   protected CommunicationChannel communicationChannel;
 
+  @NotNull(message = "IsEquipmentSubstitutionAllowed is required.")
   protected Boolean isEquipmentSubstitutionAllowed;
 
   @Size(max = 35, message = "VesselName has a max size of 35.")
