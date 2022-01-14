@@ -96,13 +96,11 @@ public class BookingServiceImpl implements BookingService {
         .map(objects -> new PageImpl<>(objects.getT1(), pageable, objects.getT2()));
   }
 
-  private ShipmentSummaryTO createShipmentSummaryTO(
-      ShipmentCustomRepository.ShipmentSummary shipmentSummary) {
+  private ShipmentSummaryTO createShipmentSummaryTO(ShipmentCustomRepository.ShipmentSummary shipmentSummary) {
     ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
     shipmentSummaryTO.setDocumentStatus(shipmentSummary.getDocumentStatus());
     shipmentSummaryTO.setCarrierBookingReference(shipmentSummary.getCarrierBookingReference());
-    shipmentSummaryTO.setCarrierBookingRequestReference(
-        shipmentSummary.getCarrierBookingRequestReference());
+    shipmentSummaryTO.setCarrierBookingRequestReference(shipmentSummary.getCarrierBookingRequestReference());
     shipmentSummaryTO.setTermsAndConditions(shipmentSummary.getTermsAndConditions());
     shipmentSummaryTO.setShipmentCreatedDateTime(shipmentSummary.getConfirmationDateTime());
     shipmentSummaryTO.setShipmentUpdatedDateTime(shipmentSummary.getUpdatedDateTime());
@@ -167,6 +165,14 @@ public class BookingServiceImpl implements BookingService {
   @Override
   @Transactional
   public Mono<BookingResponseTO> createBooking(final BookingTO bookingRequest) {
+
+    if (bookingRequest.getIsImportLicenseRequired() && bookingRequest.getImportLicenseReference() == null) {
+        return Mono.error(new CreateException("The attribute importLicenseReference cannot be null if isImportLicenseRequired is true."));
+    }
+
+    if (bookingRequest.getIsExportDeclarationRequired() && bookingRequest.getExportDeclarationReference() == null) {
+        return Mono.error(new CreateException("The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
+    }
 
     OffsetDateTime now = OffsetDateTime.now();
     Booking requestedBooking = bookingMapper.dtoToBooking(bookingRequest);
