@@ -118,7 +118,7 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.findAllByDocumentStatus(documentStatus, mappedPageRequest);
 
     return queryResponse
-        .flatMap(
+        .concatMap(
             booking ->
                 vesselRepository
                     .findByIdOrEmpty(booking.getVesselId())
