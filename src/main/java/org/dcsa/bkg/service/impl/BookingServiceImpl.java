@@ -688,10 +688,9 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   @Transactional
-  public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
-      String carrierBookingRequestReference, BookingTO bookingRequest) {
-
-    if (!carrierBookingRequestReference.equals(
+  public Mono<BookingResponseTO> updateBookingByReferenceCarrierBookingRequestReference(String carrierBookingRequestReference, BookingTO bookingRequest) {
+      OffsetDateTime updatedDateTime = OffsetDateTime.now();
+      if (!carrierBookingRequestReference.equals(
         bookingRequest.getCarrierBookingRequestReference())) {
       return Mono.error(
           new UpdateException("carrierBookingRequestReference in path does not match body."));
@@ -712,6 +711,7 @@ public class BookingServiceImpl implements BookingService {
             b -> {
               // update booking with new booking request
               Booking booking = bookingMapper.dtoToBooking(bookingRequest);
+              booking.setUpdatedDateTime(updatedDateTime);
               booking.setId(b.getId());
               booking.setDocumentStatus(b.getDocumentStatus());
               booking.setBookingRequestDateTime(b.getBookingRequestDateTime());
@@ -785,7 +785,8 @@ public class BookingServiceImpl implements BookingService {
                 () ->
                     Mono.error(
                         new UpdateException(
-                            "No booking found for given carrierBookingRequestReference."))));
+                            "No booking found for given carrierBookingRequestReference."))))
+            .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
 
   private Mono<Optional<LocationTO>> resolveLocationByTO(
