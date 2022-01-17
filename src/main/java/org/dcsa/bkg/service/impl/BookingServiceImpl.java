@@ -95,13 +95,11 @@ public class BookingServiceImpl implements BookingService {
         .map(objects -> new PageImpl<>(objects.getT1(), pageable, objects.getT2()));
   }
 
-  private ShipmentSummaryTO createShipmentSummaryTO(
-      ShipmentCustomRepository.ShipmentSummary shipmentSummary) {
+  private ShipmentSummaryTO createShipmentSummaryTO(ShipmentCustomRepository.ShipmentSummary shipmentSummary) {
     ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
     shipmentSummaryTO.setDocumentStatus(shipmentSummary.getDocumentStatus());
     shipmentSummaryTO.setCarrierBookingReference(shipmentSummary.getCarrierBookingReference());
-    shipmentSummaryTO.setCarrierBookingRequestReference(
-        shipmentSummary.getCarrierBookingRequestReference());
+    shipmentSummaryTO.setCarrierBookingRequestReference(shipmentSummary.getCarrierBookingRequestReference());
     shipmentSummaryTO.setTermsAndConditions(shipmentSummary.getTermsAndConditions());
     shipmentSummaryTO.setShipmentCreatedDateTime(shipmentSummary.getConfirmationDateTime());
     shipmentSummaryTO.setShipmentUpdatedDateTime(shipmentSummary.getUpdatedDateTime());
@@ -165,7 +163,15 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   @Transactional
-  public Mono<BookingTO> createBooking(final BookingTO bookingRequest) {
+  public Mono<BookingResponseTO> createBooking(final BookingTO bookingRequest) {
+
+    if (bookingRequest.getIsImportLicenseRequired() && bookingRequest.getImportLicenseReference() == null) {
+        return Mono.error(new CreateException("The attribute importLicenseReference cannot be null if isImportLicenseRequired is true."));
+    }
+
+    if (bookingRequest.getIsExportDeclarationRequired() && bookingRequest.getExportDeclarationReference() == null) {
+        return Mono.error(new CreateException("The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
+    }
 
     OffsetDateTime now = OffsetDateTime.now();
     Booking requestedBooking = bookingMapper.dtoToBooking(bookingRequest);
@@ -228,8 +234,7 @@ public class BookingServiceImpl implements BookingService {
               Optional<LocationTO> invoicePayableAtOpt = t.getT1().getT2();
               Optional<LocationTO> placeOfIssueOpt = t.getT1().getT3();
               Optional<List<CommodityTO>> commoditiesOpt = t.getT1().getT4();
-              Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt =
-                  t.getT1().getT5();
+              Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt = t.getT1().getT5();
               Optional<List<ReferenceTO>> referencesOpt = t.getT1().getT6();
               Optional<List<RequestedEquipmentTO>> requestedEquipmentsOpt = t.getT1().getT7();
               Optional<List<DocumentPartyTO>> documentPartiesOpt = t.getT1().getT8();
@@ -247,7 +252,8 @@ public class BookingServiceImpl implements BookingService {
 
               return Mono.just(bookingTO);
             })
-        .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO));
+        .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO))
+        .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
@@ -846,7 +852,6 @@ public class BookingServiceImpl implements BookingService {
   @Override
   public Mono<BookingTO> getBookingByCarrierBookingRequestReference(
       String carrierBookingRequestReference) {
-    BookingTO booking2TO = new BookingTO();
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
         .map(b -> Tuples.of(b.getId(), bookingMapper.bookingToDTO(b), b))

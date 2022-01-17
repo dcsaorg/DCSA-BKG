@@ -49,6 +49,7 @@ class BKGControllerTest {
   private final String BOOKING_ENDPOINT = "/bookings";
 
   private BookingTO bookingTO;
+  private BookingResponseTO bookingResponseTO;
   private BookingCancellationRequestTO bookingCancellationRequestTO;
 
   @BeforeEach
@@ -116,6 +117,12 @@ class BKGControllerTest {
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
 
+    bookingResponseTO = new BookingResponseTO();
+    bookingResponseTO.setCarrierBookingRequestReference(bookingTO.getCarrierBookingRequestReference());
+    bookingResponseTO.setDocumentStatus(bookingTO.getDocumentStatus());
+    bookingResponseTO.setBookingRequestCreatedDateTime(bookingTO.getBookingRequestCreatedDateTime());
+    bookingResponseTO.setBookingRequestUpdatedDateTime(bookingTO.getBookingRequestUpdatedDateTime());
+
     bookingCancellationRequestTO = new BookingCancellationRequestTO();
     bookingCancellationRequestTO.setDocumentStatus(DocumentStatus.CANC);
     bookingCancellationRequestTO.setReason("Booking Cancelled");
@@ -128,7 +135,7 @@ class BKGControllerTest {
     ArgumentCaptor<BookingTO> argument = ArgumentCaptor.forClass(BookingTO.class);
 
     // mock service method call
-    when(bookingService.createBooking(any())).thenReturn(Mono.just(bookingTO));
+    when(bookingService.createBooking(any())).thenReturn(Mono.just(bookingResponseTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
@@ -140,12 +147,13 @@ class BKGControllerTest {
 
     // these values are only allowed in response and not to be set via request body
     verify(bookingService).createBooking(argument.capture());
+
     // CarrierBookingRequestReference is set to null in the service implementation, as we need to be
     // able to set it via request in PUT
     assertNull(argument.getValue().getDocumentStatus());
     assertNull(argument.getValue().getBookingRequestCreatedDateTime());
 
-    checkStatus202.andThen(checkBookingResponseJsonSchema).apply(exchange);
+    checkStatus202.andThen(checkBookingResponseTOJsonSchema).apply(exchange);
   }
 
   @Test
@@ -175,6 +183,7 @@ class BKGControllerTest {
     // mock service method call
     when(bookingService.updateBookingByReferenceCarrierBookingRequestReference(any(), any()))
         .thenReturn(Mono.just(bookingTO));
+//    when(bookingService.toBookingResponseTO(any())).thenReturn(Mono.just(bookingResponseTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
@@ -191,7 +200,7 @@ class BKGControllerTest {
     assertNull(argument.getValue().getDocumentStatus());
     assertNull(argument.getValue().getBookingRequestCreatedDateTime());
 
-    checkStatus200.andThen(checkBookingResponseJsonSchema).apply(exchange);
+    checkStatus200.andThen(checkBookingResponseTOJsonSchema).apply(exchange);
   }
 
   @Test
@@ -430,5 +439,20 @@ class BKGControllerTest {
                   .jsonPath("$.documentParties[0].isToBeNotified")
                   .hasJsonPath()
                   .jsonPath("$.shipmentLocations")
+                  .hasJsonPath();
+
+  private final Function<WebTestClient.ResponseSpec, WebTestClient.BodyContentSpec>
+      checkBookingResponseTOJsonSchema =
+          (exchange) ->
+              exchange
+                  .expectBody()
+                  .consumeWith(System.out::println)
+                  .jsonPath("$.carrierBookingRequestReference")
+                  .hasJsonPath()
+                  .jsonPath("$.documentStatus")
+                  .hasJsonPath()
+                  .jsonPath("$.bookingRequestCreatedDateTime")
+                  .hasJsonPath()
+                  .jsonPath("$.bookingRequestUpdatedDateTime")
                   .hasJsonPath();
 }
