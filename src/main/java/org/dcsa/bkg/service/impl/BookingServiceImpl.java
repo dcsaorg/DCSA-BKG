@@ -1135,6 +1135,7 @@ public class BookingServiceImpl implements BookingService {
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
               requestedEquipmentTO.setRequestedEquipmentSizetype(
                   re.getRequestedEquipmentSizetype());
+              requestedEquipmentTO.setShipperOwned(re.getIsShipperOwned());
               return requestedEquipmentTO;
             })
         .collectList()
