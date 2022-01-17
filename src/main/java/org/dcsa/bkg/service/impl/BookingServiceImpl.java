@@ -95,11 +95,13 @@ public class BookingServiceImpl implements BookingService {
         .map(objects -> new PageImpl<>(objects.getT1(), pageable, objects.getT2()));
   }
 
-  private ShipmentSummaryTO createShipmentSummaryTO(ShipmentCustomRepository.ShipmentSummary shipmentSummary) {
+  private ShipmentSummaryTO createShipmentSummaryTO(
+      ShipmentCustomRepository.ShipmentSummary shipmentSummary) {
     ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
     shipmentSummaryTO.setDocumentStatus(shipmentSummary.getDocumentStatus());
     shipmentSummaryTO.setCarrierBookingReference(shipmentSummary.getCarrierBookingReference());
-    shipmentSummaryTO.setCarrierBookingRequestReference(shipmentSummary.getCarrierBookingRequestReference());
+    shipmentSummaryTO.setCarrierBookingRequestReference(
+        shipmentSummary.getCarrierBookingRequestReference());
     shipmentSummaryTO.setTermsAndConditions(shipmentSummary.getTermsAndConditions());
     shipmentSummaryTO.setShipmentCreatedDateTime(shipmentSummary.getConfirmationDateTime());
     shipmentSummaryTO.setShipmentUpdatedDateTime(shipmentSummary.getUpdatedDateTime());
@@ -165,12 +167,18 @@ public class BookingServiceImpl implements BookingService {
   @Transactional
   public Mono<BookingResponseTO> createBooking(final BookingTO bookingRequest) {
 
-    if (bookingRequest.getIsImportLicenseRequired() && bookingRequest.getImportLicenseReference() == null) {
-        return Mono.error(new CreateException("The attribute importLicenseReference cannot be null if isImportLicenseRequired is true."));
+    if (bookingRequest.getIsImportLicenseRequired()
+        && bookingRequest.getImportLicenseReference() == null) {
+      return Mono.error(
+          new CreateException(
+              "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true."));
     }
 
-    if (bookingRequest.getIsExportDeclarationRequired() && bookingRequest.getExportDeclarationReference() == null) {
-        return Mono.error(new CreateException("The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
+    if (bookingRequest.getIsExportDeclarationRequired()
+        && bookingRequest.getExportDeclarationReference() == null) {
+      return Mono.error(
+          new CreateException(
+              "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
     }
 
     OffsetDateTime now = OffsetDateTime.now();
@@ -234,7 +242,8 @@ public class BookingServiceImpl implements BookingService {
               Optional<LocationTO> invoicePayableAtOpt = t.getT1().getT2();
               Optional<LocationTO> placeOfIssueOpt = t.getT1().getT3();
               Optional<List<CommodityTO>> commoditiesOpt = t.getT1().getT4();
-              Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt = t.getT1().getT5();
+              Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt =
+                  t.getT1().getT5();
               Optional<List<ReferenceTO>> referencesOpt = t.getT1().getT6();
               Optional<List<RequestedEquipmentTO>> requestedEquipmentsOpt = t.getT1().getT7();
               Optional<List<DocumentPartyTO>> documentPartiesOpt = t.getT1().getT8();
@@ -704,6 +713,9 @@ public class BookingServiceImpl implements BookingService {
               // update booking with new booking request
               Booking booking = bookingMapper.dtoToBooking(bookingRequest);
               booking.setId(b.getId());
+              booking.setDocumentStatus(b.getDocumentStatus());
+              booking.setBookingRequestDateTime(b.getBookingRequestDateTime());
+              booking.setUpdatedDateTime(OffsetDateTime.now());
               return bookingRepository.save(booking).thenReturn(b);
             })
         .flatMap(
@@ -1123,6 +1135,7 @@ public class BookingServiceImpl implements BookingService {
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
               requestedEquipmentTO.setRequestedEquipmentSizetype(
                   re.getRequestedEquipmentSizetype());
+              requestedEquipmentTO.setShipperOwned(re.getIsShipperOwned());
               return requestedEquipmentTO;
             })
         .collectList()
