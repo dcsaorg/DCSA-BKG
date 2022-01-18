@@ -711,7 +711,6 @@ public class BookingServiceImpl implements BookingService {
             b -> {
               // update booking with new booking request
               Booking booking = bookingMapper.dtoToBooking(bookingRequest);
-              booking.setUpdatedDateTime(updatedDateTime);
               booking.setId(b.getId());
               booking.setDocumentStatus(b.getDocumentStatus());
               booking.setBookingRequestDateTime(b.getBookingRequestDateTime());
