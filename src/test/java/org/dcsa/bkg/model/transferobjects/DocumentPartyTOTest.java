@@ -65,6 +65,25 @@ class DocumentPartyTOTest {
 
   @Test
   @DisplayName(
+      "DocumentPartyTO should throw error if partyFunction is set to a value that is not in its enum subset.")
+  void testToVerifyNotAllowedEnumsInPartyFunctionIsInvalid() {
+
+    for (String str : new String[] {"AG", "VSL", "ATH", "PLT", "TR", "TWG", "BUK", "LSH"}) {
+      PartyFunction pf = PartyFunction.valueOf(str);
+      validDocumentPartyTO.setPartyFunction(pf);
+      Set<ConstraintViolation<DocumentPartyTO>> violations =
+          validator.validate(validDocumentPartyTO);
+      Assertions.assertTrue(
+          violations.stream()
+              .anyMatch(
+                  v ->
+                      "must be any of [OS, CN, COW, COX, N1, N2, NI, SFA, DDR, DDS, CA, HE, SCO, BA]"
+                          .equals(v.getMessage())));
+    }
+  }
+
+  @Test
+  @DisplayName(
       "DocumentPartyTO should throw error if displayedAddress length exceeds max size of 250.")
   void testToVerifyDisplayedAddressIsNotAllowedToExceed250() {
     Exception exception =
