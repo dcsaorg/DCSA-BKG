@@ -689,12 +689,24 @@ public class BookingServiceImpl implements BookingService {
   @Override
   @Transactional
   public Mono<BookingResponseTO> updateBookingByReferenceCarrierBookingRequestReference(String carrierBookingRequestReference, BookingTO bookingRequest) {
-      OffsetDateTime updatedDateTime = OffsetDateTime.now();
       if (!carrierBookingRequestReference.equals(
         bookingRequest.getCarrierBookingRequestReference())) {
       return Mono.error(
           new UpdateException("carrierBookingRequestReference in path does not match body."));
     }
+      if (bookingRequest.getIsImportLicenseRequired()
+              && bookingRequest.getImportLicenseReference() == null) {
+          return Mono.error(
+                  new CreateException(
+                          "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true."));
+      }
+
+      if (bookingRequest.getIsExportDeclarationRequired()
+              && bookingRequest.getExportDeclarationReference() == null) {
+          return Mono.error(
+                  new CreateException(
+                          "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
+      }
 
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
