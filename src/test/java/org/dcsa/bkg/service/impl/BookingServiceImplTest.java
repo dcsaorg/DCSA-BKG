@@ -3778,7 +3778,7 @@ class BookingServiceImplTest {
   class BookingCancellationTests {
 
     @Test
-    @DisplayName("Cancel of a booking with document status PENC should result in an error")
+    @DisplayName("Cancel of a booking with document status COMP should result in an error")
     void cancelBookingWithInvalidDocumentStatusShouldResultToError() {
 
       String carrierBookingRequestReference = UUID.randomUUID().toString();
@@ -3798,7 +3798,7 @@ class BookingServiceImplTest {
               throwable -> {
                 Assertions.assertTrue(throwable instanceof UpdateException);
                 assertEquals(
-                    "Cannot Cancel Booking that is not in status RECE, PENU or CONF",
+                    "Cannot Cancel Booking that is not in status RECE, PENU, CONF or PENC",
                     throwable.getMessage());
               })
           .verify();
