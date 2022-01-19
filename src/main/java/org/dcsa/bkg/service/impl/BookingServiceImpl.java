@@ -181,6 +181,10 @@ public class BookingServiceImpl implements BookingService {
               "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
     }
 
+    if ((bookingRequest.getVesselIMONumber() == null || bookingRequest.getExportVoyageNumber() == null) && bookingRequest.getExpectedDepartureDate() == null) {
+        return Mono.error(new CreateException("The attribute expectedDepartureDate cannot be null if vesselIMONumber/exportVoyageNumber is null."));
+    }
+
     OffsetDateTime now = OffsetDateTime.now();
     Booking requestedBooking = bookingMapper.dtoToBooking(bookingRequest);
     // CarrierBookingRequestReference is not allowed to be set by request
@@ -695,6 +699,10 @@ public class BookingServiceImpl implements BookingService {
         bookingRequest.getCarrierBookingRequestReference())) {
       return Mono.error(
           new UpdateException("carrierBookingRequestReference in path does not match body."));
+    }
+
+    if ((bookingRequest.getVesselIMONumber() == null || bookingRequest.getExportVoyageNumber() == null) && bookingRequest.getExpectedDepartureDate() == null) {
+      return Mono.error(new CreateException("The attribute expectedDepartureDate cannot be null if vesselIMONumber/exportVoyageNumber is null."));
     }
 
     return bookingRepository
