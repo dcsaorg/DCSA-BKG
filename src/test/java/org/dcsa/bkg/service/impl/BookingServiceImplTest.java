@@ -350,6 +350,8 @@ class BookingServiceImplTest {
     void init() {
       bookingTO = new BookingTO();
 
+      bookingTO.setExpectedDepartureDate(LocalDate.now());
+
       bookingTO.setIsImportLicenseRequired(true);
       bookingTO.setImportLicenseReference("import_license_reference");
 
@@ -430,10 +432,12 @@ class BookingServiceImplTest {
       bookingResponseTO = new BookingResponseTO();
       bookingResponseTO.setCarrierBookingRequestReference(
           bookingTO.getCarrierBookingRequestReference());
+
+      bookingTO.setExportVoyageNumber("nothin' from nothin' leaves nothin'!");
     }
 
     @Test
-    @DisplayName("Method should save and return shallow booking for given booking request")
+    @DisplayName("Method should throw an exception when isImportLicenseRequired is true and importLicenseReference null")
     void testCreateBookingWhenIsImportLicenseRequiredIsTrueAndImportLicenseReferenceIsNull() {
 
       bookingTO.setIsImportLicenseRequired(true);
@@ -450,7 +454,25 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Method should save and return shallow booking for given booking request")
+    @DisplayName("Method should throw an exception when isExportDeclarationRequired is true and exportDeclarationReference is null")
+    void testCreateBookingWhenExpectedDepartureDateCannotBeNullIfVesselIMONumberOrExportVoyageNumberAreNull() {
+
+      bookingTO.setExportVoyageNumber(null);
+      bookingTO.setVesselIMONumber(null);
+      bookingTO.setExpectedDepartureDate(null);
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+              .expectErrorSatisfies(
+                      throwable -> {
+                        Assertions.assertTrue(throwable instanceof CreateException);
+                        assertEquals(
+                                "The attribute expectedDepartureDate cannot be null if vesselIMONumber/exportVoyageNumber is null.",
+                                throwable.getMessage());
+                      })
+              .verify();
+    }
+
+    @Test
+    @DisplayName("Method should throw an exception when isExportDeclarationRequired is true and exportDeclarationReference is null")
     void testCreateBookingWhenIsExportDeclarationRequiredIsTrueAndExportDeclarationReferenceIsNull() {
       bookingTO.setIsExportDeclarationRequired(true);
       bookingTO.setExportDeclarationReference(null);
@@ -1395,6 +1417,8 @@ class BookingServiceImplTest {
     @BeforeEach
     void init() {
       bookingTO = new BookingTO();
+
+      bookingTO.setExpectedDepartureDate(LocalDate.now());
       // carrierBookingRequestReference needs to be set for PUT request
       bookingTO.setCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11");
 

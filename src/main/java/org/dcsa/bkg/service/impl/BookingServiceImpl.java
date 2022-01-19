@@ -181,7 +181,7 @@ public class BookingServiceImpl implements BookingService {
               "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
     }
 
-    if ((bookingRequest.getVesselIMONumber() == null || bookingRequest.getExportVoyageNumber() == null) && bookingRequest.getExpectedDepartureDate() == null) {
+    if (bookingRequest.getVesselIMONumber() == null && bookingRequest.getExportVoyageNumber() == null && bookingRequest.getExpectedDepartureDate() == null) {
         return Mono.error(new CreateException("The attribute expectedDepartureDate cannot be null if vesselIMONumber/exportVoyageNumber is null."));
     }
 
