@@ -1436,6 +1436,11 @@ class BookingServiceImplTest {
       shipmentLocationTO.setLocation(locationMapper.locationToDTO(location1));
 
       bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
+
+      bookingTO.setIsImportLicenseRequired(true);
+      bookingTO.setIsExportDeclarationRequired(false);
+      bookingTO.setImportLicenseReference("ABC123123");
+
     }
 
     @Test
