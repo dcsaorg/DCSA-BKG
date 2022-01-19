@@ -1562,6 +1562,24 @@ class BookingServiceImplTest {
     }
 
     @Test
+    @DisplayName("Method should throw an exception when isExportDeclarationRequired is true and exportDeclarationReference is null")
+    void testUpdateBookingWhenExpectedDepartureDateCannotBeNullIfVesselIMONumberOrExportVoyageNumberAreNull() {
+
+      bookingTO.setExportVoyageNumber(null);
+      bookingTO.setVesselIMONumber(null);
+      bookingTO.setExpectedDepartureDate(null);
+      StepVerifier.create(bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof CreateException);
+                assertEquals(
+                    "The attribute expectedDepartureDate cannot be null if vesselIMONumber/exportVoyageNumber is null.",
+                    throwable.getMessage());
+              })
+          .verify();
+    }
+
+    @Test
     @DisplayName(
         "Method should update and return shallow booking with existing vessel (IMO exists and name matches) "
             + "for given booking request")
