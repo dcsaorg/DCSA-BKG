@@ -4,6 +4,7 @@ import lombok.Data;
 import org.dcsa.core.events.model.enums.PartyFunction;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.exception.InvalidParameterException;
+import org.dcsa.core.validator.EnumSubset;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -16,6 +17,7 @@ public class DocumentPartyTO {
   @NotNull(message = "Party is required.")
   private PartyTO party;
 
+  @EnumSubset(anyOf = {"OS", "CN", "COW", "COX", "N1", "N2", "NI", "SFA", "DDR", "DDS", "CA", "HE", "SCO", "BA"})
   @NotNull(message = "PartyFunction is required.")
   private PartyFunction partyFunction;
 
