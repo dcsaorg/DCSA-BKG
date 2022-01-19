@@ -70,6 +70,12 @@ public abstract class AbstractBookingTO {
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   protected LocalDate expectedDepartureDate;
 
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  protected LocalDate expectedArrivalDateStart;
+
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  protected LocalDate expectedArrivalDateEnd;
+
   protected TransportDocumentTypeCode transportDocumentTypeCode;
 
   @Size(max = 20, message = "The attribute transportDocumentReference has a max size of 20.")

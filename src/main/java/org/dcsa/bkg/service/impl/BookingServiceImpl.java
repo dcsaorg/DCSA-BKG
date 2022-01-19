@@ -181,6 +181,13 @@ public class BookingServiceImpl implements BookingService {
               "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
     }
 
+    if (bookingRequest.getExpectedArrivalDateStart() != null && bookingRequest.getExpectedArrivalDateEnd() != null
+        && bookingRequest.getExpectedArrivalDateStart().isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
+      return Mono.error(
+          new CreateException(
+              "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateEnd."));
+    }
+
     OffsetDateTime now = OffsetDateTime.now();
     Booking requestedBooking = bookingMapper.dtoToBooking(bookingRequest);
     // CarrierBookingRequestReference is not allowed to be set by request
