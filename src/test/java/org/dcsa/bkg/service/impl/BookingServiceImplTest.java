@@ -350,7 +350,9 @@ class BookingServiceImplTest {
     void init() {
       bookingTO = new BookingTO();
 
-      bookingTO.setExpectedDepartureDate(LocalDate.now());
+      bookingTO.setExpectedArrivalDateStart(LocalDate.now());
+      bookingTO.setExpectedArrivalDateEnd(LocalDate.now().plusDays(1));
+      bookingTO.setExpectedDepartureDate(LocalDate.now().plusDays(10));
 
       bookingTO.setIsImportLicenseRequired(true);
       bookingTO.setImportLicenseReference("import_license_reference");
@@ -454,7 +456,25 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Method should throw an exception when isExportDeclarationRequired is true and exportDeclarationReference is null")
+    @DisplayName("Method should throw an exception when expectedArrivalDateStart, expectedArrivalDateEnd, and expectedDepartureDate are null")
+    void testCreateBookingExpectedDepartureDateCannotBeNullIfExpectedArrivalDateStartAndExpectedArrivalDateEndAreNull() {
+
+      bookingTO.setExpectedDepartureDate(null);
+      bookingTO.setExpectedArrivalDateStart(null);
+      bookingTO.setExpectedArrivalDateEnd(null);
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+              .expectErrorSatisfies(
+                      throwable -> {
+                        Assertions.assertTrue(throwable instanceof CreateException);
+                        assertEquals(
+                                "The attribute expectedDepartureDate cannot be null if both expectedArrivalDateStart and expectedArrivalDateEnd are null.",
+                                throwable.getMessage());
+                      })
+              .verify();
+    }
+
+    @Test
+    @DisplayName("Method should throw an exception when vesselIMONumber, exportVoyageNumber, and expectedDepartureDate are null")
     void testCreateBookingWhenExpectedDepartureDateCannotBeNullIfVesselIMONumberOrExportVoyageNumberAreNull() {
 
       bookingTO.setExportVoyageNumber(null);
@@ -1418,7 +1438,9 @@ class BookingServiceImplTest {
     void init() {
       bookingTO = new BookingTO();
 
-      bookingTO.setExpectedDepartureDate(LocalDate.now());
+      bookingTO.setExpectedArrivalDateStart(LocalDate.now());
+      bookingTO.setExpectedArrivalDateEnd(LocalDate.now().plusDays(1));
+      bookingTO.setExpectedDepartureDate(LocalDate.now().plusDays(10));
       // carrierBookingRequestReference needs to be set for PUT request
       bookingTO.setCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11");
 
@@ -1562,8 +1584,26 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Method should throw an exception when isExportDeclarationRequired is true and exportDeclarationReference is null")
-    void testUpdateBookingWhenExpectedDepartureDateCannotBeNullIfVesselIMONumberOrExportVoyageNumberAreNull() {
+    @DisplayName("Method should throw an exception when expectedArrivalDateStart, expectedArrivalDateEnd, and expectedDepartureDate are null")
+    void testUpdateBookingExpectedDepartureDateCannotBeNullIfExpectedArrivalDateStartAndExpectedArrivalDateEndAreNull() {
+
+      bookingTO.setExpectedDepartureDate(null);
+      bookingTO.setExpectedArrivalDateStart(null);
+      bookingTO.setExpectedArrivalDateEnd(null);
+      StepVerifier.create(bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof CreateException);
+                assertEquals(
+                        "The attribute expectedDepartureDate cannot be null if both expectedArrivalDateStart and expectedArrivalDateEnd are null.",
+                    throwable.getMessage());
+              })
+          .verify();
+    }
+
+    @Test
+    @DisplayName("Method should throw an exception when vesselIMONumber, exportVoyageNumber, and expectedDepartureDate are null")
+    void testUpdateBookingExpectedDepartureDateCannotBeNullIfVesselIMONumberOrExportVoyageNumberAreNull() {
 
       bookingTO.setExportVoyageNumber(null);
       bookingTO.setVesselIMONumber(null);

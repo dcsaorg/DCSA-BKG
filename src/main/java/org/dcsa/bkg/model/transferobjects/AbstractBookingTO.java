@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.validator.ValidVesselIMONumber;
+import org.springframework.data.relational.core.mapping.Column;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -69,6 +70,12 @@ public abstract class AbstractBookingTO {
 
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   protected LocalDate expectedDepartureDate;
+
+  @Column("expected_arrival_date_start")
+  private LocalDate expectedArrivalDateStart;
+
+  @Column("expected_arrival_date_end")
+  private LocalDate expectedArrivalDateEnd;
 
   protected TransportDocumentTypeCode transportDocumentTypeCode;
 
