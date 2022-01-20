@@ -472,7 +472,7 @@ class BookingServiceImplTest {
                       throwable -> {
                         Assertions.assertTrue(throwable instanceof CreateException);
                         assertEquals(
-                                "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateEnd.",
+                                "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart.",
                                 throwable.getMessage());
                       })
               .verify();

@@ -185,7 +185,7 @@ public class BookingServiceImpl implements BookingService {
         && bookingRequest.getExpectedArrivalDateStart().isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
       return Mono.error(
           new CreateException(
-              "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateEnd."));
+              "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart."));
     }
 
     OffsetDateTime now = OffsetDateTime.now();
