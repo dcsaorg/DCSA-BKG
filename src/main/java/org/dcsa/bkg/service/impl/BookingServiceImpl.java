@@ -181,12 +181,14 @@ public class BookingServiceImpl implements BookingService {
               "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
     }
 
-    if (bookingRequest.getExpectedArrivalDateStart() == null && bookingRequest.getExpectedArrivalDateStart() == null && bookingRequest.getExpectedDepartureDate() == null) {
-        return Mono.error(new CreateException("The attribute expectedDepartureDate cannot be null if both expectedArrivalDateStart and expectedArrivalDateEnd are null."));
-    }
-
-    if (bookingRequest.getVesselIMONumber() == null && bookingRequest.getExportVoyageNumber() == null && bookingRequest.getExpectedDepartureDate() == null) {
-        return Mono.error(new CreateException("The attribute expectedDepartureDate cannot be null if vesselIMONumber/exportVoyageNumber is null."));
+    if (bookingRequest.getExpectedArrivalDateStart() == null
+        && bookingRequest.getExpectedArrivalDateStart() == null
+        && bookingRequest.getExpectedDepartureDate() == null
+        && bookingRequest.getVesselIMONumber() == null
+        && bookingRequest.getExportVoyageNumber() == null) {
+      return Mono.error(
+          new CreateException(
+              "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty."));
     }
 
     OffsetDateTime now = OffsetDateTime.now();
@@ -699,16 +701,20 @@ public class BookingServiceImpl implements BookingService {
   public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
       String carrierBookingRequestReference, BookingTO bookingRequest) {
 
-    if (!carrierBookingRequestReference.equals(bookingRequest.getCarrierBookingRequestReference())) {
-      return Mono.error(new UpdateException("carrierBookingRequestReference in path does not match body."));
+    if (!carrierBookingRequestReference.equals(
+        bookingRequest.getCarrierBookingRequestReference())) {
+      return Mono.error(
+          new UpdateException("carrierBookingRequestReference in path does not match body."));
     }
 
-    if (bookingRequest.getExpectedArrivalDateStart() == null && bookingRequest.getExpectedArrivalDateStart() == null && bookingRequest.getExpectedDepartureDate() == null) {
-      return Mono.error(new CreateException("The attribute expectedDepartureDate cannot be null if both expectedArrivalDateStart and expectedArrivalDateEnd are null."));
-    }
-
-    if (bookingRequest.getVesselIMONumber() == null && bookingRequest.getExportVoyageNumber() == null && bookingRequest.getExpectedDepartureDate() == null) {
-      return Mono.error(new CreateException("The attribute expectedDepartureDate cannot be null if vesselIMONumber/exportVoyageNumber is null."));
+    if (bookingRequest.getExpectedArrivalDateStart() == null
+        && bookingRequest.getExpectedArrivalDateStart() == null
+        && bookingRequest.getExpectedDepartureDate() == null
+        && bookingRequest.getVesselIMONumber() == null
+        && bookingRequest.getExportVoyageNumber() == null) {
+      return Mono.error(
+          new CreateException(
+              "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty."));
     }
 
     return bookingRepository

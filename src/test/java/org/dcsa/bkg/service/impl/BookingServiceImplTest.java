@@ -456,9 +456,11 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Method should throw an exception when expectedArrivalDateStart, expectedArrivalDateEnd, and expectedDepartureDate are null")
-    void testCreateBookingExpectedDepartureDateCannotBeNullIfExpectedArrivalDateStartAndExpectedArrivalDateEndAreNull() {
+    @DisplayName("Method should throw an exception when vesselIMONumber, exportVoyageNumber, expectedArrivalDateStart, expectedArrivalDateEnd, and expectedDepartureDate are null")
+    void testCreateBookingExpectedDepartureDateCannotBeNullIfVesselIMONumberAndExportVoyageNumberExpectedArrivalDateStartAndExpectedArrivalDateEndAreNull() {
 
+      bookingTO.setVesselIMONumber(null);
+      bookingTO.setExportVoyageNumber(null);
       bookingTO.setExpectedDepartureDate(null);
       bookingTO.setExpectedArrivalDateStart(null);
       bookingTO.setExpectedArrivalDateEnd(null);
@@ -467,25 +469,7 @@ class BookingServiceImplTest {
                       throwable -> {
                         Assertions.assertTrue(throwable instanceof CreateException);
                         assertEquals(
-                                "The attribute expectedDepartureDate cannot be null if both expectedArrivalDateStart and expectedArrivalDateEnd are null.",
-                                throwable.getMessage());
-                      })
-              .verify();
-    }
-
-    @Test
-    @DisplayName("Method should throw an exception when vesselIMONumber, exportVoyageNumber, and expectedDepartureDate are null")
-    void testCreateBookingWhenExpectedDepartureDateCannotBeNullIfVesselIMONumberOrExportVoyageNumberAreNull() {
-
-      bookingTO.setExportVoyageNumber(null);
-      bookingTO.setVesselIMONumber(null);
-      bookingTO.setExpectedDepartureDate(null);
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
-              .expectErrorSatisfies(
-                      throwable -> {
-                        Assertions.assertTrue(throwable instanceof CreateException);
-                        assertEquals(
-                                "The attribute expectedDepartureDate cannot be null if vesselIMONumber/exportVoyageNumber is null.",
+                                "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
                                 throwable.getMessage());
                       })
               .verify();
@@ -1584,9 +1568,11 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Method should throw an exception when expectedArrivalDateStart, expectedArrivalDateEnd, and expectedDepartureDate are null")
-    void testUpdateBookingExpectedDepartureDateCannotBeNullIfExpectedArrivalDateStartAndExpectedArrivalDateEndAreNull() {
+    @DisplayName("Method should throw an exception when expectedArrivalDateStart, expectedArrivalDateEnd, vesselIMONumber, exportVoyageNumber, and expectedDepartureDate are null")
+    void testUpdateBookingExpectedDepartureDateCannotBeNullIfVesselIMONumberAndExportVoyageNumberAndExpectedArrivalDateStartAndExpectedArrivalDateEndAreNull() {
 
+      bookingTO.setExportVoyageNumber(null);
+      bookingTO.setVesselIMONumber(null);
       bookingTO.setExpectedDepartureDate(null);
       bookingTO.setExpectedArrivalDateStart(null);
       bookingTO.setExpectedArrivalDateEnd(null);
@@ -1595,25 +1581,7 @@ class BookingServiceImplTest {
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
                 assertEquals(
-                        "The attribute expectedDepartureDate cannot be null if both expectedArrivalDateStart and expectedArrivalDateEnd are null.",
-                    throwable.getMessage());
-              })
-          .verify();
-    }
-
-    @Test
-    @DisplayName("Method should throw an exception when vesselIMONumber, exportVoyageNumber, and expectedDepartureDate are null")
-    void testUpdateBookingExpectedDepartureDateCannotBeNullIfVesselIMONumberOrExportVoyageNumberAreNull() {
-
-      bookingTO.setExportVoyageNumber(null);
-      bookingTO.setVesselIMONumber(null);
-      bookingTO.setExpectedDepartureDate(null);
-      StepVerifier.create(bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
-          .expectErrorSatisfies(
-              throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
-                assertEquals(
-                    "The attribute expectedDepartureDate cannot be null if vesselIMONumber/exportVoyageNumber is null.",
+                        "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
                     throwable.getMessage());
               })
           .verify();
