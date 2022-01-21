@@ -717,12 +717,6 @@ public class BookingServiceImpl implements BookingService {
           new UpdateException("carrierBookingRequestReference in path does not match body."));
     }
 
-    if (bookingRequest.getExpectedDepartureDate() == null
-        && bookingRequest.getVesselIMONumber() == null
-        && bookingRequest.getExportVoyageNumber() == null) {
-      // error time
-    }
-
     if (bookingRequest.getExpectedArrivalDateStart() != null
         && bookingRequest.getExpectedArrivalDateEnd() != null
         && bookingRequest
