@@ -689,8 +689,7 @@ public class BookingServiceImpl implements BookingService {
   @Override
   @Transactional
   public Mono<BookingResponseTO> updateBookingByReferenceCarrierBookingRequestReference(String carrierBookingRequestReference, BookingTO bookingRequest) {
-      if (!carrierBookingRequestReference.equals(
-        bookingRequest.getCarrierBookingRequestReference())) {
+      if (!carrierBookingRequestReference.equals(bookingRequest.getCarrierBookingRequestReference())) {
       return Mono.error(
           new UpdateException("carrierBookingRequestReference in path does not match body."));
     }
@@ -1533,18 +1532,12 @@ public class BookingServiceImpl implements BookingService {
 
     private final Function<Booking, Mono<Booking>> checkUpdateBookingStatuses =
             booking -> {
-                if (booking.getDocumentStatus() == DocumentStatus.CANC) {
-                    return Mono.error(
-                            new UpdateException(
-                                    "Booking in cancelled state, update operation cannot be performed."));
-                }
-                EnumSet<DocumentStatus> allowedDocumentStatuses =
-                        EnumSet.of(DocumentStatus.RECE ,DocumentStatus.PENU, DocumentStatus.CONF, DocumentStatus.PENC);
+                EnumSet<DocumentStatus> allowedDocumentStatuses = EnumSet.of(DocumentStatus.RECE ,DocumentStatus.PENU);
                 if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
                     return Mono.just(booking);
                 } else
                     return Mono.error(
                             new UpdateException(
-                                    "Cannot Update Booking that is not in status RECE, PENU, CONF or PENC"));
+                                    "Cannot Update Booking that is not in status RECE or PENU"));
             };
 }
