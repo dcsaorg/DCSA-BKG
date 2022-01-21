@@ -191,6 +191,13 @@ public class BookingServiceImpl implements BookingService {
               "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty."));
     }
 
+    if (bookingRequest.getExpectedArrivalDateStart() != null && bookingRequest.getExpectedArrivalDateEnd() != null
+        && bookingRequest.getExpectedArrivalDateStart().isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
+      return Mono.error(
+          new CreateException(
+              "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart."));
+    }
+
     OffsetDateTime now = OffsetDateTime.now();
     Booking requestedBooking = bookingMapper.dtoToBooking(bookingRequest);
     // CarrierBookingRequestReference is not allowed to be set by request

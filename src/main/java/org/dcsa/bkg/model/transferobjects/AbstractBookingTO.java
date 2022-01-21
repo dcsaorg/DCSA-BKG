@@ -71,11 +71,11 @@ public abstract class AbstractBookingTO {
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   protected LocalDate expectedDepartureDate;
 
-  @Column("expected_arrival_date_start")
-  private LocalDate expectedArrivalDateStart;
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  protected LocalDate expectedArrivalDateStart;
 
-  @Column("expected_arrival_date_end")
-  private LocalDate expectedArrivalDateEnd;
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  protected LocalDate expectedArrivalDateEnd;
 
   protected TransportDocumentTypeCode transportDocumentTypeCode;
 

@@ -13,7 +13,9 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 @DisplayName("Tests for DocumentPartyTO")
@@ -61,6 +63,19 @@ class DocumentPartyTOTest {
     Set<ConstraintViolation<DocumentPartyTO>> violations = validator.validate(validDocumentPartyTO);
     Assertions.assertTrue(
         violations.stream().anyMatch(v -> "PartyFunction is required.".equals(v.getMessage())));
+  }
+
+  @Test
+  @DisplayName("DocumentPartyTO should throw error if partyFunction is set to a value that is not in its enum subset.")
+  void testToVerifyNotAllowedEnumsInPartyFunctionIsInvalid() {
+    List<String> documentPartySubset = Arrays.asList("OS", "CN", "COW", "COX", "N1", "N2", "NI", "SFA", "DDR", "DDS", "CA", "HE", "SCO", "BA");
+    for (PartyFunction pf : PartyFunction.values()) {
+      if (documentPartySubset.contains(pf.name())) continue;
+      validDocumentPartyTO.setPartyFunction(pf);
+      for (ConstraintViolation<DocumentPartyTO> violation : validator.validate(validDocumentPartyTO)) {
+        Assertions.assertEquals(violation.getMessage(), "must be any of [" + String.join(", " , documentPartySubset) +"]");
+      }
+    }
   }
 
   @Test

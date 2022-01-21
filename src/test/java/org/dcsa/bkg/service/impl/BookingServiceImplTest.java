@@ -15,22 +15,19 @@ import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
-import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -486,6 +483,22 @@ class BookingServiceImplTest {
                         Assertions.assertTrue(throwable instanceof CreateException);
                         assertEquals(
                                 "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true.",
+                                throwable.getMessage());
+                      })
+              .verify();
+    }
+
+    @Test
+    @DisplayName("Method should validate expected arrival dates")
+    void testCreateBookingWhenExpectedArrivalDatesAreInvalid() {
+      bookingTO.setExpectedArrivalDateStart(LocalDate.now());
+      bookingTO.setExpectedArrivalDateEnd(LocalDate.now().minus(1, ChronoUnit.DAYS));
+      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+              .expectErrorSatisfies(
+                      throwable -> {
+                        Assertions.assertTrue(throwable instanceof CreateException);
+                        assertEquals(
+                                "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart.",
                                 throwable.getMessage());
                       })
               .verify();
