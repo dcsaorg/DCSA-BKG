@@ -182,7 +182,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     if (bookingRequest.getExpectedArrivalDateStart() == null
-        && bookingRequest.getExpectedArrivalDateStart() == null
+        && bookingRequest.getExpectedArrivalDateEnd() == null
         && bookingRequest.getExpectedDepartureDate() == null
         && bookingRequest.getVesselIMONumber() == null
         && bookingRequest.getExportVoyageNumber() == null) {
@@ -191,8 +191,11 @@ public class BookingServiceImpl implements BookingService {
               "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty."));
     }
 
-    if (bookingRequest.getExpectedArrivalDateStart() != null && bookingRequest.getExpectedArrivalDateEnd() != null
-        && bookingRequest.getExpectedArrivalDateStart().isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
+    if (bookingRequest.getExpectedArrivalDateStart() != null
+        && bookingRequest.getExpectedArrivalDateEnd() != null
+        && bookingRequest
+            .getExpectedArrivalDateStart()
+            .isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
       return Mono.error(
           new CreateException(
               "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart."));
@@ -714,7 +717,23 @@ public class BookingServiceImpl implements BookingService {
           new UpdateException("carrierBookingRequestReference in path does not match body."));
     }
 
-    if (bookingRequest.getExpectedArrivalDateStart() == null
+    if (bookingRequest.getExpectedDepartureDate() == null
+        && bookingRequest.getVesselIMONumber() == null
+        && bookingRequest.getExportVoyageNumber() == null) {
+      // error time
+    }
+
+    if (bookingRequest.getExpectedArrivalDateStart() != null
+        && bookingRequest.getExpectedArrivalDateEnd() != null
+        && bookingRequest
+            .getExpectedArrivalDateStart()
+            .isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
+      return Mono.error(
+          new CreateException(
+              "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart."));
+    }
+
+    if (bookingRequest.getExpectedArrivalDateEnd() == null
         && bookingRequest.getExpectedArrivalDateStart() == null
         && bookingRequest.getExpectedDepartureDate() == null
         && bookingRequest.getVesselIMONumber() == null

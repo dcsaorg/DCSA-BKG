@@ -432,29 +432,92 @@ class BookingServiceImplTest {
       bookingResponseTO.setCarrierBookingRequestReference(
           bookingTO.getCarrierBookingRequestReference());
 
-      bookingTO.setExportVoyageNumber("nothin' from nothin' leaves nothin'!");
+      bookingTO.setExportVoyageNumber("export-voyage-number");
     }
 
     @Test
-    @DisplayName("Method should throw an exception when isImportLicenseRequired is true and importLicenseReference null")
+    @DisplayName(
+        "Method should throw an exception when isImportLicenseRequired is true and importLicenseReference null")
     void testCreateBookingWhenIsImportLicenseRequiredIsTrueAndImportLicenseReferenceIsNull() {
 
       bookingTO.setIsImportLicenseRequired(true);
       bookingTO.setImportLicenseReference(null);
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
-              .expectErrorSatisfies(
-                      throwable -> {
-                        Assertions.assertTrue(throwable instanceof CreateException);
-                        assertEquals(
-                                "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true.",
-                                throwable.getMessage());
-                      })
-              .verify();
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof CreateException);
+                assertEquals(
+                    "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true.",
+                    throwable.getMessage());
+              })
+          .verify();
     }
 
     @Test
-    @DisplayName("Method should throw an exception when vesselIMONumber, exportVoyageNumber, expectedArrivalDateStart, expectedArrivalDateEnd, and expectedDepartureDate are null")
-    void testCreateBookingExpectedDepartureDateCannotBeNullIfVesselIMONumberAndExportVoyageNumberExpectedArrivalDateStartAndExpectedArrivalDateEndAreNull() {
+    @DisplayName(
+        "Method should save and return with acceptable permutations of vesselIMONumber, exportVoyageNumber, expectedArrivalDateStart, expectedArrivalDateEnd, and expectedDepartureDate")
+    void testCreateBookingTestAllAcceptablePermutationsOfArrivalDepartureVesselAndVoyage() {
+
+      OffsetDateTime now = OffsetDateTime.now();
+      booking.setBookingRequestDateTime(now);
+      booking.setUpdatedDateTime(now);
+
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(vessel.getVesselIMONumber())).thenReturn(Mono.just(vessel));
+      when(vesselRepository.findByVesselNameOrEmpty(vessel.getVesselName())).thenReturn(Flux.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      // Test all permutations of null values for this check
+      for (int i = 1; i < 7; i++) {
+
+        char[] binary = String.format("%3s", Integer.toBinaryString(i)).replace(' ', '0').toCharArray();
+
+        // Reset
+        bookingTO.setVesselIMONumber("9321483");
+        bookingTO.setExportVoyageNumber("export-voyage-number");
+        bookingTO.setExpectedDepartureDate(LocalDate.now());
+        bookingTO.setExpectedArrivalDateStart(LocalDate.now().plusDays(1));
+        bookingTO.setExpectedArrivalDateEnd(LocalDate.now().plusDays(2));
+
+        if (binary[0] == '1') {
+          bookingTO.setVesselName("Rum Runner");
+          bookingTO.setVesselIMONumber(null);
+          bookingTO.setExportVoyageNumber(null);
+        } else if (binary[1] == '1') {
+          bookingTO.setExpectedDepartureDate(null);
+        } else if (binary[2] == '1') {
+          bookingTO.setExpectedArrivalDateStart(null);
+          bookingTO.setExpectedArrivalDateEnd(null);
+        }
+
+        StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+            .assertNext(
+                b -> {
+                  assertEquals("ef223019-ff16-4870-be69-9dbaaaae9b11",b.getCarrierBookingRequestReference());
+                  assertEquals("Received", b.getDocumentStatus().getValue());
+                  assertNotNull(b.getBookingRequestCreatedDateTime());
+                  assertNotNull(b.getBookingRequestUpdatedDateTime());
+                })
+            .verifyComplete();
+      }
+    }
+
+    @Test
+    @DisplayName(
+        "Method should save and return when at least one of vesselIMONumber, exportVoyageNumber, expectedArrivalDateStart, expectedArrivalDateEnd, and expectedDepartureDate is not null")
+    void
+        testCreateBookingExpectedDepartureDateAndVesselIMONumberAndExportVoyageNumberExpectedArrivalDateStartAndExpectedArrivalDateEndWhenAtLeastOneNotNull() {
 
       bookingTO.setVesselIMONumber(null);
       bookingTO.setExportVoyageNumber(null);
@@ -462,30 +525,32 @@ class BookingServiceImplTest {
       bookingTO.setExpectedArrivalDateStart(null);
       bookingTO.setExpectedArrivalDateEnd(null);
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
-              .expectErrorSatisfies(
-                      throwable -> {
-                        Assertions.assertTrue(throwable instanceof CreateException);
-                        assertEquals(
-                                "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
-                                throwable.getMessage());
-                      })
-              .verify();
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof CreateException);
+                assertEquals(
+                    "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
+                    throwable.getMessage());
+              })
+          .verify();
     }
 
     @Test
-    @DisplayName("Method should throw an exception when isExportDeclarationRequired is true and exportDeclarationReference is null")
-    void testCreateBookingWhenIsExportDeclarationRequiredIsTrueAndExportDeclarationReferenceIsNull() {
+    @DisplayName(
+        "Method should throw an exception when isExportDeclarationRequired is true and exportDeclarationReference is null")
+    void
+        testCreateBookingWhenIsExportDeclarationRequiredIsTrueAndExportDeclarationReferenceIsNull() {
       bookingTO.setIsExportDeclarationRequired(true);
       bookingTO.setExportDeclarationReference(null);
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
-              .expectErrorSatisfies(
-                      throwable -> {
-                        Assertions.assertTrue(throwable instanceof CreateException);
-                        assertEquals(
-                                "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true.",
-                                throwable.getMessage());
-                      })
-              .verify();
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof CreateException);
+                assertEquals(
+                    "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true.",
+                    throwable.getMessage());
+              })
+          .verify();
     }
 
     @Test
@@ -1028,7 +1093,8 @@ class BookingServiceImplTest {
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
 
-      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt))).thenReturn(Mono.just(location1));
+      when(locationRepository.save(locationMapper.dtoToLocation(invoicePayableAt)))
+          .thenReturn(Mono.just(location1));
       when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
           .thenReturn(Mono.just(location2));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
@@ -1549,8 +1615,7 @@ class BookingServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
-          .thenReturn(Mono.just(booking));
+      when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
 
       when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -1581,20 +1646,93 @@ class BookingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Method should throw an exception when expectedArrivalDateStart, expectedArrivalDateEnd, vesselIMONumber, exportVoyageNumber, and expectedDepartureDate are null")
-    void testUpdateBookingExpectedDepartureDateCannotBeNullIfVesselIMONumberAndExportVoyageNumberAndExpectedArrivalDateStartAndExpectedArrivalDateEndAreNull() {
+    @DisplayName(
+            "Method should update and return with acceptable permutations of vesselIMONumber, exportVoyageNumber, expectedArrivalDateStart, expectedArrivalDateEnd, and expectedDepartureDate")
+    void testUpdateBookingTestAllAcceptablePermutationsOfArrivalDepartureVesselAndVoyage() {
+
+      OffsetDateTime now = OffsetDateTime.now();
+      booking.setBookingRequestDateTime(now);
+      booking.setUpdatedDateTime(now);
+
+      bookingTO.setInvoicePayableAt(null);
+      bookingTO.setPlaceOfIssue(null);
+      bookingTO.setCommodities(null);
+      bookingTO.setValueAddedServiceRequests(null);
+      bookingTO.setReferences(null);
+      bookingTO.setRequestedEquipments(null);
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+
+      when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(vessel.getVesselIMONumber())).thenReturn(Mono.just(vessel));
+      when(vesselRepository.findByVesselNameOrEmpty(vessel.getVesselName())).thenReturn(Flux.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      when(locationRepository.deleteById(any(String.class))).thenReturn(Mono.empty());
+      when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+
+      // Test all permutations of null values for this check
+      for (int i = 1; i < 7; i++) {
+
+        char[] binary = String.format("%3s", Integer.toBinaryString(i)).replace(' ', '0').toCharArray();
+
+        // Reset
+        bookingTO.setVesselIMONumber("9321483");
+        bookingTO.setExportVoyageNumber("export-voyage-number");
+        bookingTO.setExpectedDepartureDate(LocalDate.now());
+        bookingTO.setExpectedArrivalDateStart(LocalDate.now().plusDays(1));
+        bookingTO.setExpectedArrivalDateEnd(LocalDate.now().plusDays(2));
+
+        if (binary[0] == '1') {
+          bookingTO.setVesselName("Rum Runner");
+          bookingTO.setVesselIMONumber(null);
+          bookingTO.setExportVoyageNumber(null);
+        } else if (binary[1] == '1') {
+          bookingTO.setExpectedDepartureDate(null);
+        } else if (binary[2] == '1') {
+          bookingTO.setExpectedArrivalDateStart(null);
+          bookingTO.setExpectedArrivalDateEnd(null);
+        }
+
+        StepVerifier.create(bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                        "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+                .assertNext(
+                        b -> {
+                          assertEquals("ef223019-ff16-4870-be69-9dbaaaae9b11",b.getCarrierBookingRequestReference());
+                          assertEquals("Received", b.getDocumentStatus().getValue());
+                          assertNotNull(b.getBookingRequestCreatedDateTime());
+                          assertNotNull(b.getBookingRequestUpdatedDateTime());
+                        })
+                .verifyComplete();
+      }
+    }
+
+    @Test
+    @DisplayName(
+        "Method should throw an exception when expectedArrivalDateStart, expectedArrivalDateEnd, vesselIMONumber, exportVoyageNumber, and expectedDepartureDate are null")
+    void
+        testUpdateBookingExpectedDepartureDateCannotBeNullIfVesselIMONumberAndExportVoyageNumberAndExpectedArrivalDateStartAndExpectedArrivalDateEndAreNull() {
 
       bookingTO.setExportVoyageNumber(null);
       bookingTO.setVesselIMONumber(null);
       bookingTO.setExpectedDepartureDate(null);
       bookingTO.setExpectedArrivalDateStart(null);
       bookingTO.setExpectedArrivalDateEnd(null);
-      StepVerifier.create(bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
+      StepVerifier.create(
+              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                  "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .expectErrorSatisfies(
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
                 assertEquals(
-                        "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
+                    "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
                     throwable.getMessage());
               })
           .verify();
