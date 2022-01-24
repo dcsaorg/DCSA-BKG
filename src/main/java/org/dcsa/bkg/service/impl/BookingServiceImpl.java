@@ -695,26 +695,28 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   @Transactional
-  public Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
-      String carrierBookingRequestReference, BookingTO bookingRequest) {
-
-    if (!carrierBookingRequestReference.equals(
-        bookingRequest.getCarrierBookingRequestReference())) {
+  public Mono<BookingResponseTO> updateBookingByReferenceCarrierBookingRequestReference(String carrierBookingRequestReference, BookingTO bookingRequest) {
+      if (!carrierBookingRequestReference.equals(bookingRequest.getCarrierBookingRequestReference())) {
       return Mono.error(
           new UpdateException("carrierBookingRequestReference in path does not match body."));
     }
+      if (bookingRequest.getIsImportLicenseRequired()
+              && bookingRequest.getImportLicenseReference() == null) {
+          return Mono.error(
+                  new CreateException(
+                          "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true."));
+      }
+
+      if (bookingRequest.getIsExportDeclarationRequired()
+              && bookingRequest.getExportDeclarationReference() == null) {
+          return Mono.error(
+                  new CreateException(
+                          "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
+      }
 
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
-        .flatMap(
-            b -> {
-              if (bookingRequest.getDocumentStatus() == DocumentStatus.CANC) {
-                return Mono.error(
-                    new UpdateException(
-                        "Booking in cancelled state, update operation cannot be performed."));
-              }
-              return Mono.just(b);
-            })
+        .flatMap(checkUpdateBookingStatuses)
         .flatMap(
             b -> {
               // update booking with new booking request
@@ -792,7 +794,8 @@ public class BookingServiceImpl implements BookingService {
                 () ->
                     Mono.error(
                         new UpdateException(
-                            "No booking found for given carrierBookingRequestReference."))));
+                            "No booking found for given carrierBookingRequestReference."))))
+            .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
 
   private Mono<Optional<LocationTO>> resolveLocationByTO(
@@ -1444,7 +1447,7 @@ public class BookingServiceImpl implements BookingService {
         .switchIfEmpty(
             Mono.error(
                 new UpdateException("No Booking found with: ." + carrierBookingRequestReference)))
-        .flatMap(checkBookingStatus)
+        .flatMap(checkCancelBookingStatus)
         .flatMap(
             booking ->
                 bookingRepository
@@ -1522,15 +1525,26 @@ public class BookingServiceImpl implements BookingService {
         }
       };
 
-  private final Function<Booking, Mono<Booking>> checkBookingStatus =
+  private final Function<Booking, Mono<Booking>> checkCancelBookingStatus =
       booking -> {
         EnumSet<DocumentStatus> allowedDocumentStatuses =
-            EnumSet.of(DocumentStatus.RECE, DocumentStatus.PENU, DocumentStatus.CONF);
+            EnumSet.of(DocumentStatus.RECE, DocumentStatus.PENU, DocumentStatus.CONF, DocumentStatus.PENC);
         if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
           return Mono.just(booking);
         } else
           return Mono.error(
               new UpdateException(
-                  "Cannot Cancel Booking that is not in status RECE, PENU or CONF"));
+                  "Cannot Cancel Booking that is not in status RECE, PENU, CONF or PENC"));
       };
+
+    private final Function<Booking, Mono<Booking>> checkUpdateBookingStatuses =
+            booking -> {
+                EnumSet<DocumentStatus> allowedDocumentStatuses = EnumSet.of(DocumentStatus.RECE ,DocumentStatus.PENU);
+                if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
+                    return Mono.just(booking);
+                } else
+                    return Mono.error(
+                            new UpdateException(
+                                    "Cannot Update Booking that is not in status RECE or PENU"));
+            };
 }

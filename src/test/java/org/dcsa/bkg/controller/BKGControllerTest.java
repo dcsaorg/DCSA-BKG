@@ -182,8 +182,7 @@ class BKGControllerTest {
 
     // mock service method call
     when(bookingService.updateBookingByReferenceCarrierBookingRequestReference(any(), any()))
-        .thenReturn(Mono.just(bookingTO));
-//    when(bookingService.toBookingResponseTO(any())).thenReturn(Mono.just(bookingResponseTO));
+            .thenReturn(Mono.just(bookingResponseTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
