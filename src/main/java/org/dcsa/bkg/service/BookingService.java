@@ -14,7 +14,7 @@ public interface BookingService {
 
   Mono<BookingResponseTO> createBooking(BookingTO bookingRequest);
 
-  Mono<BookingTO> updateBookingByReferenceCarrierBookingRequestReference(
+  Mono<BookingResponseTO> updateBookingByReferenceCarrierBookingRequestReference(
       String carrierBookingRequestReference, BookingTO bookingRequest);
 
   Mono<BookingTO> getBookingByCarrierBookingRequestReference(String carrierBookingRequestReference);
