@@ -167,25 +167,9 @@ public class BookingServiceImpl implements BookingService {
   @Transactional
   public Mono<BookingResponseTO> createBooking(final BookingTO bookingRequest) {
 
-    if (bookingRequest.getIsImportLicenseRequired()
-        && bookingRequest.getImportLicenseReference() == null) {
-      return Mono.error(
-          new CreateException(
-              "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true."));
-    }
-
-    if (bookingRequest.getIsExportDeclarationRequired()
-        && bookingRequest.getExportDeclarationReference() == null) {
-      return Mono.error(
-          new CreateException(
-              "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
-    }
-
-    if (bookingRequest.getExpectedArrivalDateStart() != null && bookingRequest.getExpectedArrivalDateEnd() != null
-        && bookingRequest.getExpectedArrivalDateStart().isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
-      return Mono.error(
-          new CreateException(
-              "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart."));
+    String bookingRequestError = validateBookingRequest(bookingRequest);
+    if (!bookingRequestError.isEmpty()) {
+        return Mono.error(new CreateException(bookingRequestError));
     }
 
     OffsetDateTime now = OffsetDateTime.now();
@@ -695,28 +679,17 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   @Transactional
-  public Mono<BookingResponseTO> updateBookingByReferenceCarrierBookingRequestReference(String carrierBookingRequestReference, BookingTO bookingRequest) {
-      if (!carrierBookingRequestReference.equals(bookingRequest.getCarrierBookingRequestReference())) {
-      return Mono.error(
-          new UpdateException("carrierBookingRequestReference in path does not match body."));
-    }
-      if (bookingRequest.getIsImportLicenseRequired()
-              && bookingRequest.getImportLicenseReference() == null) {
-          return Mono.error(
-                  new CreateException(
-                          "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true."));
-      }
+  public Mono<BookingResponseTO> updateBookingByReferenceCarrierBookingRequestReference(
+      String carrierBookingRequestReference, BookingTO bookingRequest) {
 
-      if (bookingRequest.getIsExportDeclarationRequired()
-              && bookingRequest.getExportDeclarationReference() == null) {
-          return Mono.error(
-                  new CreateException(
-                          "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
+      String bookingRequestError = validateBookingRequest(bookingRequest);
+      if (!bookingRequestError.isEmpty()) {
+          return Mono.error(new CreateException(bookingRequestError));
       }
 
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
-        .flatMap(checkUpdateBookingStatuses)
+        .flatMap(checkUpdateBookingStatus)
         .flatMap(
             b -> {
               // update booking with new booking request
@@ -795,7 +768,7 @@ public class BookingServiceImpl implements BookingService {
                     Mono.error(
                         new UpdateException(
                             "No booking found for given carrierBookingRequestReference."))))
-            .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
+        .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
 
   private Mono<Optional<LocationTO>> resolveLocationByTO(
@@ -1516,6 +1489,36 @@ public class BookingServiceImpl implements BookingService {
     return Mono.just(shipmentEvent);
   }
 
+  private String validateBookingRequest(BookingTO bookingRequest) {
+        if (bookingRequest.getIsImportLicenseRequired()
+            && bookingRequest.getImportLicenseReference() == null) {
+              return "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true.";
+        }
+
+        if (bookingRequest.getIsExportDeclarationRequired()
+            && bookingRequest.getExportDeclarationReference() == null) {
+            return "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true.";
+        }
+
+        if (bookingRequest.getExpectedArrivalDateStart() == null
+            && bookingRequest.getExpectedArrivalDateEnd() == null
+            && bookingRequest.getExpectedDepartureDate() == null
+            && bookingRequest.getVesselIMONumber() == null
+            && bookingRequest.getExportVoyageNumber() == null) {
+            return "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.";
+        }
+
+        if (bookingRequest.getExpectedArrivalDateStart() != null
+            && bookingRequest.getExpectedArrivalDateEnd() != null
+            && bookingRequest
+                .getExpectedArrivalDateStart()
+                .isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
+            return "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart.";
+        }
+        return StringUtils.EMPTY;
+      }
+
+
   private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
       isRecordUpdated -> {
         if (isRecordUpdated) {
@@ -1528,23 +1531,24 @@ public class BookingServiceImpl implements BookingService {
   private final Function<Booking, Mono<Booking>> checkCancelBookingStatus =
       booking -> {
         EnumSet<DocumentStatus> allowedDocumentStatuses =
-            EnumSet.of(DocumentStatus.RECE, DocumentStatus.PENU, DocumentStatus.CONF, DocumentStatus.PENC);
+            EnumSet.of(
+                DocumentStatus.RECE, DocumentStatus.PENU, DocumentStatus.CONF, DocumentStatus.PENC);
         if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
           return Mono.just(booking);
-        } else
-          return Mono.error(
-              new UpdateException(
-                  "Cannot Cancel Booking that is not in status RECE, PENU, CONF or PENC"));
+        }
+        return Mono.error(
+            new UpdateException(
+                "Cannot Cancel Booking that is not in status RECE, PENU, CONF or PENC"));
       };
 
-    private final Function<Booking, Mono<Booking>> checkUpdateBookingStatuses =
-            booking -> {
-                EnumSet<DocumentStatus> allowedDocumentStatuses = EnumSet.of(DocumentStatus.RECE ,DocumentStatus.PENU);
-                if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
-                    return Mono.just(booking);
-                } else
-                    return Mono.error(
-                            new UpdateException(
-                                    "Cannot Update Booking that is not in status RECE or PENU"));
-            };
+  private final Function<Booking, Mono<Booking>> checkUpdateBookingStatus =
+      booking -> {
+        EnumSet<DocumentStatus> allowedDocumentStatuses =
+            EnumSet.of(DocumentStatus.RECE, DocumentStatus.PENU);
+        if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
+          return Mono.just(booking);
+        }
+        return Mono.error(
+            new UpdateException("Cannot Update Booking that is not in status RECE or PENU"));
+      };
 }
