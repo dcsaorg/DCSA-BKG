@@ -57,7 +57,7 @@ class BKGControllerTest {
     // populate DTO with relevant objects to verify json schema returned
     bookingTO = new BookingTO();
     bookingTO.setCarrierBookingRequestReference(UUID.randomUUID().toString());
-    bookingTO.setDocumentStatus(DocumentStatus.PENU);
+    bookingTO.setDocumentStatus(ShipmentEventTypeCode.PENU);
     bookingTO.setBookingRequestCreatedDateTime(OffsetDateTime.now());
     bookingTO.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingTO.setDeliveryTypeAtDestination(ReceiptDeliveryType.SD);
@@ -124,7 +124,7 @@ class BKGControllerTest {
     bookingResponseTO.setBookingRequestUpdatedDateTime(bookingTO.getBookingRequestUpdatedDateTime());
 
     bookingCancellationRequestTO = new BookingCancellationRequestTO();
-    bookingCancellationRequestTO.setDocumentStatus(DocumentStatus.CANC);
+    bookingCancellationRequestTO.setDocumentStatus(ShipmentEventTypeCode.CANC);
     bookingCancellationRequestTO.setReason("Booking Cancelled");
   }
 

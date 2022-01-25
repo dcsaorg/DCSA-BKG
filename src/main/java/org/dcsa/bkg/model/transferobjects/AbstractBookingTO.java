@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.dcsa.core.events.model.enums.*;
+import org.dcsa.core.validator.EnumSubset;
 import org.dcsa.core.validator.ValidVesselIMONumber;
 import org.springframework.data.relational.core.mapping.Column;
 
@@ -13,13 +14,16 @@ import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
+import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.DOCUMENT_STATUSES;
+
 @Data
 public abstract class AbstractBookingTO {
 
   protected String carrierBookingRequestReference;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  protected DocumentStatus documentStatus;
+  @EnumSubset(anyOf = DOCUMENT_STATUSES)
+  protected ShipmentEventTypeCode documentStatus;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   @JsonFormat(shape = JsonFormat.Shape.STRING)
