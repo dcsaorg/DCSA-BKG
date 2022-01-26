@@ -19,7 +19,7 @@ import reactor.core.publisher.Flux;
 
 import javax.validation.constraints.Min;
 
-import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.DOCUMENT_STATUSES;
+import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOCUMENT_STATUSES;
 
 @RequiredArgsConstructor
 @RestController
@@ -33,7 +33,7 @@ public class BKGShipmentSummariesController {
 
   @GetMapping
   public Flux<ShipmentSummaryTO> getBookingConfirmationSummaries(
-      @RequestParam(value = "documentStatus", required = false) @EnumSubset(anyOf = DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
+      @RequestParam(value = "documentStatus", required = false) @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
       @RequestParam(
               value = "limit",
               defaultValue = "${pagination.defaultPageSize}",

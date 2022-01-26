@@ -32,7 +32,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.DOCUMENT_STATUSES;
+import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOCUMENT_STATUSES;
 
 @Service
 @RequiredArgsConstructor
@@ -86,7 +86,7 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   public Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
-      @EnumSubset(anyOf = DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
+      @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
       Pageable pageable) {
 
     Pageable mappedPageRequest = mapSortParameters(pageable);
@@ -114,7 +114,7 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   public Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
-      @EnumSubset(anyOf = DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
+      @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
       Pageable pageable) {
 
     Pageable mappedPageRequest = mapSortParameters(pageable);

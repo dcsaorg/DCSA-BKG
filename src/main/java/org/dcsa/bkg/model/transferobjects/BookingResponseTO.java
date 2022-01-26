@@ -7,13 +7,13 @@ import org.dcsa.core.validator.EnumSubset;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 
-import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.DOCUMENT_STATUSES;
+import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOCUMENT_STATUSES;
 
 @Data
 public class BookingResponseTO {
   @NotNull private String carrierBookingRequestReference;
 
-  @EnumSubset(anyOf = DOCUMENT_STATUSES)
+  @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES)
   @NotNull private ShipmentEventTypeCode documentStatus;
 
   @NotNull private OffsetDateTime bookingRequestCreatedDateTime;

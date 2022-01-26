@@ -14,7 +14,7 @@ import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
-import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.DOCUMENT_STATUSES;
+import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOCUMENT_STATUSES;
 
 @Data
 public abstract class AbstractBookingTO {
@@ -22,7 +22,7 @@ public abstract class AbstractBookingTO {
   protected String carrierBookingRequestReference;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  @EnumSubset(anyOf = DOCUMENT_STATUSES)
+  @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES)
   protected ShipmentEventTypeCode documentStatus;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
