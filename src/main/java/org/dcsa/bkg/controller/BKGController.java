@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
 import org.dcsa.bkg.model.transferobjects.BookingResponseTO;
 import org.dcsa.bkg.model.transferobjects.BookingTO;
+import org.dcsa.bkg.model.validators.DocumentPartyTOValidator;
 import org.dcsa.bkg.service.BookingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -23,6 +25,11 @@ import javax.validation.constraints.Size;
 public class BKGController {
 
   private final BookingService bookingService;
+
+  @InitBinder
+  private void initBinder(WebDataBinder dataBinder) {
+    dataBinder.addValidators(new DocumentPartyTOValidator());
+  }
 
   @PostMapping
   @ResponseStatus(HttpStatus.ACCEPTED)

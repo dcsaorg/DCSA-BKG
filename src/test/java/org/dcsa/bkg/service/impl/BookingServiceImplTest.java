@@ -5,11 +5,13 @@ import org.dcsa.bkg.model.transferobjects.*;
 import org.dcsa.bkg.service.BookingService;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.*;
+import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.AddressService;
+import org.dcsa.core.events.service.DocumentPartyService;
 import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
@@ -29,6 +31,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,6 +76,7 @@ class BookingServiceImplTest {
   @Mock ShipmentEventService shipmentEventService;
   @Mock LocationService locationService;
   @Mock AddressService addressService;
+  @Mock DocumentPartyService documentPartyService;
 
   @InjectMocks BookingServiceImpl bookingServiceImpl;
 
@@ -401,8 +406,8 @@ class BookingServiceImplTest {
       bookingTO.setRequestedEquipments(Collections.singletonList(requestedEquipmentTO));
 
       partyContactDetailsTO = new PartyContactDetailsTO();
-      partyContactDetails.setName("Bit");
-      partyContactDetails.setEmail("coin@gmail.com");
+      partyContactDetailsTO.setName("Bit");
+      partyContactDetailsTO.setEmail("coin@gmail.com");
 
       identifyingCode =
           PartyTO.IdentifyingCode.builder()
@@ -596,6 +601,7 @@ class BookingServiceImplTest {
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.empty()));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -647,6 +653,7 @@ class BookingServiceImplTest {
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.empty()));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -770,6 +777,7 @@ class BookingServiceImplTest {
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.empty()));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -827,6 +835,7 @@ class BookingServiceImplTest {
           .thenReturn(Mono.just(location1));
       when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
           .thenReturn(Mono.just(location2));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.empty()));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -883,6 +892,7 @@ class BookingServiceImplTest {
       when(locationRepository.save(locationMapper.dtoToLocation(placeOfIssue)))
           .thenReturn(Mono.just(location2));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.empty()));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -943,6 +953,7 @@ class BookingServiceImplTest {
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
       when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.empty()));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1010,6 +1021,7 @@ class BookingServiceImplTest {
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.empty()));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1081,6 +1093,7 @@ class BookingServiceImplTest {
           .thenReturn(Flux.just(requestedEquipment));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.empty()));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1152,6 +1165,7 @@ class BookingServiceImplTest {
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.empty()));
 
       StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
@@ -1189,17 +1203,10 @@ class BookingServiceImplTest {
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
       when(requestedEquipmentRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(requestedEquipment));
-      when(addressService.ensureResolvable(any())).thenReturn(Mono.just(address));
-      when(partyRepository.save(any())).thenReturn(Mono.just(party));
-      when(partyContactDetailsRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(partyContactDetails));
-      when(partyIdentifyingCodeRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(partyIdentifyingCode));
-      when(documentPartyRepository.save(any())).thenReturn(Mono.just(documentParty));
-      when(displayedAddressRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(displayedAddress));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(List.of(documentPartyTO))));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1211,12 +1218,7 @@ class BookingServiceImplTest {
                 verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
                 verify(referenceRepository).saveAll(any(Flux.class));
                 verify(requestedEquipmentRepository).saveAll(any(Flux.class));
-                verify(addressService).ensureResolvable(any());
-                verify(partyRepository).save(any());
-                verify(partyContactDetailsRepository).saveAll(any(Flux.class));
-                verify(partyIdentifyingCodeRepository).saveAll(any(Flux.class));
-                verify(documentPartyRepository).save(any());
-                verify(displayedAddressRepository).saveAll(any(Flux.class));
+                verify(documentPartyService).createDocumentPartiesByBookingID(booking.getId(), bookingTO.getDocumentParties());
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals("Received", b.getDocumentStatus().getValue());
@@ -1282,7 +1284,7 @@ class BookingServiceImplTest {
                         .getAddress()
                         .getCity());
                 assertEquals(
-                    "Javastraat",
+                    "test 1",
                     argumentCaptor
                         .getValue()
                         .getDocumentParties()
@@ -1319,15 +1321,7 @@ class BookingServiceImplTest {
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
       when(requestedEquipmentRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(requestedEquipment));
-      when(addressService.ensureResolvable(any())).thenReturn(Mono.just(address));
-      when(partyRepository.save(any())).thenReturn(Mono.just(party));
-      when(partyContactDetailsRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(partyContactDetails));
-      when(partyIdentifyingCodeRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(partyIdentifyingCode));
-      when(documentPartyRepository.save(any())).thenReturn(Mono.just(documentParty));
-      when(displayedAddressRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(displayedAddress));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(List.of(documentPartyTO))));
       when(locationRepository.save(location1)).thenReturn(Mono.just(location1));
       when(shipmentLocationRepository.save(any())).thenReturn(Mono.just(shipmentLocation));
       when(shipmentEventService.create(any()))
@@ -1343,12 +1337,7 @@ class BookingServiceImplTest {
                 verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
                 verify(referenceRepository).saveAll(any(Flux.class));
                 verify(requestedEquipmentRepository).saveAll(any(Flux.class));
-                verify(addressService).ensureResolvable(any());
-                verify(partyRepository).save(any());
-                verify(partyContactDetailsRepository).saveAll(any(Flux.class));
-                verify(partyIdentifyingCodeRepository).saveAll(any(Flux.class));
-                verify(documentPartyRepository).save(any());
-                verify(displayedAddressRepository).saveAll(any(Flux.class));
+                verify(documentPartyService).createDocumentPartiesByBookingID(booking.getId(), bookingTO.getDocumentParties());
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals("Received", b.getDocumentStatus().getValue());
@@ -1414,7 +1403,7 @@ class BookingServiceImplTest {
                         .getAddress()
                         .getCity());
                 assertEquals(
-                    "Javastraat",
+                    "test 1",
                     argumentCaptor
                         .getValue()
                         .getDocumentParties()
@@ -1514,8 +1503,8 @@ class BookingServiceImplTest {
       bookingTO.setRequestedEquipments(Collections.singletonList(requestedEquipmentTO));
 
       partyContactDetailsTO = new PartyContactDetailsTO();
-      partyContactDetails.setName("Bit");
-      partyContactDetails.setEmail("coin@gmail.com");
+      partyContactDetailsTO.setName("Bit");
+      partyContactDetailsTO.setEmail("coin@gmail.com");
 
       identifyingCode =
           PartyTO.IdentifyingCode.builder()
@@ -1597,6 +1586,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
@@ -1749,6 +1739,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
@@ -1807,6 +1798,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       StepVerifier.create(
               bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
@@ -1851,6 +1843,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       StepVerifier.create(
               bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
@@ -1894,6 +1887,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
@@ -1949,6 +1943,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
@@ -2017,6 +2012,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
@@ -2082,6 +2078,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
@@ -2151,6 +2148,7 @@ class BookingServiceImplTest {
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
 
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
@@ -2219,6 +2217,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
@@ -2289,6 +2288,7 @@ class BookingServiceImplTest {
           .thenReturn(Flux.just(requestedEquipment));
 
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
 
       when(shipmentEventService.create(any()))
@@ -2361,15 +2361,7 @@ class BookingServiceImplTest {
           .thenReturn(Flux.just(requestedEquipment));
 
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
-      when(addressService.ensureResolvable(any())).thenReturn(Mono.just(address));
-      when(partyRepository.save(any())).thenReturn(Mono.just(party));
-      when(partyContactDetailsRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(partyContactDetails));
-      when(partyIdentifyingCodeRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(partyIdentifyingCode));
-      when(documentPartyRepository.save(any())).thenReturn(Mono.just(documentParty));
-      when(displayedAddressRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(displayedAddress));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(List.of(documentPartyTO))));
 
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
 
@@ -2413,7 +2405,7 @@ class BookingServiceImplTest {
                         assertEquals(
                                 "København", argumentCaptor.getValue().getDocumentParties().get(0).getParty().getAddress().getCity());
                         assertEquals(
-                                "Javastraat", argumentCaptor.getValue().getDocumentParties().get(0).getDisplayedAddress().get(0));
+                                "test 1", argumentCaptor.getValue().getDocumentParties().get(0).getDisplayedAddress().get(0));
                         assertEquals(PartyFunction.DDS, argumentCaptor.getValue().getDocumentParties().get(0).getPartyFunction());
                       })
               .verifyComplete();
@@ -2457,15 +2449,7 @@ class BookingServiceImplTest {
           .thenReturn(Flux.just(requestedEquipment));
 
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
-      when(addressService.ensureResolvable(any())).thenReturn(Mono.just(address));
-      when(partyRepository.save(any())).thenReturn(Mono.just(party));
-      when(partyContactDetailsRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(partyContactDetails));
-      when(partyIdentifyingCodeRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(partyIdentifyingCode));
-      when(documentPartyRepository.save(any())).thenReturn(Mono.just(documentParty));
-      when(displayedAddressRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(displayedAddress));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(List.of(documentPartyTO))));
 
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(locationRepository.save(location1)).thenReturn(Mono.just(location1));
@@ -2510,7 +2494,7 @@ class BookingServiceImplTest {
                         assertEquals(
                                 "København", argumentCaptor.getValue().getDocumentParties().get(0).getParty().getAddress().getCity());
                         assertEquals(
-                                "Javastraat", argumentCaptor.getValue().getDocumentParties().get(0).getDisplayedAddress().get(0));
+                                "test 1", argumentCaptor.getValue().getDocumentParties().get(0).getDisplayedAddress().get(0));
                         assertEquals(PartyFunction.DDS, argumentCaptor.getValue().getDocumentParties().get(0).getPartyFunction());
                         assertEquals(
                                 bookingTO.getShipmentLocations().get(0).getDisplayedName(),

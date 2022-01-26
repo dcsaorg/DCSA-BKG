@@ -5,12 +5,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.dcsa.core.events.model.enums.CargoGrossWeight;
-import org.dcsa.core.events.model.enums.CargoMovementType;
-import org.dcsa.core.events.model.enums.CommunicationChannel;
-import org.dcsa.core.events.model.enums.ReceiptDeliveryType;
-import org.dcsa.core.exception.InvalidParameterException;
+import org.dcsa.bkg.model.validators.DocumentPartyTOValidator;
+import org.dcsa.core.events.model.enums.*;
+import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
+import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
+import org.dcsa.core.events.model.transferobjects.PartyTO;
+import org.dcsa.core.exception.DCSAException;
 import org.junit.jupiter.api.*;
+import org.springframework.validation.BeanPropertyBindingResult;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -19,13 +21,16 @@ import javax.validation.ValidatorFactory;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 @DisplayName("Tests for BookingTO")
 class BookingTOTest {
 
   private Validator validator;
+  private org.springframework.validation.Validator springValidator;
   private ObjectMapper objectMapper;
   private BookingTO validBookingTO;
 
@@ -33,6 +38,7 @@ class BookingTOTest {
   void init() {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     validator = factory.getValidator();
+    springValidator = new DocumentPartyTOValidator();
 
     // replicating default spring boot config for object mapper
     // for reference
@@ -60,6 +66,16 @@ class BookingTOTest {
     commodityTO.setCargoGrossWeight(12.12);
     commodityTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
     validBookingTO.setCommodities(Collections.singletonList(commodityTO));
+
+    PartyTO partyTO = new PartyTO();
+    partyTO.setPartyContactDetails(Collections.singletonList(new PartyContactDetailsTO()));
+
+    DocumentPartyTO validDocumentPartyTO = new DocumentPartyTO();
+    validDocumentPartyTO.setParty(partyTO);
+    validDocumentPartyTO.setPartyFunction(PartyFunction.N1);
+    validDocumentPartyTO.setDisplayedAddress(Collections.singletonList("x".repeat(250)));
+    validDocumentPartyTO.setIsToBeNotified(true);
+    validBookingTO.setDocumentParties(Collections.singletonList(validDocumentPartyTO));
   }
 
   @Test
@@ -376,18 +392,39 @@ class BookingTOTest {
     DocumentPartyTO documentPartyTO = new DocumentPartyTO();
     Exception exception =
             Assertions.assertThrows(
-                    InvalidParameterException.class,
+                    DCSAException.class,
                     () ->
                             documentPartyTO.setDisplayedAddress(
                                     Collections.singletonList("x".repeat(251))));
     Assertions.assertEquals(
             "A single displayedAddress has a max size of 250.", exception.getMessage());
-//    validBookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
-//    Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
-//    Assertions.assertTrue(
-//        violations.size() > 0
-//            && violations.stream()
-//                .anyMatch(v -> v.getPropertyPath().toString().contains("documentParties")));
+  }
+
+  @Test
+  @DisplayName(
+    "BookingTO should throw error if partyFunction is set to a value that is not in its enum subset.")
+  void testToVerifyNotAllowedEnumsInPartyFunctionIsInvalid() {
+    BeanPropertyBindingResult errors =
+      new BeanPropertyBindingResult(validBookingTO, "bookingTO");
+
+    List<String> documentPartySubset =
+      Arrays.asList(
+        "OS", "CN", "COW", "COX", "N1", "N2", "NI", "SFA", "DDR", "DDS", "CA", "HE", "SCO",
+        "BA");
+    for (PartyFunction pf : PartyFunction.values()) {
+      if (documentPartySubset.contains(pf.name())) continue;
+      List<DocumentPartyTO> documentPartyTOList = validBookingTO.getDocumentParties();
+      for (DocumentPartyTO docParty : documentPartyTOList) {
+        docParty.setPartyFunction(pf);
+      }
+      Exception exception =
+        Assertions.assertThrows(
+          DCSAException.class,
+          () -> springValidator.validate(validBookingTO, errors)
+        );
+      Assertions.assertEquals(
+        "The provided partyFunction " + pf.name() +" is not allowed in Booking.", exception.getMessage());
+    }
   }
 
   @Test

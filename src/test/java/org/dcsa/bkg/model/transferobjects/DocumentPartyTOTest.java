@@ -1,9 +1,10 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import org.dcsa.core.events.model.enums.PartyFunction;
+import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
-import org.dcsa.core.exception.InvalidParameterException;
+import org.dcsa.core.exception.DCSAException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,15 +14,14 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 @DisplayName("Tests for DocumentPartyTO")
 class DocumentPartyTOTest {
 
   private Validator validator;
+
   private PartyTO partyTO;
   private DocumentPartyTO validDocumentPartyTO;
 
@@ -66,16 +66,11 @@ class DocumentPartyTOTest {
   }
 
   @Test
-  @DisplayName("DocumentPartyTO should throw error if partyFunction is set to a value that is not in its enum subset.")
-  void testToVerifyNotAllowedEnumsInPartyFunctionIsInvalid() {
-    List<String> documentPartySubset = Arrays.asList("OS", "CN", "COW", "COX", "N1", "N2", "NI", "SFA", "DDR", "DDS", "CA", "HE", "SCO", "BA");
-    for (PartyFunction pf : PartyFunction.values()) {
-      if (documentPartySubset.contains(pf.name())) continue;
-      validDocumentPartyTO.setPartyFunction(pf);
-      for (ConstraintViolation<DocumentPartyTO> violation : validator.validate(validDocumentPartyTO)) {
-        Assertions.assertEquals(violation.getMessage(), "must be any of [" + String.join(", " , documentPartySubset) +"]");
-      }
-    }
+  @DisplayName("DocumentPartyTO should be valid without displayedAddress.")
+  void testWithoutDisplayedAddress() {
+    validDocumentPartyTO.setDisplayedAddress(null);
+    Set<ConstraintViolation<DocumentPartyTO>> violations = validator.validate(validDocumentPartyTO);
+    Assertions.assertEquals(0, violations.size());
   }
 
   @Test
@@ -84,7 +79,7 @@ class DocumentPartyTOTest {
   void testToVerifyDisplayedAddressIsNotAllowedToExceed250() {
     Exception exception =
         Assertions.assertThrows(
-            InvalidParameterException.class,
+          DCSAException.class,
             () ->
                 validDocumentPartyTO.setDisplayedAddress(
                     Collections.singletonList("x".repeat(251))));
