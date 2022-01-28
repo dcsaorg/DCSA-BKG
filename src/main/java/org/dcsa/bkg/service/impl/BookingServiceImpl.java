@@ -17,6 +17,7 @@ import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
+import org.dcsa.core.validator.EnumSubset;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOCUMENT_STATUSES;
 
 @Service
 @RequiredArgsConstructor
@@ -83,7 +86,8 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   public Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
-      DocumentStatus documentStatus, Pageable pageable) {
+      @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
+      Pageable pageable) {
 
     Pageable mappedPageRequest = mapSortParameters(pageable);
 
@@ -110,7 +114,8 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   public Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
-      DocumentStatus documentStatus, Pageable pageable) {
+      @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
+      Pageable pageable) {
 
     Pageable mappedPageRequest = mapSortParameters(pageable);
 
@@ -176,7 +181,7 @@ public class BookingServiceImpl implements BookingService {
     Booking requestedBooking = bookingMapper.dtoToBooking(bookingRequest);
     // CarrierBookingRequestReference is not allowed to be set by request
     requestedBooking.setCarrierBookingRequestReference(null);
-    requestedBooking.setDocumentStatus(DocumentStatus.RECE);
+    requestedBooking.setDocumentStatus(ShipmentEventTypeCode.RECE);
     requestedBooking.setBookingRequestDateTime(now);
     requestedBooking.setUpdatedDateTime(now);
 
@@ -1432,7 +1437,7 @@ public class BookingServiceImpl implements BookingService {
                     .thenReturn(booking))
         .map(
             booking -> {
-              booking.setDocumentStatus(DocumentStatus.CANC);
+              booking.setDocumentStatus(ShipmentEventTypeCode.CANC);
               return booking;
             })
         .flatMap(
@@ -1530,9 +1535,9 @@ public class BookingServiceImpl implements BookingService {
 
   private final Function<Booking, Mono<Booking>> checkCancelBookingStatus =
       booking -> {
-        EnumSet<DocumentStatus> allowedDocumentStatuses =
+        EnumSet<ShipmentEventTypeCode> allowedDocumentStatuses =
             EnumSet.of(
-                DocumentStatus.RECE, DocumentStatus.PENU, DocumentStatus.CONF, DocumentStatus.PENC);
+                ShipmentEventTypeCode.RECE, ShipmentEventTypeCode.PENU, ShipmentEventTypeCode.CONF, ShipmentEventTypeCode.PENC);
         if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
           return Mono.just(booking);
         }
@@ -1543,8 +1548,8 @@ public class BookingServiceImpl implements BookingService {
 
   private final Function<Booking, Mono<Booking>> checkUpdateBookingStatus =
       booking -> {
-        EnumSet<DocumentStatus> allowedDocumentStatuses =
-            EnumSet.of(DocumentStatus.RECE, DocumentStatus.PENU);
+        EnumSet<ShipmentEventTypeCode> allowedDocumentStatuses =
+            EnumSet.of(ShipmentEventTypeCode.RECE, ShipmentEventTypeCode.PENU);
         if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
           return Mono.just(booking);
         }

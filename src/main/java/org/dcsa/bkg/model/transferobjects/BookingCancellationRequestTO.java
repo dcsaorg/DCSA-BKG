@@ -1,7 +1,8 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import lombok.Data;
-import org.dcsa.core.events.model.enums.DocumentStatus;
+import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
+import org.dcsa.core.validator.EnumSubset;
 
 import javax.validation.constraints.NotNull;
 
@@ -9,6 +10,7 @@ import javax.validation.constraints.NotNull;
 public class BookingCancellationRequestTO {
 
 	@NotNull(message = "DocumentStatus is required")
-	private DocumentStatus documentStatus;
+	@EnumSubset(anyOf = "CANC")
+	private ShipmentEventTypeCode documentStatus;
 	private String reason;
 }

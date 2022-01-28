@@ -5,8 +5,6 @@ import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
 import org.dcsa.bkg.model.transferobjects.BookingResponseTO;
 import org.dcsa.bkg.model.transferobjects.BookingTO;
 import org.dcsa.bkg.service.BookingService;
-import org.dcsa.core.events.model.enums.DocumentStatus;
-import org.dcsa.core.exception.CreateException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -52,10 +50,7 @@ public class BKGController {
   @PatchMapping("{carrierBookingRequestReference}")
   @ResponseStatus(HttpStatus.OK)
   public Mono<BookingResponseTO> bookingCancellation(
-          @PathVariable @Size(max = 100) String carrierBookingRequestReference, @RequestBody BookingCancellationRequestTO bookingCancellationRequestTO) {
-    if (!DocumentStatus.CANC.equals(bookingCancellationRequestTO.getDocumentStatus())) {
-      return Mono.error(new CreateException("documentStatus '" + bookingCancellationRequestTO.getDocumentStatus().getValue() + "' not equal to '" + DocumentStatus.CANC));
-    }
+          @PathVariable @Size(max = 100) String carrierBookingRequestReference, @RequestBody @Valid BookingCancellationRequestTO bookingCancellationRequestTO) {
     return bookingService.cancelBookingByCarrierBookingReference(carrierBookingRequestReference, bookingCancellationRequestTO);
   }
 }

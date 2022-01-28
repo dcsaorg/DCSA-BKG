@@ -3,10 +3,13 @@ package org.dcsa.bkg.model.transferobjects;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import org.dcsa.core.events.model.enums.DocumentStatus;
+import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
+import org.dcsa.core.validator.EnumSubset;
 
 import javax.validation.constraints.Size;
 import java.time.OffsetDateTime;
+
+import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOCUMENT_STATUSES;
 
 @Data
 public class ShipmentSummaryTO {
@@ -26,5 +29,6 @@ public class ShipmentSummaryTO {
   private String carrierBookingRequestReference;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private DocumentStatus documentStatus;
+  @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES)
+  private ShipmentEventTypeCode documentStatus;
 }

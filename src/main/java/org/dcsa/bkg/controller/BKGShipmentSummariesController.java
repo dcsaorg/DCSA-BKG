@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.dcsa.bkg.controller.util.Pagination;
 import org.dcsa.bkg.model.transferobjects.ShipmentSummaryTO;
 import org.dcsa.bkg.service.BookingService;
-import org.dcsa.core.events.model.enums.DocumentStatus;
+import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
+import org.dcsa.core.validator.EnumSubset;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
@@ -18,6 +19,8 @@ import reactor.core.publisher.Flux;
 
 import javax.validation.constraints.Min;
 
+import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOCUMENT_STATUSES;
+
 @RequiredArgsConstructor
 @RestController
 @Validated
@@ -30,7 +33,7 @@ public class BKGShipmentSummariesController {
 
   @GetMapping
   public Flux<ShipmentSummaryTO> getBookingConfirmationSummaries(
-      @RequestParam(value = "documentStatus", required = false) DocumentStatus documentStatus,
+      @RequestParam(value = "documentStatus", required = false) @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
       @RequestParam(
               value = "limit",
               defaultValue = "${pagination.defaultPageSize}",

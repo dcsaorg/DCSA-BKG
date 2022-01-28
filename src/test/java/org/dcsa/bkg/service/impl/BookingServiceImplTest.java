@@ -135,7 +135,7 @@ class BookingServiceImplTest {
     booking.setCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11");
     booking.setInvoicePayableAt("c703277f-84ca-4816-9ccf-fad8e202d3b6");
     booking.setPlaceOfIssueID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745");
-    booking.setDocumentStatus(DocumentStatus.RECE);
+    booking.setDocumentStatus(ShipmentEventTypeCode.RECE);
 
     location1 = new Location();
     location1.setId("c703277f-84ca-4816-9ccf-fad8e202d3b6");
@@ -322,7 +322,7 @@ class BookingServiceImplTest {
 
     bookingCancellationRequestTO = new BookingCancellationRequestTO();
     bookingCancellationRequestTO.setReason("Booking Cancelled");
-    bookingCancellationRequestTO.setDocumentStatus(DocumentStatus.CANC);
+    bookingCancellationRequestTO.setDocumentStatus(ShipmentEventTypeCode.CANC);
 
     // Date & Time
     OffsetDateTime now = OffsetDateTime.now();
@@ -3577,7 +3577,7 @@ class BookingServiceImplTest {
   class BookingRequestSummariesTest {
 
     private Booking initializeBookingTestInstance(
-        UUID carrierBookingRequestReference, DocumentStatus documentStatus, UUID vesselId) {
+        UUID carrierBookingRequestReference, ShipmentEventTypeCode documentStatus, UUID vesselId) {
       Booking booking = new Booking();
       booking.setCarrierBookingRequestReference(carrierBookingRequestReference.toString());
       booking.setDocumentStatus(documentStatus);
@@ -3622,7 +3622,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.CONF;
+      ShipmentEventTypeCode documentStatus = ShipmentEventTypeCode.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByDocumentStatus(documentStatus, pageRequest))
@@ -3647,7 +3647,7 @@ class BookingServiceImplTest {
                 assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
+                assertEquals(ShipmentEventTypeCode.CONF, bookingSummaryTO.getDocumentStatus());
                 assertEquals("ABC12313", bookingSummaryTO.getVesselIMONumber());
               })
           .expectComplete()
@@ -3661,7 +3661,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.CONF;
+      ShipmentEventTypeCode documentStatus = ShipmentEventTypeCode.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByDocumentStatus(documentStatus, pageRequest))
@@ -3685,7 +3685,7 @@ class BookingServiceImplTest {
                 assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
+                assertEquals(ShipmentEventTypeCode.CONF, bookingSummaryTO.getDocumentStatus());
               })
           .expectComplete()
           .verify();
@@ -3698,7 +3698,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = null;
-      DocumentStatus documentStatus = DocumentStatus.CONF;
+      ShipmentEventTypeCode documentStatus = ShipmentEventTypeCode.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByDocumentStatus(documentStatus, pageRequest))
@@ -3722,7 +3722,7 @@ class BookingServiceImplTest {
                 assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
+                assertEquals(ShipmentEventTypeCode.CONF, bookingSummaryTO.getDocumentStatus());
               })
           .expectComplete()
           .verify();
@@ -3770,7 +3770,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.CONF;
+      ShipmentEventTypeCode documentStatus = ShipmentEventTypeCode.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByDocumentStatus(documentStatus, pageRequest))
@@ -3795,7 +3795,7 @@ class BookingServiceImplTest {
                 assertEquals(
                     carrierBookingRequestReference.toString(),
                     bookingSummaryTO.getCarrierBookingRequestReference());
-                assertEquals(DocumentStatus.CONF, bookingSummaryTO.getDocumentStatus());
+                assertEquals(ShipmentEventTypeCode.CONF, bookingSummaryTO.getDocumentStatus());
               })
           .expectComplete()
           .verify();
@@ -3807,7 +3807,7 @@ class BookingServiceImplTest {
 
       UUID carrierBookingRequestReference = UUID.randomUUID();
       UUID vesselId = UUID.randomUUID();
-      DocumentStatus documentStatus = DocumentStatus.CONF;
+      ShipmentEventTypeCode documentStatus = ShipmentEventTypeCode.CONF;
       PageRequest pageRequest = PageRequest.of(0, 100);
 
       when(bookingRepository.findAllByDocumentStatus(null, pageRequest))
@@ -3985,7 +3985,7 @@ class BookingServiceImplTest {
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
-      mockBookingResponse.setDocumentStatus(DocumentStatus.CANC);
+      mockBookingResponse.setDocumentStatus(ShipmentEventTypeCode.CANC);
 
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
@@ -4035,13 +4035,13 @@ class BookingServiceImplTest {
       String carrierBookingRequestReference = UUID.randomUUID().toString();
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
-      mockBookingResponse.setDocumentStatus(DocumentStatus.PENU);
+      mockBookingResponse.setDocumentStatus(ShipmentEventTypeCode.PENU);
 
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
       when(bookingRepository
               .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
-                  eq(DocumentStatus.CANC), eq(carrierBookingRequestReference), any()))
+                  eq(ShipmentEventTypeCode.CANC), eq(carrierBookingRequestReference), any()))
           .thenReturn(Mono.just(false));
 
       Mono<BookingResponseTO> cancelBookingResponse =
@@ -4066,13 +4066,13 @@ class BookingServiceImplTest {
       Booking mockBookingResponse = new Booking();
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
       mockBookingResponse.setBookingRequestDateTime(now);
-      mockBookingResponse.setDocumentStatus(DocumentStatus.RECE);
+      mockBookingResponse.setDocumentStatus(ShipmentEventTypeCode.RECE);
 
       when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
       when(bookingRepository
               .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
-                  eq(DocumentStatus.CANC), eq(carrierBookingRequestReference), any()))
+                  eq(ShipmentEventTypeCode.CANC), eq(carrierBookingRequestReference), any()))
           .thenReturn(Mono.just(true));
       when(shipmentEventService.create(any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
@@ -4084,7 +4084,7 @@ class BookingServiceImplTest {
           .assertNext(
               b -> {
                 assertEquals(carrierBookingRequestReference, b.getCarrierBookingRequestReference());
-                assertEquals(DocumentStatus.CANC, b.getDocumentStatus());
+                assertEquals(ShipmentEventTypeCode.CANC, b.getDocumentStatus());
                 Assertions.assertNotNull(b.getBookingRequestCreatedDateTime());
                 Assertions.assertNotNull(b.getBookingRequestUpdatedDateTime());
                 assertEquals(now, b.getBookingRequestCreatedDateTime());

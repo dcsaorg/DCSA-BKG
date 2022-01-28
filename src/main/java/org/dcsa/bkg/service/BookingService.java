@@ -1,16 +1,14 @@
 package org.dcsa.bkg.service;
 
 import org.dcsa.bkg.model.transferobjects.*;
-import org.dcsa.core.events.model.enums.DocumentStatus;
+import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Mono;
 
-import java.time.OffsetDateTime;
-
 public interface BookingService {
   Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
-      DocumentStatus documentStatus, Pageable pageable);
+      ShipmentEventTypeCode documentStatus, Pageable pageable);
 
   Mono<BookingResponseTO> createBooking(BookingTO bookingRequest);
 
@@ -25,5 +23,5 @@ public interface BookingService {
       String carrierBookingReference, BookingCancellationRequestTO bookingCancellationRequestTO);
 
   Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
-      DocumentStatus documentStatus, Pageable pageable);
+      ShipmentEventTypeCode documentStatus, Pageable pageable);
 }
