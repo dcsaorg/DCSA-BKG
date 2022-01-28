@@ -257,6 +257,24 @@ class BKGControllerTest {
   }
 
   @Test
+  @DisplayName("Canceling a booking request using invalid document status should return 400")
+  void invalidDocumentStatusBookingsCancellationShouldReturn400() {
+    bookingCancellationRequestTO.setDocumentStatus(ShipmentEventTypeCode.RECE);
+    WebTestClient.ResponseSpec exchange =
+            webTestClient
+                    .patch()
+                    .uri(
+                            BOOKING_ENDPOINT
+                                    + "/"
+                                    + bookingTO.getCarrierBookingRequestReference())
+                    .body(BodyInserters.fromValue(bookingCancellationRequestTO))
+                    .accept(MediaType.APPLICATION_JSON)
+                    .exchange();
+
+    checkStatus400.apply(exchange);
+  }
+
+  @Test
   @DisplayName(
       "Cancelling of a booking in unallowed status should return a 400 for invalid request")
   void confirmedBookingsCancellationShouldReturn400() {

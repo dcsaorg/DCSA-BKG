@@ -6,13 +6,11 @@ import org.dcsa.core.validator.EnumSubset;
 
 import javax.validation.constraints.NotNull;
 
-import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOCUMENT_STATUSES;
-
 @Data
 public class BookingCancellationRequestTO {
 
 	@NotNull(message = "DocumentStatus is required")
-	@EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES)
+	@EnumSubset(anyOf = "CANC")
 	private ShipmentEventTypeCode documentStatus;
 	private String reason;
 }
