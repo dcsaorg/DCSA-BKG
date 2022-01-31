@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,7 +29,12 @@ public class BKGController {
 
   @InitBinder
   private void initBinder(WebDataBinder dataBinder) {
-    dataBinder.addValidators(new DocumentPartyTOValidator());
+
+    if (Optional.ofNullable(dataBinder.getTarget())
+        .filter(field -> field.getClass().equals(BookingTO.class))
+        .isPresent()) {
+      dataBinder.addValidators(new DocumentPartyTOValidator());
+    }
   }
 
   @PostMapping
@@ -57,7 +63,9 @@ public class BKGController {
   @PatchMapping("{carrierBookingRequestReference}")
   @ResponseStatus(HttpStatus.OK)
   public Mono<BookingResponseTO> bookingCancellation(
-          @PathVariable @Size(max = 100) String carrierBookingRequestReference, @RequestBody @Valid BookingCancellationRequestTO bookingCancellationRequestTO) {
-    return bookingService.cancelBookingByCarrierBookingReference(carrierBookingRequestReference, bookingCancellationRequestTO);
+      @PathVariable @Size(max = 100) String carrierBookingRequestReference,
+      @RequestBody @Valid BookingCancellationRequestTO bookingCancellationRequestTO) {
+    return bookingService.cancelBookingByCarrierBookingReference(
+        carrierBookingRequestReference, bookingCancellationRequestTO);
   }
 }

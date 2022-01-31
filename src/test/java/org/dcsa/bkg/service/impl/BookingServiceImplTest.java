@@ -487,6 +487,7 @@ class BookingServiceImplTest {
       when(vesselRepository.findByVesselNameOrEmpty(vessel.getVesselName())).thenReturn(Flux.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       // Test all permutations of null values for this check
       for (int i = 1; i < 7; i++) {
@@ -1649,6 +1650,7 @@ class BookingServiceImplTest {
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Optional.of(Collections.emptyList())));
 
       // Test all permutations of null values for this check
       for (int i = 1; i < 7; i++) {
