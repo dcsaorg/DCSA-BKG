@@ -156,7 +156,7 @@ class BKGEventControllerTest {
 
   @Test
   @DisplayName("Get events should throw bad request for incorrect documentTypeCode format.")
-  void testEventsShouldFailForIncorrectTransportDocumentReference() {
+  void testEventsShouldFailForIncorrectTransportDocumentTypeCode() {
     webTestClient
         .get()
         .uri(
@@ -188,7 +188,7 @@ class BKGEventControllerTest {
   @Test
   @DisplayName(
       "Get events should throw bad request for incorrect transportDocumentReference length.")
-  void testEventsShouldFailForIncorrectTransportDocumentTypeCode() {
+  void testEventsShouldFailForIncorrectTransportDocumentReference() {
     webTestClient
         .get()
         .uri(
