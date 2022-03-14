@@ -1,12 +1,11 @@
 package org.dcsa.bkg.controller;
 
-import org.dcsa.bkg.model.transferobjects.*;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
+import org.dcsa.bkg.service.BKGService;
+import org.dcsa.core.events.edocumentation.model.transferobject.*;
 import org.dcsa.core.events.model.Address;
 import org.dcsa.core.events.model.enums.*;
-import org.dcsa.core.events.model.transferobjects.LocationTO;
-import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
-import org.dcsa.core.events.model.transferobjects.PartyTO;
+import org.dcsa.core.events.model.transferobjects.*;
 import org.dcsa.core.exception.UpdateException;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
@@ -44,7 +43,8 @@ class BKGControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
-  @MockBean BookingService bookingService;
+  @MockBean
+  BKGService bookingService;
 
   private final String BOOKING_ENDPOINT = "/bookings";
 

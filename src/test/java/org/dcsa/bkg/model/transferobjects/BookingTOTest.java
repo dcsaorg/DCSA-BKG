@@ -5,12 +5,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.dcsa.core.events.edocumentation.model.transferobject.*;
 import org.dcsa.core.events.model.enums.CargoGrossWeight;
 import org.dcsa.core.events.model.enums.CargoMovementType;
 import org.dcsa.core.events.model.enums.CommunicationChannel;
 import org.dcsa.core.events.model.enums.ReceiptDeliveryType;
-import org.dcsa.core.exception.InvalidParameterException;
+import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
+import org.dcsa.core.events.model.transferobjects.ReferenceTO;
+import org.dcsa.core.exception.ConcreteRequestErrorMessageException;
 import org.junit.jupiter.api.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -376,10 +381,12 @@ class BookingTOTest {
     DocumentPartyTO documentPartyTO = new DocumentPartyTO();
     Exception exception =
             Assertions.assertThrows(
-                    InvalidParameterException.class,
+                    ConcreteRequestErrorMessageException.class,
                     () ->
                             documentPartyTO.setDisplayedAddress(
                                     Collections.singletonList("x".repeat(251))));
+    Assertions.assertEquals(
+            HttpStatus.BAD_REQUEST, exception.getClass().getAnnotation(ResponseStatus.class).value());
     Assertions.assertEquals(
             "A single displayedAddress has a max size of 250.", exception.getMessage());
 //    validBookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));

@@ -1,6 +1,7 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import org.dcsa.core.events.model.enums.ReferenceTypeCode;
+import org.dcsa.core.events.model.transferobjects.ReferenceTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

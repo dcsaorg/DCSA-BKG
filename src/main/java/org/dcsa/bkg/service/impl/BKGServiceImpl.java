@@ -2,14 +2,23 @@ package org.dcsa.bkg.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.dcsa.bkg.model.mappers.*;
-import org.dcsa.bkg.model.transferobjects.*;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.model.mappers.BookingSummaryMapper;
+import org.dcsa.bkg.model.mappers.PartyContactDetailsMapper;
+import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
+import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
+import org.dcsa.bkg.model.transferobjects.ShipmentSummaryTO;
+import org.dcsa.bkg.service.BKGService;
+import org.dcsa.core.events.edocumentation.model.mapper.*;
+import org.dcsa.core.events.edocumentation.model.transferobject.*;
+import org.dcsa.core.events.edocumentation.repository.*;
 import org.dcsa.core.events.model.*;
-import org.dcsa.core.events.model.enums.*;
-import org.dcsa.core.events.model.transferobjects.LocationTO;
-import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
-import org.dcsa.core.events.model.transferobjects.PartyTO;
+import org.dcsa.core.events.model.enums.DocumentTypeCode;
+import org.dcsa.core.events.model.enums.EventClassifierCode;
+import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
+import org.dcsa.core.events.model.enums.TransportEventTypeCode;
+import org.dcsa.core.events.model.mapper.LocationMapper;
+import org.dcsa.core.events.model.mapper.PartyMapper;
+import org.dcsa.core.events.model.transferobjects.*;
 import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.AddressService;
 import org.dcsa.core.events.service.LocationService;
@@ -36,7 +45,7 @@ import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOC
 
 @Service
 @RequiredArgsConstructor
-public class BookingServiceImpl implements BookingService {
+public class BKGServiceImpl implements BKGService {
 
   // repositories
   private final BookingRepository bookingRepository;
@@ -85,8 +94,7 @@ public class BookingServiceImpl implements BookingService {
   private final AddressService addressService;
 
   @Override
-  public Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(
-      @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
+  public Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(ShipmentEventTypeCode documentStatus,
       Pageable pageable) {
 
     Pageable mappedPageRequest = mapSortParameters(pageable);

@@ -1,13 +1,16 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import org.dcsa.core.events.model.enums.PartyFunction;
+import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
-import org.dcsa.core.exception.InvalidParameterException;
+import org.dcsa.core.exception.ConcreteRequestErrorMessageException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -84,10 +87,12 @@ class DocumentPartyTOTest {
   void testToVerifyDisplayedAddressIsNotAllowedToExceed250() {
     Exception exception =
         Assertions.assertThrows(
-            InvalidParameterException.class,
+            ConcreteRequestErrorMessageException.class,
             () ->
                 validDocumentPartyTO.setDisplayedAddress(
                     Collections.singletonList("x".repeat(251))));
+    Assertions.assertEquals(
+        HttpStatus.BAD_REQUEST, exception.getClass().getAnnotation(ResponseStatus.class).value());
     Assertions.assertEquals(
         "A single displayedAddress has a max size of 250.", exception.getMessage());
   }

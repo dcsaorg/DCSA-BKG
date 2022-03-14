@@ -1,5 +1,6 @@
 package org.dcsa.bkg.model.transferobjects;
 
+import org.dcsa.core.events.edocumentation.model.transferobject.ValueAddedServiceRequestTO;
 import org.dcsa.core.events.model.enums.ValueAddedServiceCode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

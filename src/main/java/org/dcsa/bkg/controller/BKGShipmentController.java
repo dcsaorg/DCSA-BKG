@@ -1,8 +1,8 @@
 package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.dcsa.bkg.model.transferobjects.ShipmentTO;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.service.BKGService;
+import org.dcsa.core.events.edocumentation.model.transferobject.ShipmentTO;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +21,7 @@ import javax.validation.constraints.Size;
     produces = {MediaType.APPLICATION_JSON_VALUE})
 public class BKGShipmentController {
 
-  private final BookingService bookingService;
+  private final BKGService bookingService;
 
   @GetMapping(path = "{carrierBookingReference}")
   public Mono<ShipmentTO> getBookingReference(

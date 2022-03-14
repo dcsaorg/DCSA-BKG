@@ -1,7 +1,7 @@
 package org.dcsa.bkg.controller;
 
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.service.BKGService;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
@@ -34,7 +34,8 @@ class BKGSummariesControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
-  @MockBean BookingService bookingService;
+  @MockBean
+  BKGService bookingService;
 
   private final String BOOKING_SUMMARIES_ENDPOINT = "/booking-summaries";
 

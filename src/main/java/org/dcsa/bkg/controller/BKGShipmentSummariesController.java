@@ -3,7 +3,7 @@ package org.dcsa.bkg.controller;
 import lombok.RequiredArgsConstructor;
 import org.dcsa.bkg.controller.util.Pagination;
 import org.dcsa.bkg.model.transferobjects.ShipmentSummaryTO;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.service.BKGService;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.dcsa.core.validator.EnumSubset;
 import org.springframework.data.domain.PageRequest;
@@ -29,11 +29,13 @@ import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOC
     produces = {MediaType.APPLICATION_JSON_VALUE})
 public class BKGShipmentSummariesController {
 
-  private final BookingService bookingService;
+  private final BKGService bkgService;
 
   @GetMapping
   public Flux<ShipmentSummaryTO> getBookingConfirmationSummaries(
-      @RequestParam(value = "documentStatus", required = false) @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
+      @RequestParam(value = "documentStatus", required = false)
+          @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES)
+          ShipmentEventTypeCode documentStatus,
       @RequestParam(
               value = "limit",
               defaultValue = "${pagination.defaultPageSize}",
@@ -47,11 +49,11 @@ public class BKGShipmentSummariesController {
     Pagination pagination = new Pagination(Sort.by(Sort.Direction.DESC, "shipmentCreatedDateTime"));
     PageRequest pageRequest = pagination.createPageRequest(limit, cursor, sort);
 
-    return bookingService
+    return bkgService
         .getShipmentSummaries(documentStatus, pageRequest)
         .doOnNext(
             shipmentSummaryTOS ->
                 response.getHeaders().addAll(pagination.setPaginationHeaders(shipmentSummaryTOS)))
-        .flatMapMany(shipmentSummaryTOS -> Flux.fromIterable(shipmentSummaryTOS));
+        .flatMapMany(Flux::fromIterable);
   }
 }

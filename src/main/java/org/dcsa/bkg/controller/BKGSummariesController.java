@@ -3,7 +3,7 @@ package org.dcsa.bkg.controller;
 import lombok.RequiredArgsConstructor;
 import org.dcsa.bkg.controller.util.Pagination;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.service.BKGService;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.dcsa.core.validator.EnumSubset;
 import org.springframework.data.domain.PageRequest;
@@ -29,11 +29,13 @@ import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOC
     produces = {MediaType.APPLICATION_JSON_VALUE})
 public class BKGSummariesController {
 
-  private final BookingService bookingService;
+  private final BKGService bookingService;
 
   @GetMapping
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
-      @RequestParam(value = "documentStatus", required = false) @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
+      @RequestParam(value = "documentStatus", required = false)
+          @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES)
+          ShipmentEventTypeCode documentStatus,
       @RequestParam(
               value = "limit",
               defaultValue = "${pagination.defaultPageSize}",
@@ -44,7 +46,8 @@ public class BKGSummariesController {
       @RequestParam(value = "sort", required = false) String[] sort,
       ServerHttpResponse response) {
 
-    Pagination pagination = new Pagination(Sort.by(Sort.Direction.DESC, "bookingRequestCreatedDateTime"));
+    Pagination pagination =
+        new Pagination(Sort.by(Sort.Direction.DESC, "bookingRequestCreatedDateTime"));
     PageRequest pageRequest = pagination.createPageRequest(limit, cursor, sort);
 
     return bookingService
@@ -52,6 +55,6 @@ public class BKGSummariesController {
         .doOnNext(
             bookingSummaryTOS ->
                 response.getHeaders().addAll(pagination.setPaginationHeaders(bookingSummaryTOS)))
-        .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
+        .flatMapMany(Flux::fromIterable);
   }
 }
