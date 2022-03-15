@@ -1,5 +1,6 @@
 package org.dcsa.bkg.model.transferobjects;
 
+import org.dcsa.core.events.edocumentation.model.transferobject.ConfirmedEquipmentTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

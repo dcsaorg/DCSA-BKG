@@ -1,12 +1,17 @@
 package org.dcsa.bkg.service;
 
-import org.dcsa.bkg.model.transferobjects.*;
+import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
+import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
+import org.dcsa.bkg.model.transferobjects.ShipmentSummaryTO;
+import org.dcsa.core.events.edocumentation.model.transferobject.BookingResponseTO;
+import org.dcsa.core.events.edocumentation.model.transferobject.BookingTO;
+import org.dcsa.core.events.edocumentation.model.transferobject.ShipmentTO;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Mono;
 
-public interface BookingService {
+public interface BKGService {
   Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
       ShipmentEventTypeCode documentStatus, Pageable pageable);
 

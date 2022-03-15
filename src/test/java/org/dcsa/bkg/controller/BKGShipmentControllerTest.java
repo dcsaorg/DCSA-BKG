@@ -1,7 +1,7 @@
 package org.dcsa.bkg.controller;
 
-import org.dcsa.bkg.model.transferobjects.*;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.service.BKGService;
+import org.dcsa.core.events.edocumentation.model.transferobject.*;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.transferobjects.LocationTO;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
@@ -32,7 +32,7 @@ class BKGShipmentControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
-  @MockBean BookingService bookingService;
+  @MockBean BKGService bookingService;
 
   private final String CONFIRMED_BOOKING_ENDPOINT = "/shipments";
 
@@ -81,7 +81,7 @@ class BKGShipmentControllerTest {
     confirmedEquipment.setConfirmedEquipmentSizetype("WHAT");
 
     ChargeTO charge = new ChargeTO();
-    charge.setChargeTypeCode("ChargeTypeCode");
+    charge.setChargeType("ChargeTypeCode");
     charge.setCalculationBasis("CalculationBasis");
     charge.setCurrencyAmount(12.12);
     charge.setCurrencyCode("ABC");
@@ -113,8 +113,7 @@ class BKGShipmentControllerTest {
       (exchange) -> exchange.expectStatus().isBadRequest();
 
   @Test
-  @DisplayName(
-      "Get shipments should return valid list of shipment summaries for valid request.")
+  @DisplayName("Get shipments should return valid list of shipment summaries for valid request.")
   void shipmentShouldReturnListOfShipments() {
 
     Mockito.when(
@@ -125,10 +124,7 @@ class BKGShipmentControllerTest {
     WebTestClient.ResponseSpec exchange =
         webTestClient
             .get()
-            .uri(
-                CONFIRMED_BOOKING_ENDPOINT
-                    + "/"
-                    + shipmentTO.getCarrierBookingReference())
+            .uri(CONFIRMED_BOOKING_ENDPOINT + "/" + shipmentTO.getCarrierBookingReference())
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
 
@@ -189,7 +185,7 @@ class BKGShipmentControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.confirmedEquipments.[0].confirmedEquipmentSizetype")
                   .hasJsonPath()
-                  .jsonPath("$.charges.[0].chargeTypeCode")
+                  .jsonPath("$.charges.[0].chargeType")
                   .hasJsonPath()
                   .jsonPath("$.charges.[0].calculationBasis")
                   .hasJsonPath()

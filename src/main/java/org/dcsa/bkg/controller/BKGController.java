@@ -2,9 +2,9 @@ package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
-import org.dcsa.bkg.model.transferobjects.BookingResponseTO;
-import org.dcsa.bkg.model.transferobjects.BookingTO;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.service.BKGService;
+import org.dcsa.core.events.edocumentation.model.transferobject.BookingResponseTO;
+import org.dcsa.core.events.edocumentation.model.transferobject.BookingTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -22,12 +22,12 @@ import javax.validation.constraints.Size;
     produces = {MediaType.APPLICATION_JSON_VALUE})
 public class BKGController {
 
-  private final BookingService bookingService;
+  private final BKGService bkgService;
 
   @PostMapping
   @ResponseStatus(HttpStatus.ACCEPTED)
   public Mono<BookingResponseTO> createBooking(@Valid @RequestBody BookingTO bookingRequest) {
-    return bookingService.createBooking(bookingRequest);
+    return bkgService.createBooking(bookingRequest);
   }
 
   @PutMapping("/{carrierBookingRequestReference}")
@@ -35,7 +35,7 @@ public class BKGController {
   public Mono<BookingResponseTO> updateBookingByReference(
       @PathVariable @Size(max = 100) String carrierBookingRequestReference,
       @Valid @RequestBody BookingTO bookingRequest) {
-    return bookingService.updateBookingByReferenceCarrierBookingRequestReference(
+    return bkgService.updateBookingByReferenceCarrierBookingRequestReference(
         carrierBookingRequestReference, bookingRequest);
   }
 
@@ -43,14 +43,15 @@ public class BKGController {
   @ResponseStatus(HttpStatus.OK)
   public Mono<BookingTO> getBookingByReference(
       @PathVariable @Size(max = 100) String carrierBookingRequestReference) {
-    return bookingService.getBookingByCarrierBookingRequestReference(
-        carrierBookingRequestReference);
+    return bkgService.getBookingByCarrierBookingRequestReference(carrierBookingRequestReference);
   }
 
   @PatchMapping("{carrierBookingRequestReference}")
   @ResponseStatus(HttpStatus.OK)
   public Mono<BookingResponseTO> bookingCancellation(
-          @PathVariable @Size(max = 100) String carrierBookingRequestReference, @RequestBody @Valid BookingCancellationRequestTO bookingCancellationRequestTO) {
-    return bookingService.cancelBookingByCarrierBookingReference(carrierBookingRequestReference, bookingCancellationRequestTO);
+      @PathVariable @Size(max = 100) String carrierBookingRequestReference,
+      @RequestBody @Valid BookingCancellationRequestTO bookingCancellationRequestTO) {
+    return bkgService.cancelBookingByCarrierBookingReference(
+        carrierBookingRequestReference, bookingCancellationRequestTO);
   }
 }

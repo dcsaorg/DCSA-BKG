@@ -1,7 +1,7 @@
 package org.dcsa.bkg.controller;
 
 import org.dcsa.bkg.model.transferobjects.ShipmentSummaryTO;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.service.BKGService;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +34,7 @@ class BKGShipmentSummariesControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
-  @MockBean BookingService bookingService;
+  @MockBean BKGService bookingService;
 
   MockServerHttpResponse serverHttpResponse;
   MockServerHttpRequest serverHttpRequest;

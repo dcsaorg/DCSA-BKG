@@ -1,5 +1,6 @@
 package org.dcsa.bkg.model.transferobjects;
 
+import org.dcsa.core.events.edocumentation.model.transferobject.ChargeTO;
 import org.dcsa.core.events.model.enums.PaymentTerm;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,7 @@ class ChargeTOTest {
 
     chargeTO = new ChargeTO();
     chargeTO.setPaymentTermCode(PaymentTerm.PRE);
-    chargeTO.setChargeTypeCode("x".repeat(20));
+    chargeTO.setChargeType("x".repeat(20));
     chargeTO.setUnitPrice(20.20);
     chargeTO.setQuantity(20.20);
     chargeTO.setCurrencyCode("x".repeat(3));
@@ -79,10 +80,10 @@ class ChargeTOTest {
   @Test
   @DisplayName("ChargeTO should throw error if chargeType is not set.")
   void testToVerifyChargeTypeIsRequired() {
-    chargeTO.setChargeTypeCode(null);
+    chargeTO.setChargeType(null);
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "ChargeTypeCode is required.".equals(v.getMessage())));
+        violations.stream().anyMatch(v -> "ChargeType is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -107,11 +108,11 @@ class ChargeTOTest {
   @DisplayName(
       "ChargeTO should throw error if chargeType length exceeds max size of 20.")
   void testToChargeTypeIsNotAllowedToExceed20() {
-    chargeTO.setChargeTypeCode("x".repeat(21));
+    chargeTO.setChargeType("x".repeat(21));
     Set<ConstraintViolation<ChargeTO>> violations = validator.validate(chargeTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "ChargeTypeCode has a max size of 20.".equals(v.getMessage())));
+            .anyMatch(v -> "ChargeType has a max size of 20.".equals(v.getMessage())));
   }
 
   @Test

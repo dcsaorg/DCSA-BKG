@@ -1,12 +1,11 @@
 package org.dcsa.bkg.controller;
 
-import org.dcsa.bkg.model.transferobjects.*;
-import org.dcsa.bkg.service.BookingService;
+import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
+import org.dcsa.bkg.service.BKGService;
+import org.dcsa.core.events.edocumentation.model.transferobject.*;
 import org.dcsa.core.events.model.Address;
 import org.dcsa.core.events.model.enums.*;
-import org.dcsa.core.events.model.transferobjects.LocationTO;
-import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
-import org.dcsa.core.events.model.transferobjects.PartyTO;
+import org.dcsa.core.events.model.transferobjects.*;
 import org.dcsa.core.exception.UpdateException;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
@@ -44,7 +43,7 @@ class BKGControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
-  @MockBean BookingService bookingService;
+  @MockBean BKGService bookingService;
 
   private final String BOOKING_ENDPOINT = "/bookings";
 
@@ -118,10 +117,13 @@ class BKGControllerTest {
     bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
 
     bookingResponseTO = new BookingResponseTO();
-    bookingResponseTO.setCarrierBookingRequestReference(bookingTO.getCarrierBookingRequestReference());
+    bookingResponseTO.setCarrierBookingRequestReference(
+        bookingTO.getCarrierBookingRequestReference());
     bookingResponseTO.setDocumentStatus(bookingTO.getDocumentStatus());
-    bookingResponseTO.setBookingRequestCreatedDateTime(bookingTO.getBookingRequestCreatedDateTime());
-    bookingResponseTO.setBookingRequestUpdatedDateTime(bookingTO.getBookingRequestUpdatedDateTime());
+    bookingResponseTO.setBookingRequestCreatedDateTime(
+        bookingTO.getBookingRequestCreatedDateTime());
+    bookingResponseTO.setBookingRequestUpdatedDateTime(
+        bookingTO.getBookingRequestUpdatedDateTime());
 
     bookingCancellationRequestTO = new BookingCancellationRequestTO();
     bookingCancellationRequestTO.setDocumentStatus(ShipmentEventTypeCode.CANC);
@@ -182,7 +184,7 @@ class BKGControllerTest {
 
     // mock service method call
     when(bookingService.updateBookingByReferenceCarrierBookingRequestReference(any(), any()))
-            .thenReturn(Mono.just(bookingResponseTO));
+        .thenReturn(Mono.just(bookingResponseTO));
 
     WebTestClient.ResponseSpec exchange =
         webTestClient
@@ -193,7 +195,8 @@ class BKGControllerTest {
             .exchange();
 
     // these values are only allowed in response and not to be set via request body
-    verify(bookingService).updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
+    verify(bookingService)
+        .updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
     // CarrierBookingRequestReference is set to null in the service implementation, as we need to be
     // able to set it via request in PUT
     assertNull(argument.getValue().getDocumentStatus());
@@ -245,10 +248,7 @@ class BKGControllerTest {
     WebTestClient.ResponseSpec exchange =
         webTestClient
             .patch()
-            .uri(
-                BOOKING_ENDPOINT
-                    + "/"
-                    + bookingTO.getCarrierBookingRequestReference())
+            .uri(BOOKING_ENDPOINT + "/" + bookingTO.getCarrierBookingRequestReference())
             .body(BodyInserters.fromValue(bookingCancellationRequestTO))
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
@@ -261,15 +261,12 @@ class BKGControllerTest {
   void invalidDocumentStatusBookingsCancellationShouldReturn400() {
     bookingCancellationRequestTO.setDocumentStatus(ShipmentEventTypeCode.RECE);
     WebTestClient.ResponseSpec exchange =
-            webTestClient
-                    .patch()
-                    .uri(
-                            BOOKING_ENDPOINT
-                                    + "/"
-                                    + bookingTO.getCarrierBookingRequestReference())
-                    .body(BodyInserters.fromValue(bookingCancellationRequestTO))
-                    .accept(MediaType.APPLICATION_JSON)
-                    .exchange();
+        webTestClient
+            .patch()
+            .uri(BOOKING_ENDPOINT + "/" + bookingTO.getCarrierBookingRequestReference())
+            .body(BodyInserters.fromValue(bookingCancellationRequestTO))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange();
 
     checkStatus400.apply(exchange);
   }
@@ -290,10 +287,7 @@ class BKGControllerTest {
     WebTestClient.ResponseSpec exchange =
         webTestClient
             .patch()
-            .uri(
-                BOOKING_ENDPOINT
-                    + "/"
-                    + bookingTO.getCarrierBookingRequestReference())
+            .uri(BOOKING_ENDPOINT + "/" + bookingTO.getCarrierBookingRequestReference())
             .body(BodyInserters.fromValue(bookingCancellationRequestTO))
             .accept(MediaType.APPLICATION_JSON)
             .exchange();

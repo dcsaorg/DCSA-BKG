@@ -1,9 +1,10 @@
 package org.dcsa.bkg.model.transferobjects;
 
 import org.dcsa.core.events.model.enums.PartyFunction;
+import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
 import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
 import org.dcsa.core.events.model.transferobjects.PartyTO;
-import org.dcsa.core.exception.InvalidParameterException;
+import org.dcsa.core.exception.ConcreteRequestErrorMessageException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,7 +23,6 @@ import java.util.Set;
 class DocumentPartyTOTest {
 
   private Validator validator;
-  private PartyTO partyTO;
   private DocumentPartyTO validDocumentPartyTO;
 
   @BeforeEach
@@ -30,7 +30,7 @@ class DocumentPartyTOTest {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     validator = factory.getValidator();
 
-    partyTO = new PartyTO();
+    PartyTO partyTO = new PartyTO();
     partyTO.setPartyContactDetails(Collections.singletonList(new PartyContactDetailsTO()));
 
     validDocumentPartyTO = new DocumentPartyTO();
@@ -66,14 +66,21 @@ class DocumentPartyTOTest {
   }
 
   @Test
-  @DisplayName("DocumentPartyTO should throw error if partyFunction is set to a value that is not in its enum subset.")
+  @DisplayName(
+      "DocumentPartyTO should throw error if partyFunction is set to a value that is not in its enum subset.")
   void testToVerifyNotAllowedEnumsInPartyFunctionIsInvalid() {
-    List<String> documentPartySubset = Arrays.asList("OS", "CN", "COW", "COX", "N1", "N2", "NI", "SFA", "DDR", "DDS", "CA", "HE", "SCO", "BA");
+    List<String> documentPartySubset =
+        Arrays.asList(
+            "OS", "CN", "COW", "COX", "N1", "N2", "NI", "SFA", "DDR", "DDS", "CA", "HE", "SCO",
+            "BA");
     for (PartyFunction pf : PartyFunction.values()) {
       if (documentPartySubset.contains(pf.name())) continue;
       validDocumentPartyTO.setPartyFunction(pf);
-      for (ConstraintViolation<DocumentPartyTO> violation : validator.validate(validDocumentPartyTO)) {
-        Assertions.assertEquals(violation.getMessage(), "must be any of [" + String.join(", " , documentPartySubset) +"]");
+      for (ConstraintViolation<DocumentPartyTO> violation :
+          validator.validate(validDocumentPartyTO)) {
+        Assertions.assertEquals(
+            violation.getMessage(),
+            "must be any of [" + String.join(", ", documentPartySubset) + "]");
       }
     }
   }
@@ -84,10 +91,11 @@ class DocumentPartyTOTest {
   void testToVerifyDisplayedAddressIsNotAllowedToExceed250() {
     Exception exception =
         Assertions.assertThrows(
-            InvalidParameterException.class,
+            ConcreteRequestErrorMessageException.class,
             () ->
                 validDocumentPartyTO.setDisplayedAddress(
                     Collections.singletonList("x".repeat(251))));
+    Assertions.assertEquals("BadRequestException", exception.getClass().getSimpleName());
     Assertions.assertEquals(
         "A single displayedAddress has a max size of 250.", exception.getMessage());
   }
