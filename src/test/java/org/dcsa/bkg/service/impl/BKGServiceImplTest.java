@@ -4,7 +4,6 @@ import org.dcsa.bkg.model.mappers.BookingSummaryMapper;
 import org.dcsa.bkg.model.mappers.PartyContactDetailsMapper;
 import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
-import org.dcsa.bkg.service.BKGService;
 import org.dcsa.core.events.edocumentation.model.mapper.*;
 import org.dcsa.core.events.edocumentation.model.transferobject.*;
 import org.dcsa.core.events.edocumentation.repository.*;
@@ -73,18 +72,14 @@ class BKGServiceImplTest {
   @Mock ShipmentTransportRepository shipmentTransportRepository;
   @Mock VoyageRepository voyageRepository;
 
-  @Mock
-  BKGService bookingService;
   @Mock ShipmentEventService shipmentEventService;
   @Mock LocationService locationService;
   @Mock AddressService addressService;
 
-  @InjectMocks
-  BKGServiceImpl bookingServiceImpl;
+  @InjectMocks BKGServiceImpl bkgServiceImpl;
 
   @Spy BookingMapper bookingMapper = Mappers.getMapper(BookingMapper.class);
-  @Spy
-  LocationMapper locationMapper = Mappers.getMapper(LocationMapper.class);
+  @Spy LocationMapper locationMapper = Mappers.getMapper(LocationMapper.class);
   @Spy CommodityMapper commodityMapper = Mappers.getMapper(CommodityMapper.class);
   @Spy PartyMapper partyMapper = Mappers.getMapper(PartyMapper.class);
   @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
@@ -455,7 +450,7 @@ class BKGServiceImplTest {
 
       bookingTO.setIsImportLicenseRequired(true);
       bookingTO.setImportLicenseReference(null);
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
@@ -518,7 +513,7 @@ class BKGServiceImplTest {
           bookingTO.setExpectedArrivalDateEnd(null);
         }
 
-        StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+        StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
             .assertNext(
                 b -> {
                   assertEquals(
@@ -543,7 +538,7 @@ class BKGServiceImplTest {
       bookingTO.setExpectedDepartureDate(null);
       bookingTO.setExpectedArrivalDateStart(null);
       bookingTO.setExpectedArrivalDateEnd(null);
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
@@ -561,7 +556,7 @@ class BKGServiceImplTest {
         testCreateBookingWhenIsExportDeclarationRequiredIsTrueAndExportDeclarationReferenceIsNull() {
       bookingTO.setIsExportDeclarationRequired(true);
       bookingTO.setExportDeclarationReference(null);
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
@@ -577,7 +572,7 @@ class BKGServiceImplTest {
     void testCreateBookingWhenExpectedArrivalDatesAreInvalid() {
       bookingTO.setExpectedArrivalDateStart(LocalDate.now());
       bookingTO.setExpectedArrivalDateEnd(LocalDate.now().minus(1, ChronoUnit.DAYS));
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
@@ -613,7 +608,7 @@ class BKGServiceImplTest {
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
                 assertEquals(
@@ -664,7 +659,7 @@ class BKGServiceImplTest {
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
                 verify(vesselRepository, never()).save(any());
@@ -711,7 +706,7 @@ class BKGServiceImplTest {
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
@@ -745,7 +740,7 @@ class BKGServiceImplTest {
       when(vesselRepository.findByVesselNameOrEmpty(any()))
           .thenReturn(Flux.just(vessel, new Vessel()));
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
@@ -787,7 +782,7 @@ class BKGServiceImplTest {
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
                 verify(vesselRepository, never()).save(any());
@@ -844,7 +839,7 @@ class BKGServiceImplTest {
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
                 verify(locationRepository, times(2)).save(any());
@@ -900,7 +895,7 @@ class BKGServiceImplTest {
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
                 verify(locationRepository, times(2)).save(any());
@@ -960,7 +955,7 @@ class BKGServiceImplTest {
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
                 verify(locationRepository, times(2)).save(any());
@@ -1027,7 +1022,7 @@ class BKGServiceImplTest {
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
                 verify(locationRepository, times(2)).save(any());
@@ -1098,7 +1093,7 @@ class BKGServiceImplTest {
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
                 verify(locationRepository, times(2)).save(any());
@@ -1167,7 +1162,7 @@ class BKGServiceImplTest {
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.empty());
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
@@ -1217,7 +1212,7 @@ class BKGServiceImplTest {
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
                 verify(locationRepository, times(2)).save(any());
@@ -1349,7 +1344,7 @@ class BKGServiceImplTest {
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
-      StepVerifier.create(bookingServiceImpl.createBooking(bookingTO))
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
                 verify(locationRepository, times(3)).save(any());
@@ -1572,7 +1567,7 @@ class BKGServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .expectErrorSatisfies(
               throwable -> {
@@ -1618,7 +1613,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -1703,7 +1698,7 @@ class BKGServiceImplTest {
         }
 
         StepVerifier.create(
-                bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+                bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
             .assertNext(
                 b -> {
@@ -1730,7 +1725,7 @@ class BKGServiceImplTest {
       bookingTO.setExpectedArrivalDateStart(null);
       bookingTO.setExpectedArrivalDateEnd(null);
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .expectErrorSatisfies(
               throwable -> {
@@ -1778,7 +1773,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -1831,7 +1826,7 @@ class BKGServiceImplTest {
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .expectErrorSatisfies(
               throwable -> {
@@ -1875,7 +1870,7 @@ class BKGServiceImplTest {
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .expectErrorSatisfies(
               throwable -> {
@@ -1923,7 +1918,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -1987,7 +1982,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -2050,7 +2045,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -2115,7 +2110,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -2188,7 +2183,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -2268,7 +2263,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -2352,7 +2347,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -2453,7 +2448,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -2598,7 +2593,7 @@ class BKGServiceImplTest {
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
       StepVerifier.create(
-              bookingServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
+              bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .assertNext(
               b -> {
@@ -2726,7 +2721,7 @@ class BKGServiceImplTest {
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference(
+              bkgServiceImpl.getBookingByCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11"))
           .assertNext(
               b -> {
@@ -2766,7 +2761,7 @@ class BKGServiceImplTest {
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference(
+              bkgServiceImpl.getBookingByCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11"))
           .assertNext(
               b -> {
@@ -2807,7 +2802,7 @@ class BKGServiceImplTest {
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference(
+              bkgServiceImpl.getBookingByCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11"))
           .assertNext(
               b -> {
@@ -2854,7 +2849,7 @@ class BKGServiceImplTest {
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference(
+              bkgServiceImpl.getBookingByCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11"))
           .assertNext(
               b -> {
@@ -2902,7 +2897,7 @@ class BKGServiceImplTest {
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference(
+              bkgServiceImpl.getBookingByCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11"))
           .assertNext(
               b -> {
@@ -2953,7 +2948,7 @@ class BKGServiceImplTest {
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference(
+              bkgServiceImpl.getBookingByCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11"))
           .assertNext(
               b -> {
@@ -3005,7 +3000,7 @@ class BKGServiceImplTest {
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference(
+              bkgServiceImpl.getBookingByCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11"))
           .assertNext(
               b -> {
@@ -3066,7 +3061,7 @@ class BKGServiceImplTest {
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference(
+              bkgServiceImpl.getBookingByCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11"))
           .assertNext(
               b -> {
@@ -3150,7 +3145,7 @@ class BKGServiceImplTest {
           .thenReturn(Flux.just(shipmentLocation));
 
       StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference(
+              bkgServiceImpl.getBookingByCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11"))
           .assertNext(
               b -> {
@@ -3211,8 +3206,7 @@ class BKGServiceImplTest {
 
       when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.empty());
 
-      StepVerifier.create(
-              bookingServiceImpl.getBookingByCarrierBookingRequestReference("IdoNotExist"))
+      StepVerifier.create(bkgServiceImpl.getBookingByCarrierBookingRequestReference("IdoNotExist"))
           .expectError(NotFoundException.class);
     }
   }
@@ -3234,7 +3228,7 @@ class BKGServiceImplTest {
       when(shipmentTransportRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getShipmentByCarrierBookingReference(
+              bkgServiceImpl.getShipmentByCarrierBookingReference(
                   shipment.getCarrierBookingReference()))
           .assertNext(
               b -> {
@@ -3275,7 +3269,7 @@ class BKGServiceImplTest {
       when(shipmentTransportRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getShipmentByCarrierBookingReference(
+              bkgServiceImpl.getShipmentByCarrierBookingReference(
                   shipment.getCarrierBookingReference()))
           .assertNext(
               b -> {
@@ -3326,7 +3320,7 @@ class BKGServiceImplTest {
       when(shipmentTransportRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getShipmentByCarrierBookingReference(
+              bkgServiceImpl.getShipmentByCarrierBookingReference(
                   shipment.getCarrierBookingReference()))
           .assertNext(
               b -> {
@@ -3378,7 +3372,7 @@ class BKGServiceImplTest {
       when(shipmentTransportRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getShipmentByCarrierBookingReference(
+              bkgServiceImpl.getShipmentByCarrierBookingReference(
                   shipment.getCarrierBookingReference()))
           .assertNext(
               b -> {
@@ -3407,7 +3401,7 @@ class BKGServiceImplTest {
       when(shipmentTransportRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
-              bookingServiceImpl.getShipmentByCarrierBookingReference(
+              bkgServiceImpl.getShipmentByCarrierBookingReference(
                   shipment.getCarrierBookingReference()))
           .assertNext(
               b -> {
@@ -3471,7 +3465,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(arrivalTransportEvent));
 
       StepVerifier.create(
-              bookingServiceImpl.getShipmentByCarrierBookingReference(
+              bkgServiceImpl.getShipmentByCarrierBookingReference(
                   shipment.getCarrierBookingReference()))
           .assertNext(
               b -> {
@@ -3581,7 +3575,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(arrivalTransportEvent));
 
       StepVerifier.create(
-              bookingServiceImpl.getShipmentByCarrierBookingReference(
+              bkgServiceImpl.getShipmentByCarrierBookingReference(
                   shipment.getCarrierBookingReference()))
           .assertNext(
               b -> {
@@ -3704,7 +3698,7 @@ class BKGServiceImplTest {
           .thenReturn(Flux.just(partyIdentifyingCode));
 
       StepVerifier.create(
-              bookingServiceImpl.getShipmentByCarrierBookingReference(
+              bkgServiceImpl.getShipmentByCarrierBookingReference(
                   shipment.getCarrierBookingReference()))
           .assertNext(
               b -> {
@@ -3816,7 +3810,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl
+          bkgServiceImpl
               .getBookingRequestSummaries(documentStatus, pageRequest)
               .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
@@ -3854,7 +3848,7 @@ class BKGServiceImplTest {
       when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl
+          bkgServiceImpl
               .getBookingRequestSummaries(documentStatus, pageRequest)
               .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
@@ -3891,7 +3885,7 @@ class BKGServiceImplTest {
       when(vesselRepository.findByIdOrEmpty(vesselId)).thenReturn(Mono.empty());
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl
+          bkgServiceImpl
               .getBookingRequestSummaries(documentStatus, pageRequest)
               .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
@@ -3927,7 +3921,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl
+          bkgServiceImpl
               .getBookingRequestSummaries(null, pageRequest)
               .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
@@ -3964,7 +3958,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl
+          bkgServiceImpl
               .getBookingRequestSummaries(documentStatus, pageRequest)
               .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
@@ -4001,7 +3995,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(initializeVesselTestInstance(vesselId)));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl
+          bkgServiceImpl
               .getBookingRequestSummaries(null, pageRequest)
               .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
@@ -4029,7 +4023,7 @@ class BKGServiceImplTest {
       when(bookingRepository.countAllByDocumentStatus(null)).thenReturn(Mono.just(1L));
 
       Flux<BookingSummaryTO> bookingToResponse =
-          bookingServiceImpl
+          bkgServiceImpl
               .getBookingRequestSummaries(null, pageRequest)
               .flatMapMany(bookingSummaryTOS -> Flux.fromIterable(bookingSummaryTOS));
 
@@ -4066,7 +4060,7 @@ class BKGServiceImplTest {
       when(shipmentRepository.countShipmentsByDocumentStatus(any())).thenReturn(Mono.just(1L));
 
       StepVerifier.create(
-              bookingServiceImpl
+              bkgServiceImpl
                   .getShipmentSummaries(null, pageRequest)
                   .flatMapMany(shipmentSummaryTOS -> Flux.fromIterable(shipmentSummaryTOS)))
           .assertNext(
@@ -4099,7 +4093,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(1L));
 
       StepVerifier.create(
-              bookingServiceImpl
+              bkgServiceImpl
                   .getShipmentSummaries(booking.getDocumentStatus(), pageRequest)
                   .flatMapMany(shipmentSummaryTOS -> Flux.fromIterable(shipmentSummaryTOS)))
           .assertNext(
@@ -4131,7 +4125,7 @@ class BKGServiceImplTest {
       when(shipmentRepository.countShipmentsByDocumentStatus(any())).thenReturn(Mono.just(1L));
 
       StepVerifier.create(
-              bookingServiceImpl
+              bkgServiceImpl
                   .getShipmentSummaries(null, pageRequest)
                   .flatMapMany(shipmentSummaryTOS -> Flux.fromIterable(shipmentSummaryTOS)))
           .assertNext(
@@ -4170,7 +4164,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(mockBookingResponse));
 
       Mono<BookingResponseTO> cancelBookingResponse =
-          bookingServiceImpl.cancelBookingByCarrierBookingReference(
+          bkgServiceImpl.cancelBookingByCarrierBookingReference(
               carrierBookingRequestReference, bookingCancellationRequestTO);
 
       StepVerifier.create(cancelBookingResponse)
@@ -4193,7 +4187,7 @@ class BKGServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.empty());
 
       Mono<BookingResponseTO> cancelBookingResponse =
-          bookingServiceImpl.cancelBookingByCarrierBookingReference(
+          bkgServiceImpl.cancelBookingByCarrierBookingReference(
               carrierBookingRequestReference, bookingCancellationRequestTO);
 
       StepVerifier.create(cancelBookingResponse)
@@ -4224,7 +4218,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(false));
 
       Mono<BookingResponseTO> cancelBookingResponse =
-          bookingServiceImpl.cancelBookingByCarrierBookingReference(
+          bkgServiceImpl.cancelBookingByCarrierBookingReference(
               carrierBookingRequestReference, bookingCancellationRequestTO);
 
       StepVerifier.create(cancelBookingResponse)
@@ -4256,7 +4250,7 @@ class BKGServiceImplTest {
       when(shipmentEventService.create(any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
       Mono<BookingResponseTO> cancelBookingResponse =
-          bookingServiceImpl.cancelBookingByCarrierBookingReference(
+          bkgServiceImpl.cancelBookingByCarrierBookingReference(
               carrierBookingRequestReference, bookingCancellationRequestTO);
 
       StepVerifier.create(cancelBookingResponse)

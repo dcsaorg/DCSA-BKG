@@ -32,8 +32,7 @@ class BKGShipmentControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
-  @MockBean
-  BKGService bookingService;
+  @MockBean BKGService bookingService;
 
   private final String CONFIRMED_BOOKING_ENDPOINT = "/shipments";
 
@@ -114,8 +113,7 @@ class BKGShipmentControllerTest {
       (exchange) -> exchange.expectStatus().isBadRequest();
 
   @Test
-  @DisplayName(
-      "Get shipments should return valid list of shipment summaries for valid request.")
+  @DisplayName("Get shipments should return valid list of shipment summaries for valid request.")
   void shipmentShouldReturnListOfShipments() {
 
     Mockito.when(
@@ -126,10 +124,7 @@ class BKGShipmentControllerTest {
     WebTestClient.ResponseSpec exchange =
         webTestClient
             .get()
-            .uri(
-                CONFIRMED_BOOKING_ENDPOINT
-                    + "/"
-                    + shipmentTO.getCarrierBookingReference())
+            .uri(CONFIRMED_BOOKING_ENDPOINT + "/" + shipmentTO.getCarrierBookingReference())
             .accept(MediaType.APPLICATION_JSON)
             .exchange();
 

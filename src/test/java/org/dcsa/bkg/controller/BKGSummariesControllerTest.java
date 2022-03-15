@@ -34,8 +34,7 @@ class BKGSummariesControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
-  @MockBean
-  BKGService bookingService;
+  @MockBean BKGService bookingService;
 
   private final String BOOKING_SUMMARIES_ENDPOINT = "/booking-summaries";
 
@@ -106,7 +105,10 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setIsEquipmentSubstitutionAllowed(true);
 
     Mockito.when(bookingService.getBookingRequestSummaries(any(), any()))
-        .thenReturn(Mono.just(new PageImpl<BookingSummaryTO>(Arrays.asList(bookingSummaryTo), PageRequest.of(0, 10), 1)));
+        .thenReturn(
+            Mono.just(
+                new PageImpl<BookingSummaryTO>(
+                    Arrays.asList(bookingSummaryTo), PageRequest.of(0, 10), 1)));
 
     webTestClient
         .get()

@@ -81,7 +81,8 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute receiptTypeAtOrigin is required.".equals(v.getMessage())));
+            .anyMatch(
+                v -> "The attribute receiptTypeAtOrigin is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -91,7 +92,9 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute deliveryTypeAtDestination is required.".equals(v.getMessage())));
+            .anyMatch(
+                v ->
+                    "The attribute deliveryTypeAtDestination is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -101,7 +104,9 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute cargoMovementTypeAtOrigin is required.".equals(v.getMessage())));
+            .anyMatch(
+                v ->
+                    "The attribute cargoMovementTypeAtOrigin is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -111,7 +116,10 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute cargoMovementTypeAtDestination is required.".equals(v.getMessage())));
+            .anyMatch(
+                v ->
+                    "The attribute cargoMovementTypeAtDestination is required."
+                        .equals(v.getMessage())));
   }
 
   @Test
@@ -121,7 +129,8 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute serviceContractReference is required.".equals(v.getMessage())));
+            .anyMatch(
+                v -> "The attribute serviceContractReference is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -133,7 +142,9 @@ class BookingTOTest {
     Assertions.assertTrue(
         violations.stream()
             .anyMatch(
-                v -> "The attribute serviceContractReference has a max size of 30.".equals(v.getMessage())));
+                v ->
+                    "The attribute serviceContractReference has a max size of 30."
+                        .equals(v.getMessage())));
   }
 
   @Test
@@ -142,8 +153,9 @@ class BookingTOTest {
     validBookingTO.setIsPartialLoadAllowed(null);
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
-            violations.stream()
-                    .anyMatch(v -> "The attribute isPartialLoadAllowed is required.".equals(v.getMessage())));
+        violations.stream()
+            .anyMatch(
+                v -> "The attribute isPartialLoadAllowed is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -152,8 +164,11 @@ class BookingTOTest {
     validBookingTO.setIsExportDeclarationRequired(null);
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
-            violations.stream()
-                    .anyMatch(v -> "The attribute isExportDeclarationRequired is required.".equals(v.getMessage())));
+        violations.stream()
+            .anyMatch(
+                v ->
+                    "The attribute isExportDeclarationRequired is required."
+                        .equals(v.getMessage())));
   }
 
   @Test
@@ -162,8 +177,9 @@ class BookingTOTest {
     validBookingTO.setIsImportLicenseRequired(null);
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
-            violations.stream()
-                    .anyMatch(v -> "The attribute isImportLicenseRequired is required.".equals(v.getMessage())));
+        violations.stream()
+            .anyMatch(
+                v -> "The attribute isImportLicenseRequired is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -174,7 +190,10 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute importLicenseReference has a max size of 35.".equals(v.getMessage())));
+            .anyMatch(
+                v ->
+                    "The attribute importLicenseReference has a max size of 35."
+                        .equals(v.getMessage())));
   }
 
   @Test
@@ -183,8 +202,8 @@ class BookingTOTest {
     validBookingTO.setSubmissionDateTime(null);
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
-            violations.stream()
-                    .anyMatch(v -> "The attribute submissionDateTime is required.".equals(v.getMessage())));
+        violations.stream()
+            .anyMatch(v -> "The attribute submissionDateTime is required.".equals(v.getMessage())));
   }
 
   // Disabled as simple date format only supports upto millisecond resolution, That means up to 3
@@ -216,7 +235,9 @@ class BookingTOTest {
     Assertions.assertTrue(
         violations.stream()
             .anyMatch(
-                v -> "The attribute contractQuotationReference has a max size of 35.".equals(v.getMessage())));
+                v ->
+                    "The attribute contractQuotationReference has a max size of 35."
+                        .equals(v.getMessage())));
   }
 
   @Test
@@ -242,7 +263,9 @@ class BookingTOTest {
     Assertions.assertTrue(
         violations.stream()
             .anyMatch(
-                v -> "The attribute transportDocumentReference has a max size of 20.".equals(v.getMessage())));
+                v ->
+                    "The attribute transportDocumentReference has a max size of 20."
+                        .equals(v.getMessage())));
   }
 
   @Test
@@ -253,7 +276,10 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute bookingChannelReference has a max size of 20.".equals(v.getMessage())));
+            .anyMatch(
+                v ->
+                    "The attribute bookingChannelReference has a max size of 20."
+                        .equals(v.getMessage())));
   }
 
   @Test
@@ -263,7 +289,8 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute communicationChannel is required.".equals(v.getMessage())));
+            .anyMatch(
+                v -> "The attribute communicationChannel is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -273,7 +300,10 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute isEquipmentSubstitutionAllowed is required.".equals(v.getMessage())));
+            .anyMatch(
+                v ->
+                    "The attribute isEquipmentSubstitutionAllowed is required."
+                        .equals(v.getMessage())));
   }
 
   @Test
@@ -283,7 +313,8 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute vesselName has a max size of 35.".equals(v.getMessage())));
+            .anyMatch(
+                v -> "The attribute vesselName has a max size of 35.".equals(v.getMessage())));
   }
 
   @Test
@@ -292,7 +323,8 @@ class BookingTOTest {
     validBookingTO.setVesselIMONumber("123456");
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "The attribute vesselIMONumber is invalid.".equals(v.getMessage())));
+        violations.stream()
+            .anyMatch(v -> "The attribute vesselIMONumber is invalid.".equals(v.getMessage())));
   }
 
   @Test
@@ -302,7 +334,10 @@ class BookingTOTest {
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
-            .anyMatch(v -> "The attribute exportVoyageNumber has a max size of 50.".equals(v.getMessage())));
+            .anyMatch(
+                v ->
+                    "The attribute exportVoyageNumber has a max size of 50."
+                        .equals(v.getMessage())));
   }
 
   @Test
@@ -311,7 +346,8 @@ class BookingTOTest {
     validBookingTO.setCommodities(null);
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "The attribute commodities is required.".equals(v.getMessage())));
+        violations.stream()
+            .anyMatch(v -> "The attribute commodities is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -320,7 +356,8 @@ class BookingTOTest {
     validBookingTO.setCommodities(Collections.emptyList());
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
-        violations.stream().anyMatch(v -> "The attribute commodities is required.".equals(v.getMessage())));
+        violations.stream()
+            .anyMatch(v -> "The attribute commodities is required.".equals(v.getMessage())));
   }
 
   @Test
@@ -380,21 +417,19 @@ class BookingTOTest {
     // so that the spring validator can be invoked
     DocumentPartyTO documentPartyTO = new DocumentPartyTO();
     Exception exception =
-            Assertions.assertThrows(
-                    ConcreteRequestErrorMessageException.class,
-                    () ->
-                            documentPartyTO.setDisplayedAddress(
-                                    Collections.singletonList("x".repeat(251))));
+        Assertions.assertThrows(
+            ConcreteRequestErrorMessageException.class,
+            () -> documentPartyTO.setDisplayedAddress(Collections.singletonList("x".repeat(251))));
     Assertions.assertEquals(
-            HttpStatus.BAD_REQUEST, exception.getClass().getAnnotation(ResponseStatus.class).value());
+        HttpStatus.BAD_REQUEST, exception.getClass().getAnnotation(ResponseStatus.class).value());
     Assertions.assertEquals(
-            "A single displayedAddress has a max size of 250.", exception.getMessage());
-//    validBookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
-//    Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
-//    Assertions.assertTrue(
-//        violations.size() > 0
-//            && violations.stream()
-//                .anyMatch(v -> v.getPropertyPath().toString().contains("documentParties")));
+        "A single displayedAddress has a max size of 250.", exception.getMessage());
+    //    validBookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
+    //    Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
+    //    Assertions.assertTrue(
+    //        violations.size() > 0
+    //            && violations.stream()
+    //                .anyMatch(v -> v.getPropertyPath().toString().contains("documentParties")));
   }
 
   @Test

@@ -34,8 +34,7 @@ class BKGShipmentSummariesControllerTest {
 
   @Autowired WebTestClient webTestClient;
 
-  @MockBean
-  BKGService bookingService;
+  @MockBean BKGService bookingService;
 
   MockServerHttpResponse serverHttpResponse;
   MockServerHttpRequest serverHttpRequest;
