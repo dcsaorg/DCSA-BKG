@@ -6,7 +6,6 @@ import lombok.Data;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.validator.EnumSubset;
 import org.dcsa.core.validator.ValidVesselIMONumber;
-import org.springframework.data.relational.core.mapping.Column;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -28,6 +27,10 @@ public abstract class AbstractBookingTO {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   protected OffsetDateTime bookingRequestCreatedDateTime;
+
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  protected OffsetDateTime bookingRequestUpdatedDateTime;
 
   @NotNull(message = "The attribute receiptTypeAtOrigin is required.")
   protected ReceiptDeliveryType receiptTypeAtOrigin;
@@ -107,6 +110,4 @@ public abstract class AbstractBookingTO {
   protected String exportVoyageNumber;
 
   protected DCSATransportType preCarriageModeOfTransportCode;
-
-  protected OffsetDateTime bookingRequestUpdatedDateTime;
 }

@@ -58,6 +58,7 @@ class BKGControllerTest {
     bookingTO.setCarrierBookingRequestReference(UUID.randomUUID().toString());
     bookingTO.setDocumentStatus(ShipmentEventTypeCode.PENU);
     bookingTO.setBookingRequestCreatedDateTime(OffsetDateTime.now());
+    bookingTO.setBookingRequestUpdatedDateTime(OffsetDateTime.now());
     bookingTO.setReceiptTypeAtOrigin(ReceiptDeliveryType.CY);
     bookingTO.setDeliveryTypeAtDestination(ReceiptDeliveryType.SD);
     bookingTO.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
@@ -67,7 +68,20 @@ class BKGControllerTest {
     bookingTO.setSubmissionDateTime(OffsetDateTime.now());
     bookingTO.setExpectedDepartureDate(LocalDate.now());
     bookingTO.setInvoicePayableAt(new LocationTO());
-
+    bookingTO.setPaymentTermCode(PaymentTerm.COL);
+    bookingTO.setExportDeclarationReference("exportDeclaration");
+    bookingTO.setImportLicenseReference("importLicenseReference");
+    bookingTO.setIsAMSACIFilingRequired(false);
+    bookingTO.setIsDestinationFilingRequired(false);
+    bookingTO.setContractQuotationReference("contractRef");
+    bookingTO.setTransportDocumentTypeCode(TransportDocumentTypeCode.BOL);
+    bookingTO.setTransportDocumentReference("TDRef");
+    bookingTO.setBookingChannelReference("ChannelRef");
+    bookingTO.setIncoTerms(IncoTerms.FCA);
+    bookingTO.setPlaceOfIssue(new LocationTO());
+    bookingTO.setVesselName("Vessel");
+    bookingTO.setVesselIMONumber("9074729");
+    bookingTO.setExportVoyageNumber("1234N");
     bookingTO.setIsExportDeclarationRequired(true);
     bookingTO.setIsPartialLoadAllowed(true);
     bookingTO.setIsImportLicenseRequired(true);
@@ -78,6 +92,8 @@ class BKGControllerTest {
     commodityTO.setHsCode("x".repeat(10));
     commodityTO.setCargoGrossWeight(12.12);
     commodityTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
+    commodityTO.setExportLicenseIssueDate(LocalDate.now());
+    commodityTO.setExportLicenseExpiryDate(LocalDate.now());
     bookingTO.setCommodities(Collections.singletonList(commodityTO));
 
     ValueAddedServiceRequestTO valueAddedServiceRequestTO = new ValueAddedServiceRequestTO();
@@ -95,12 +111,31 @@ class BKGControllerTest {
     requestedEquipmentTO.setShipperOwned(true);
     bookingTO.setRequestedEquipments(Collections.singletonList(requestedEquipmentTO));
 
+    Address address = new Address();
+    address.setName("name");
+    address.setStreet("street");
+    address.setStreetNumber("1");
+    address.setFloor("2");
+    address.setPostalCode("1234AA");
+    address.setCity("City");
+    address.setStateRegion("region");
+    address.setCountry("NL");
+
+    PartyContactDetailsTO partyContactDetailsTO = new PartyContactDetailsTO();
+    partyContactDetailsTO.setName("partycontactDetails");
+    partyContactDetailsTO.setPhone("phone");
+    partyContactDetailsTO.setEmail("email");
+
     DocumentPartyTO documentPartyTO = new DocumentPartyTO();
     PartyTO partyTO = new PartyTO();
     partyTO.setIdentifyingCodes(
         Collections.singletonList(PartyTO.IdentifyingCode.builder().build()));
-    partyTO.setAddress(new Address());
-    partyTO.setPartyContactDetails(Collections.singletonList(new PartyContactDetailsTO()));
+    partyTO.setAddress(address);
+    partyTO.setPartyName("partyName");
+    partyTO.setPartyContactDetails(Collections.singletonList(partyContactDetailsTO));
+    partyTO.setTaxReference1("taxRef");
+    partyTO.setTaxReference2("taxRef2");
+    partyTO.setPublicKey("pubKey");
     documentPartyTO.setParty(partyTO);
     documentPartyTO.setPartyFunction(PartyFunction.N1);
     documentPartyTO.setDisplayedAddress(Collections.singletonList("x".repeat(250)));
@@ -134,6 +169,12 @@ class BKGControllerTest {
   @DisplayName("POST booking should return 202 and valid booking json schema.")
   void postBookingsShouldReturn202ForValidBookingRequest() {
 
+    BookingTO bookingRequest = bookingTO;
+    bookingRequest.setBookingRequestCreatedDateTime(null);
+    bookingRequest.setBookingRequestUpdatedDateTime(null);
+    bookingRequest.setDocumentStatus(null);
+    bookingRequest.setCarrierBookingRequestReference(null);
+
     ArgumentCaptor<BookingTO> argument = ArgumentCaptor.forClass(BookingTO.class);
 
     // mock service method call
@@ -144,7 +185,7 @@ class BKGControllerTest {
             .post()
             .uri(BOOKING_ENDPOINT)
             .contentType(MediaType.APPLICATION_JSON)
-            .body(BodyInserters.fromValue(bookingTO))
+            .body(BodyInserters.fromValue(bookingRequest))
             .exchange();
 
     // these values are only allowed in response and not to be set via request body
@@ -180,6 +221,11 @@ class BKGControllerTest {
       "PUT booking should return 202 and valid booking json schema for given carrierBookingRequestReference.")
   void putBookingsShouldReturn202ForValidBookingRequest() {
 
+    BookingTO bookingRequest = bookingTO;
+    bookingRequest.setBookingRequestCreatedDateTime(null);
+    bookingRequest.setBookingRequestUpdatedDateTime(null);
+    bookingRequest.setDocumentStatus(null);
+
     ArgumentCaptor<BookingTO> argument = ArgumentCaptor.forClass(BookingTO.class);
 
     // mock service method call
@@ -191,14 +237,15 @@ class BKGControllerTest {
             .put()
             .uri(BOOKING_ENDPOINT + "/" + UUID.randomUUID())
             .contentType(MediaType.APPLICATION_JSON)
-            .body(BodyInserters.fromValue(bookingTO))
+            .body(BodyInserters.fromValue(bookingRequest))
             .exchange();
 
     // these values are only allowed in response and not to be set via request body
     verify(bookingService)
         .updateBookingByReferenceCarrierBookingRequestReference(any(), argument.capture());
-    // CarrierBookingRequestReference is set to null in the service implementation, as we need to be
-    // able to set it via request in PUT
+    //    // CarrierBookingRequestReference is set to null in the service implementation, as we need
+    // to be
+    //    // able to set it via request in PUT
     assertNull(argument.getValue().getDocumentStatus());
     assertNull(argument.getValue().getBookingRequestCreatedDateTime());
 

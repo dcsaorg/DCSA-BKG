@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static org.dcsa.core.events.model.enums.PartyFunction.DOCUMENTATION_PARTY_FUNCTION_CODES;
+
 @DisplayName("Tests for DocumentPartyTO")
 class DocumentPartyTOTest {
 
@@ -69,10 +71,7 @@ class DocumentPartyTOTest {
   @DisplayName(
       "DocumentPartyTO should throw error if partyFunction is set to a value that is not in its enum subset.")
   void testToVerifyNotAllowedEnumsInPartyFunctionIsInvalid() {
-    List<String> documentPartySubset =
-        Arrays.asList(
-            "OS", "CN", "COW", "COX", "N1", "N2", "NI", "SFA", "DDR", "DDS", "CA", "HE", "SCO",
-            "BA");
+    List<String> documentPartySubset = Arrays.asList(DOCUMENTATION_PARTY_FUNCTION_CODES);
     for (PartyFunction pf : PartyFunction.values()) {
       if (documentPartySubset.contains(pf.name())) continue;
       validDocumentPartyTO.setPartyFunction(pf);

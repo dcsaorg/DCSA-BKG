@@ -13,20 +13,26 @@ IntelliJ it is recommended to download and activate the
 
 ### BUILDING AND RUNNING THE PROJECT
 
->**[RECOMMENDED]** Set up a Github Personal Access Token (PAT) as mentioned [here](https://github.com/dcsaorg/DCSA-Core/blob/master/README.md#how-to-use-dcsa-core-packages), then skip to **step 3**.
+> **[RECOMMENDED]** Set up a Github Personal Access Token (PAT) as mentioned [here](https://github.com/dcsaorg/DCSA-Core/blob/master/README.md#how-to-use-dcsa-core-packages), then skip to **step 3**.
 
 If you would like to build required DCSA packages individually, begin with step 1.
 
-1) Build **DCSA-Core** as described in [DCSA-Core/README.md](https://github.com/dcsaorg/DCSA-Core/blob/master/README.md#to-build-manually-run), then
+1) Build **DCSA-Core** as described
+   in [DCSA-Core/README.md](https://github.com/dcsaorg/DCSA-Core/blob/master/README.md#to-build-manually-run), then
 
-2) Build **DCSA-Event-Core** as described in [DCSA-Event-Core/README.md](https://github.com/dcsaorg/DCSA-Event-Core/blob/master/README.md#to-build-manually-run), then
+2) Build **DCSA-Event-Core** as described
+   in [DCSA-Event-Core/README.md](https://github.com/dcsaorg/DCSA-Event-Core/blob/master/README.md#to-build-manually-run)
+   , then
 
 3) Clone **DCSA-BKG** (with ``--recurse-submodules`` option.) and Build using, ``mvn package``
 
-4) Initialize your local postgresql database as described in [datamodel/README.md](https://github.com/dcsaorg/DCSA-Information-Model/blob/master/README.md) \
-   or If you have docker installed, you may skip this step and use the docker-compose command mentioned below to set it up (This will initialize the application along with the database).
+4) Initialize your local postgresql database as described
+   in [datamodel/README.md](https://github.com/dcsaorg/DCSA-Information-Model/blob/master/README.md) \
+   or If you have docker installed, you may skip this step and use the docker-compose command mentioned below to set it
+   up (This will initialize the application along with the database).
 
 5) Run application,
+
 ```
 mvn spring-boot:run [options]
 
@@ -41,10 +47,13 @@ docker-compose up -d -V --build
 ```
 
 6) Verify if the application is running,
+
 ```
 curl http://localhost:9090/v2/actuator/health
 ```
+
 ------------------------------------------------------------------------------------------------------------------------
+
 ### DEVELOPMENT FLOW
 
 We maintain two branches, `master` and `dev`. \
@@ -60,3 +69,14 @@ A typical development flow would look like:
 4) At the end of a sprint, we sync the core dependencies (`dev-<project>`) with their respective `master`,\
  update the dependency versions in `dev` and merge with `master` after successful CI validation.
 5) Continue development on `dev` for new sprint.
+   update the dependency versions in `dev` and merge with `master` after successful CI validation.
+5) Continue development on `dev` for new sprint.
+
+## Json schemas used for validation
+
+Generated from resolved OAS Yaml file using: https://github.com/adzubla/schema-convert
+
+This will generate JSON schemas from the definitions in the OAS Yaml file.
+
+**Note! This will only generate JSON schemas from definitions in the components or domains. In the case of summaries
+endpoints the outer array is defined in the API and therefore excluded in the generated JSON schema file!**
