@@ -127,14 +127,14 @@ public class BKGServiceImpl implements BKGService {
                                 bookingTO.setVesselIMONumber(v.getVesselIMONumber());
                                 return Mono.just(bookingTO);
                               }),
-                      createLocationByTO(
+                      optionalInMono(locationService.createLocationByTO(
                           bookingRequest.getInvoicePayableAt(),
                           invPayAT ->
-                              bookingRepository.setInvoicePayableAtFor(invPayAT, bookingID)),
-                      createLocationByTO(
+                              bookingRepository.setInvoicePayableAtFor(invPayAT, bookingID))),
+                      optionalInMono(locationService.createLocationByTO(
                           bookingRequest.getPlaceOfIssue(),
                           placeOfIss ->
-                              bookingRepository.setPlaceOfIssueIDFor(placeOfIss, bookingID)),
+                              bookingRepository.setPlaceOfIssueIDFor(placeOfIss, bookingID))),
                       createCommoditiesByBookingIDAndTOs(
                           bookingID, bookingRequest.getCommodities()),
                       createValueAddedServiceRequestsByBookingIDAndTOs(
@@ -228,39 +228,8 @@ public class BKGServiceImpl implements BKGService {
     }
   }
 
-  private Mono<Optional<LocationTO>> createLocationByTO(
-      LocationTO locationTO, Function<String, Mono<Boolean>> updateBookingCallback) {
-
-    if (Objects.isNull(locationTO)) {
-      return Mono.just(Optional.empty());
-    }
-
-    Location location = locationMapper.dtoToLocation(locationTO);
-
-    if (Objects.isNull(locationTO.getAddress())) {
-      return locationRepository
-          .save(location)
-          .flatMap(l -> updateBookingCallback.apply(l.getId()).thenReturn(l))
-          .map(locationMapper::locationToDTO)
-          .map(Optional::of);
-    } else {
-      return addressService
-          .ensureResolvable(locationTO.getAddress())
-          .flatMap(
-              a -> {
-                location.setAddressID(a.getId());
-                return locationRepository
-                    .save(location)
-                    .flatMap(l -> updateBookingCallback.apply(l.getId()).thenReturn(l))
-                    .map(
-                        l -> {
-                          LocationTO lTO = locationMapper.locationToDTO(l);
-                          lTO.setAddress(a);
-                          return lTO;
-                        })
-                    .map(Optional::of);
-              });
-    }
+  private <T> Mono<Optional<T>> optionalInMono(Mono<T> original) {
+    return original.map(Optional::of).switchIfEmpty(Mono.just(Optional.empty()));
   }
 
   private Mono<Optional<List<CommodityTO>>> createCommoditiesByBookingIDAndTOs(
@@ -636,16 +605,16 @@ public class BKGServiceImpl implements BKGService {
                                   bookingTO.setVesselIMONumber(v.getVesselIMONumber());
                                   return Mono.just(bookingTO);
                                 }),
-                        resolveLocationByTO(
+                        optionalInMono(locationService.resolveLocationByTO(
                             b.getInvoicePayableAt(),
                             bookingRequest.getInvoicePayableAt(),
                             invPayAT ->
-                                bookingRepository.setInvoicePayableAtFor(invPayAT, b.getId())),
-                        resolveLocationByTO(
+                                bookingRepository.setInvoicePayableAtFor(invPayAT, b.getId()))),
+                        optionalInMono(locationService.resolveLocationByTO(
                             b.getPlaceOfIssueID(),
                             bookingRequest.getPlaceOfIssue(),
                             placeOfIss ->
-                                bookingRepository.setPlaceOfIssueIDFor(placeOfIss, b.getId())),
+                                bookingRepository.setPlaceOfIssueIDFor(placeOfIss, b.getId()))),
                         resolveCommoditiesForBookingID(bookingRequest.getCommodities(), b.getId()),
                         resolveValueAddedServiceReqForBookingID(
                             bookingRequest.getValueAddedServiceRequests(), b.getId()),
@@ -690,29 +659,6 @@ public class BKGServiceImpl implements BKGService {
                         new UpdateException(
                             "No booking found for given carrierBookingRequestReference."))))
         .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
-  }
-
-  private Mono<Optional<LocationTO>> resolveLocationByTO(
-      String currentLocationIDInBooking,
-      LocationTO locationTO,
-      Function<String, Mono<Boolean>> updateBookingCallback) {
-
-    // locationTO is the location received from the update booking request
-    if (Objects.isNull(locationTO)) {
-      if (StringUtils.isEmpty(currentLocationIDInBooking)) {
-        // it's possible that there may be no location linked to booking
-        return Mono.just(Optional.empty());
-      } else {
-        return locationRepository
-            .deleteById(currentLocationIDInBooking)
-            .then(Mono.just(Optional.empty()));
-      }
-    } else {
-      return locationService
-          .ensureResolvable(locationTO)
-          .flatMap(lTO -> updateBookingCallback.apply(lTO.getId()).thenReturn(lTO))
-          .map(Optional::of);
-    }
   }
 
   private Mono<Optional<List<CommodityTO>>> resolveCommoditiesForBookingID(
@@ -895,41 +841,17 @@ public class BKGServiceImpl implements BKGService {
 
   private Mono<Tuple2<Optional<LocationTO>, Optional<LocationTO>>> fetchLocationTupleByID(
       String invoicePayableAtLocID, String placeOfIssueLocID) {
-    return Mono.zip(fetchLocationByID(invoicePayableAtLocID), fetchLocationByID(placeOfIssueLocID))
+    return Mono.zip(
+      optionalInMono(locationService.fetchLocationDeepObjByID(invoicePayableAtLocID)),
+      optionalInMono(locationService.fetchLocationDeepObjByID(placeOfIssueLocID)))
         .map(deepObjs -> Tuples.of(deepObjs.getT1(), deepObjs.getT2()));
-  }
-
-  private Mono<Optional<LocationTO>> fetchLocationByID(String id) {
-    if (id == null) return Mono.just(Optional.empty());
-    return locationRepository
-        .findById(id)
-        .flatMap(
-            location ->
-                Mono.zip(
-                        addressRepository
-                            .findByIdOrEmpty(location.getAddressID())
-                            .map(Optional::of)
-                            .defaultIfEmpty(Optional.empty()),
-                        facilityRepository
-                            .findByIdOrEmpty(location.getFacilityID())
-                            .map(Optional::of)
-                            .defaultIfEmpty(Optional.empty()))
-                    .flatMap(
-                        t2 -> {
-                          LocationTO locTO = locationMapper.locationToDTO(location);
-                          t2.getT1().ifPresent(locTO::setAddress);
-                          t2.getT2().ifPresent(locTO::setFacility);
-                          return Mono.just(locTO);
-                        }))
-        .onErrorReturn(new LocationTO())
-        .map(Optional::of);
   }
 
   private Mono<Optional<LocationTO>> fetchLocationByTransportCallId(String id) {
     if (id == null) return Mono.just(Optional.empty());
     return transportCallRepository
         .findById(id)
-        .flatMap(transportCall -> fetchLocationByID(transportCall.getLocationID()));
+        .flatMap(transportCall -> optionalInMono(locationService.fetchLocationDeepObjByID(transportCall.getLocationID())));
   }
 
   private Mono<Optional<List<CarrierClauseTO>>> fetchCarrierClausesByShipmentID(UUID shipmentID) {
@@ -967,8 +889,8 @@ public class BKGServiceImpl implements BKGService {
         .flatMap(
             booking ->
                 Mono.zip(
-                        fetchLocationByID(booking.getInvoicePayableAt()),
-                        fetchLocationByID(booking.getPlaceOfIssueID()),
+                        optionalInMono(locationService.fetchLocationDeepObjByID(booking.getInvoicePayableAt())),
+                        optionalInMono(locationService.fetchLocationDeepObjByID(booking.getPlaceOfIssueID())),
                         fetchCommoditiesByBookingID(booking.getId()),
                         fetchValueAddedServiceRequestsByBookingID(booking.getId()),
                         fetchReferencesByBookingID(booking.getId()),
@@ -1137,7 +1059,7 @@ public class BKGServiceImpl implements BKGService {
         .findByBookingID(bookingID)
         .flatMap(
             sl ->
-                fetchLocationByID(sl.getLocationID())
+                  optionalInMono(locationService.fetchLocationDeepObjByID(sl.getLocationID()))
                     .flatMap(
                         lopt -> {
                           ShipmentLocationTO shipmentLocationTO =
