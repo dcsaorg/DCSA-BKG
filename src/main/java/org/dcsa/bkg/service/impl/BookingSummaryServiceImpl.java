@@ -39,7 +39,8 @@ public class BookingSummaryServiceImpl
 
   @Override
   protected Mono<BookingSummaryTO> mapDM2TO(Booking booking) {
-    return null;
+    throw new UnsupportedOperationException(
+        "Should not be called, since a summaries endpoint acts on a Flux of items. org.dcsa.bkg.service.impl.BookingSummaryServiceImpl.bulkMapDM2TO should be used.");
   }
 
   @Override
