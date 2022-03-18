@@ -2,11 +2,8 @@ package org.dcsa.bkg.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.dcsa.bkg.model.mappers.BookingSummaryMapper;
 import org.dcsa.bkg.model.mappers.PartyContactDetailsMapper;
 import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
-import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
-import org.dcsa.bkg.model.transferobjects.ShipmentSummaryTO;
 import org.dcsa.bkg.service.BKGService;
 import org.dcsa.core.events.edocumentation.model.mapper.*;
 import org.dcsa.core.events.edocumentation.model.transferobject.*;
@@ -26,8 +23,6 @@ import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
-import org.dcsa.core.validator.EnumSubset;
-import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -38,10 +33,7 @@ import reactor.util.function.Tuples;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOCUMENT_STATUSES;
 
 @Service
 @RequiredArgsConstructor
@@ -77,7 +69,6 @@ public class BKGServiceImpl implements BKGService {
 
   // mappers
   private final BookingMapper bookingMapper;
-  private final BookingSummaryMapper bookingSummaryMapper;
   private final LocationMapper locationMapper;
   private final CommodityMapper commodityMapper;
   private final PartyMapper partyMapper;
@@ -94,95 +85,12 @@ public class BKGServiceImpl implements BKGService {
   private final AddressService addressService;
 
   @Override
-  public Mono<Page<ShipmentSummaryTO>> getShipmentSummaries(ShipmentEventTypeCode documentStatus,
-      Pageable pageable) {
-
-    Pageable mappedPageRequest = mapSortParameters(pageable);
-
-    return shipmentRepository
-        .findShipmentsAndBookingsByDocumentStatus(documentStatus, mappedPageRequest)
-        .map(this::createShipmentSummaryTO)
-        .collectList()
-        .zipWith(shipmentRepository.countShipmentsByDocumentStatus(documentStatus))
-        .map(objects -> new PageImpl<>(objects.getT1(), pageable, objects.getT2()));
-  }
-
-  private ShipmentSummaryTO createShipmentSummaryTO(
-      ShipmentCustomRepository.ShipmentSummary shipmentSummary) {
-    ShipmentSummaryTO shipmentSummaryTO = new ShipmentSummaryTO();
-    shipmentSummaryTO.setDocumentStatus(shipmentSummary.getDocumentStatus());
-    shipmentSummaryTO.setCarrierBookingReference(shipmentSummary.getCarrierBookingReference());
-    shipmentSummaryTO.setCarrierBookingRequestReference(
-        shipmentSummary.getCarrierBookingRequestReference());
-    shipmentSummaryTO.setTermsAndConditions(shipmentSummary.getTermsAndConditions());
-    shipmentSummaryTO.setShipmentCreatedDateTime(shipmentSummary.getConfirmationDateTime());
-    shipmentSummaryTO.setShipmentUpdatedDateTime(shipmentSummary.getUpdatedDateTime());
-    return shipmentSummaryTO;
-  }
-
-  @Override
-  public Mono<Page<BookingSummaryTO>> getBookingRequestSummaries(
-      @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES) ShipmentEventTypeCode documentStatus,
-      Pageable pageable) {
-
-    Pageable mappedPageRequest = mapSortParameters(pageable);
-
-    Flux<Booking> queryResponse =
-        bookingRepository.findAllByDocumentStatus(documentStatus, mappedPageRequest);
-
-    return queryResponse
-        .concatMap(
-            booking ->
-                vesselRepository
-                    .findByIdOrEmpty(booking.getVesselId())
-                    .mapNotNull(
-                        vessel -> {
-                          BookingSummaryTO bookingSummaryTO =
-                              bookingSummaryMapper.bookingSummaryTOFromBooking(booking);
-                          bookingSummaryTO.setVesselIMONumber(vessel.getVesselIMONumber());
-                          return bookingSummaryTO;
-                        })
-                    .defaultIfEmpty(bookingSummaryMapper.bookingSummaryTOFromBooking(booking)))
-        .collectList()
-        .zipWith(bookingRepository.countAllByDocumentStatus(documentStatus))
-        .map(objects -> new PageImpl<>(objects.getT1(), pageable, objects.getT2()));
-  }
-
-  private Pageable mapSortParameters(Pageable pageable) {
-    List<Sort.Order> sort =
-        pageable
-            .getSort()
-            .get()
-            .map(
-                order -> {
-                  if (order.getProperty().equals("bookingRequestCreatedDateTime")) {
-                    return Sort.Order.by("bookingRequestDateTime").with(order.getDirection());
-                  }
-                  if (order.getProperty().equals("bookingRequestUpdatedDateTime")) {
-                    return Sort.Order.by("updatedDateTime").with(order.getDirection());
-                  }
-                  if (order.getProperty().equals("shipmentCreatedDateTime")) {
-                    return Sort.Order.by("confirmationDateTime").with(order.getDirection());
-                  }
-                  if (order.getProperty().equals("shipmentUpdatedDateTime")) {
-                    return Sort.Order.by("updatedDateTime").with(order.getDirection());
-                  }
-                  return order;
-                })
-            .collect(Collectors.toList());
-
-    Pageable mappedPageRequest =
-        PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sort));
-    return mappedPageRequest;
-  }
-
-  @Override
   @Transactional
   public Mono<BookingResponseTO> createBooking(final BookingTO bookingRequest) {
 
     String bookingRequestError = validateBookingRequest(bookingRequest);
     if (!bookingRequestError.isEmpty()) {
-        return Mono.error(new CreateException(bookingRequestError));
+      return Mono.error(new CreateException(bookingRequestError));
     }
 
     OffsetDateTime now = OffsetDateTime.now();
@@ -695,10 +603,10 @@ public class BKGServiceImpl implements BKGService {
   public Mono<BookingResponseTO> updateBookingByReferenceCarrierBookingRequestReference(
       String carrierBookingRequestReference, BookingTO bookingRequest) {
 
-      String bookingRequestError = validateBookingRequest(bookingRequest);
-      if (!bookingRequestError.isEmpty()) {
-          return Mono.error(new CreateException(bookingRequestError));
-      }
+    String bookingRequestError = validateBookingRequest(bookingRequest);
+    if (!bookingRequestError.isEmpty()) {
+      return Mono.error(new CreateException(bookingRequestError));
+    }
 
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
@@ -1503,34 +1411,33 @@ public class BKGServiceImpl implements BKGService {
   }
 
   private String validateBookingRequest(BookingTO bookingRequest) {
-        if (bookingRequest.getIsImportLicenseRequired()
-            && bookingRequest.getImportLicenseReference() == null) {
-              return "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true.";
-        }
+    if (bookingRequest.getIsImportLicenseRequired()
+        && bookingRequest.getImportLicenseReference() == null) {
+      return "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true.";
+    }
 
-        if (bookingRequest.getIsExportDeclarationRequired()
-            && bookingRequest.getExportDeclarationReference() == null) {
-            return "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true.";
-        }
+    if (bookingRequest.getIsExportDeclarationRequired()
+        && bookingRequest.getExportDeclarationReference() == null) {
+      return "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true.";
+    }
 
-        if (bookingRequest.getExpectedArrivalDateStart() == null
-            && bookingRequest.getExpectedArrivalDateEnd() == null
-            && bookingRequest.getExpectedDepartureDate() == null
-            && bookingRequest.getVesselIMONumber() == null
-            && bookingRequest.getExportVoyageNumber() == null) {
-            return "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.";
-        }
+    if (bookingRequest.getExpectedArrivalDateStart() == null
+        && bookingRequest.getExpectedArrivalDateEnd() == null
+        && bookingRequest.getExpectedDepartureDate() == null
+        && bookingRequest.getVesselIMONumber() == null
+        && bookingRequest.getExportVoyageNumber() == null) {
+      return "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.";
+    }
 
-        if (bookingRequest.getExpectedArrivalDateStart() != null
-            && bookingRequest.getExpectedArrivalDateEnd() != null
-            && bookingRequest
-                .getExpectedArrivalDateStart()
-                .isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
-            return "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart.";
-        }
-        return StringUtils.EMPTY;
-      }
-
+    if (bookingRequest.getExpectedArrivalDateStart() != null
+        && bookingRequest.getExpectedArrivalDateEnd() != null
+        && bookingRequest
+            .getExpectedArrivalDateStart()
+            .isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
+      return "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart.";
+    }
+    return StringUtils.EMPTY;
+  }
 
   private final Function<Boolean, Mono<? extends Boolean>> verifyCancellation =
       isRecordUpdated -> {
@@ -1545,7 +1452,10 @@ public class BKGServiceImpl implements BKGService {
       booking -> {
         EnumSet<ShipmentEventTypeCode> allowedDocumentStatuses =
             EnumSet.of(
-                ShipmentEventTypeCode.RECE, ShipmentEventTypeCode.PENU, ShipmentEventTypeCode.CONF, ShipmentEventTypeCode.PENC);
+                ShipmentEventTypeCode.RECE,
+                ShipmentEventTypeCode.PENU,
+                ShipmentEventTypeCode.CONF,
+                ShipmentEventTypeCode.PENC);
         if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
           return Mono.just(booking);
         }

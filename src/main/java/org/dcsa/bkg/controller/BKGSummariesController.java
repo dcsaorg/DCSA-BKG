@@ -1,14 +1,17 @@
 package org.dcsa.bkg.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.dcsa.bkg.controller.util.Pagination;
 import org.dcsa.bkg.model.transferobjects.BookingSummaryTO;
-import org.dcsa.bkg.service.BKGService;
+import org.dcsa.bkg.service.impl.BookingSummaryServiceImpl;
+import org.dcsa.core.controller.AsymmetricQueryController;
+import org.dcsa.core.events.model.Booking;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
+import org.dcsa.core.extendedrequest.ExtendedParameters;
+import org.dcsa.core.extendedrequest.ExtendedRequest;
 import org.dcsa.core.validator.EnumSubset;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +20,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
-import javax.validation.constraints.Min;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOCUMENT_STATUSES;
 
@@ -27,34 +33,37 @@ import static org.dcsa.core.events.model.enums.ShipmentEventTypeCode.BOOKING_DOC
 @RequestMapping(
     value = "/booking-summaries",
     produces = {MediaType.APPLICATION_JSON_VALUE})
-public class BKGSummariesController {
+public class BKGSummariesController
+    extends AsymmetricQueryController<BookingSummaryServiceImpl, Booking, BookingSummaryTO, UUID> {
 
-  private final BKGService bookingService;
+  private final ExtendedParameters extendedParameters;
+  private final R2dbcDialect r2dbcDialect;
+  private final BookingSummaryServiceImpl service;
+
+  @Override
+  protected BookingSummaryServiceImpl getService() {
+    return service;
+  }
 
   @GetMapping
   public Flux<BookingSummaryTO> getBookingRequestSummaries(
       @RequestParam(value = "documentStatus", required = false)
           @EnumSubset(anyOf = BOOKING_DOCUMENT_STATUSES)
           ShipmentEventTypeCode documentStatus,
-      @RequestParam(
-              value = "limit",
-              defaultValue = "${pagination.defaultPageSize}",
-              required = false)
-          @Min(1)
-          int limit,
-      @RequestParam(value = "cursor", required = false) String cursor,
-      @RequestParam(value = "sort", required = false) String[] sort,
-      ServerHttpResponse response) {
+      ServerHttpResponse response,
+      ServerHttpRequest request) {
+    return super.findAll(response, request);
+  }
 
-    Pagination pagination =
-        new Pagination(Sort.by(Sort.Direction.DESC, "bookingRequestCreatedDateTime"));
-    PageRequest pageRequest = pagination.createPageRequest(limit, cursor, sort);
-
-    return bookingService
-        .getBookingRequestSummaries(documentStatus, pageRequest)
-        .doOnNext(
-            bookingSummaryTOS ->
-                response.getHeaders().addAll(pagination.setPaginationHeaders(bookingSummaryTOS)))
-        .flatMapMany(Flux::fromIterable);
+  @Override
+  protected ExtendedRequest<Booking> newExtendedRequest() {
+    return new ExtendedRequest<>(extendedParameters, r2dbcDialect, Booking.class) {
+      @Override
+      public void parseParameter(Map<String, List<String>> params) {
+        Map<String, List<String>> allowedParams = new HashMap<>(params);
+        allowedParams.putIfAbsent("documentStatus", List.of(BOOKING_DOCUMENT_STATUSES));
+        super.parseParameter(allowedParams);
+      }
+    };
   }
 }
