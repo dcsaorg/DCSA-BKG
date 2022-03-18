@@ -4,6 +4,13 @@
 
 ------------------------------------------------------------------------------------------------------------------------
 
+Code standard
+-------------------------------------
+We use [Google Java Style](https://google.github.io/styleguide/javaguide.html), when using
+IntelliJ it is recommended to download and activate the
+[google-java-format plugin](https://github.com/google/google-java-format).
+
+
 ### BUILDING AND RUNNING THE PROJECT
 
 >**[RECOMMENDED]** Set up a Github Personal Access Token (PAT) as mentioned [here](https://github.com/dcsaorg/DCSA-Core/blob/master/README.md#how-to-use-dcsa-core-packages), then skip to **step 3**.
@@ -21,7 +28,7 @@ If you would like to build required DCSA packages individually, begin with step 
 
 5) Run application,
 ```
-mvn spring-boot:run [options] 
+mvn spring-boot:run [options]
 
 options:
  -Dspring-boot.run.arguments="--DB_HOSTNAME=localhost:5432 --AUTH0_ENABLED=false --LOG_LEVEL=DEBUG"
