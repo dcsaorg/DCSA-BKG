@@ -51,9 +51,7 @@ public class BKGServiceImpl implements BKGService {
   private final DocumentPartyRepository documentPartyRepository;
   private final DocumentPartyService documentPartyService;
   private final PartyService partyService;
-  private final PartyRepository partyRepository;
   private final PartyContactDetailsRepository partyContactDetailsRepository;
-  private final PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   private final ShipmentLocationRepository shipmentLocationRepository;
   private final DisplayedAddressRepository displayedAddressRepository;
   private final ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
@@ -73,12 +71,10 @@ public class BKGServiceImpl implements BKGService {
   private final BookingMapper bookingMapper;
   private final LocationMapper locationMapper;
   private final CommodityMapper commodityMapper;
-  private final PartyMapper partyMapper;
   private final ShipmentMapper shipmentMapper;
   private final CarrierClauseMapper carrierClauseMapper;
   private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
   private final ChargeMapper chargeMapper;
-  private final PartyContactDetailsMapper partyContactDetailsMapper;
   private final TransportMapper transportMapper;
 
   // services

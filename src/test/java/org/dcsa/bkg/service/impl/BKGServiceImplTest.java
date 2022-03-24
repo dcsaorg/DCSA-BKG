@@ -59,10 +59,8 @@ class BKGServiceImplTest {
   @Mock DocumentPartyRepository documentPartyRepository;
   @Mock DocumentPartyService documentPartyService;
   @Mock PartyService partyService;
-  @Mock PartyRepository partyRepository;
   @Mock DisplayedAddressRepository displayedAddressRepository;
   @Mock PartyContactDetailsRepository partyContactDetailsRepository;
-  @Mock PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   @Mock ShipmentLocationRepository shipmentLocationRepository;
   @Mock ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   @Mock VesselRepository vesselRepository;
