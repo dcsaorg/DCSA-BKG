@@ -226,6 +226,9 @@ public class BKGServiceImpl implements BKGService {
     }
   }
 
+  /**
+   * TODO This is a hack. But I preferred to simply remove duplicate code and not re-writing it at the same time - https://dcsa.atlassian.net/browse/DDT-975 should address this.
+   */
   private <T> Mono<Optional<T>> optionalInMono(Mono<T> original) {
     return original.map(Optional::of).switchIfEmpty(Mono.just(Optional.empty()));
   }
