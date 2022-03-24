@@ -2,7 +2,7 @@ version: '3.5'
 services:
     web:
         environment:
-            - "DB_HOSTNAME=db"
+            - "DB_HOSTNAME=dcsa-test-db"
             - "SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}"
         container_name: dcsa_bkg
         build:
