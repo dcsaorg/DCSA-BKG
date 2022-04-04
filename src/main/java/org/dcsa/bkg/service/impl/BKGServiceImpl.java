@@ -18,7 +18,9 @@ import org.dcsa.core.events.model.mapper.PartyMapper;
 import org.dcsa.core.events.model.transferobjects.*;
 import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.AddressService;
+import org.dcsa.core.events.service.DocumentPartyService;
 import org.dcsa.core.events.service.LocationService;
+import org.dcsa.core.events.service.PartyService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.NotFoundException;
@@ -42,16 +44,14 @@ public class BKGServiceImpl implements BKGService {
   // repositories
   private final BookingRepository bookingRepository;
   private final LocationRepository locationRepository;
-  private final AddressRepository addressRepository;
-  private final FacilityRepository facilityRepository;
   private final CommodityRepository commodityRepository;
   private final ValueAddedServiceRequestRepository valueAddedServiceRequestRepository;
   private final ReferenceRepository referenceRepository;
   private final RequestedEquipmentRepository requestedEquipmentRepository;
   private final DocumentPartyRepository documentPartyRepository;
-  private final PartyRepository partyRepository;
+  private final DocumentPartyService documentPartyService;
+  private final PartyService partyService;
   private final PartyContactDetailsRepository partyContactDetailsRepository;
-  private final PartyIdentifyingCodeRepository partyIdentifyingCodeRepository;
   private final ShipmentLocationRepository shipmentLocationRepository;
   private final DisplayedAddressRepository displayedAddressRepository;
   private final ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
@@ -71,12 +71,10 @@ public class BKGServiceImpl implements BKGService {
   private final BookingMapper bookingMapper;
   private final LocationMapper locationMapper;
   private final CommodityMapper commodityMapper;
-  private final PartyMapper partyMapper;
   private final ShipmentMapper shipmentMapper;
   private final CarrierClauseMapper carrierClauseMapper;
   private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
   private final ChargeMapper chargeMapper;
-  private final PartyContactDetailsMapper partyContactDetailsMapper;
   private final TransportMapper transportMapper;
 
   // services
@@ -127,14 +125,14 @@ public class BKGServiceImpl implements BKGService {
                                 bookingTO.setVesselIMONumber(v.getVesselIMONumber());
                                 return Mono.just(bookingTO);
                               }),
-                      createLocationByTO(
+                      optionalInMono(locationService.createLocationByTO(
                           bookingRequest.getInvoicePayableAt(),
                           invPayAT ->
-                              bookingRepository.setInvoicePayableAtFor(invPayAT, bookingID)),
-                      createLocationByTO(
+                              bookingRepository.setInvoicePayableAtFor(invPayAT, bookingID))),
+                      optionalInMono(locationService.createLocationByTO(
                           bookingRequest.getPlaceOfIssue(),
                           placeOfIss ->
-                              bookingRepository.setPlaceOfIssueIDFor(placeOfIss, bookingID)),
+                              bookingRepository.setPlaceOfIssueIDFor(placeOfIss, bookingID))),
                       createCommoditiesByBookingIDAndTOs(
                           bookingID, bookingRequest.getCommodities()),
                       createValueAddedServiceRequestsByBookingIDAndTOs(
@@ -142,8 +140,8 @@ public class BKGServiceImpl implements BKGService {
                       createReferencesByBookingIDAndTOs(bookingID, bookingRequest.getReferences()),
                       createRequestedEquipmentsByBookingIDAndTOs(
                           bookingID, bookingRequest.getRequestedEquipments()),
-                      createDocumentPartiesByBookingIDAndTOs(
-                          bookingID, bookingRequest.getDocumentParties()))
+                      optionalInMono(documentPartyService.createDocumentPartiesByBookingID(
+                          bookingID, bookingRequest.getDocumentParties())))
                   .zipWith(
                       createShipmentLocationsByBookingIDAndTOs(
                           bookingID, bookingRequest.getShipmentLocations()));
@@ -228,39 +226,11 @@ public class BKGServiceImpl implements BKGService {
     }
   }
 
-  private Mono<Optional<LocationTO>> createLocationByTO(
-      LocationTO locationTO, Function<String, Mono<Boolean>> updateBookingCallback) {
-
-    if (Objects.isNull(locationTO)) {
-      return Mono.just(Optional.empty());
-    }
-
-    Location location = locationMapper.dtoToLocation(locationTO);
-
-    if (Objects.isNull(locationTO.getAddress())) {
-      return locationRepository
-          .save(location)
-          .flatMap(l -> updateBookingCallback.apply(l.getId()).thenReturn(l))
-          .map(locationMapper::locationToDTO)
-          .map(Optional::of);
-    } else {
-      return addressService
-          .ensureResolvable(locationTO.getAddress())
-          .flatMap(
-              a -> {
-                location.setAddressID(a.getId());
-                return locationRepository
-                    .save(location)
-                    .flatMap(l -> updateBookingCallback.apply(l.getId()).thenReturn(l))
-                    .map(
-                        l -> {
-                          LocationTO lTO = locationMapper.locationToDTO(l);
-                          lTO.setAddress(a);
-                          return lTO;
-                        })
-                    .map(Optional::of);
-              });
-    }
+  /**
+   * TODO This is a hack. But I preferred to simply remove duplicate code and not re-writing it at the same time - https://dcsa.atlassian.net/browse/DDT-975 should address this.
+   */
+  private <T> Mono<Optional<T>> optionalInMono(Mono<T> original) {
+    return original.map(Optional::of).switchIfEmpty(Mono.just(Optional.empty()));
   }
 
   private Mono<Optional<List<CommodityTO>>> createCommoditiesByBookingIDAndTOs(
@@ -386,155 +356,6 @@ public class BKGServiceImpl implements BKGService {
         .map(Optional::of);
   }
 
-  private Mono<Optional<List<DocumentPartyTO>>> createDocumentPartiesByBookingIDAndTOs(
-      final UUID bookingID, List<DocumentPartyTO> documentParties) {
-
-    if (Objects.isNull(documentParties) || documentParties.isEmpty()) {
-      return Mono.just(Optional.of(Collections.emptyList()));
-    }
-
-    return Flux.fromStream(documentParties.stream())
-        .flatMap(
-            dp ->
-                // party is mandatory, cannot be null in document party as per API specs
-                createPartyByTO(dp.getParty())
-                    .flatMap(
-                        t -> {
-                          DocumentParty documentParty = new DocumentParty();
-                          documentParty.setPartyID(t.getT1());
-                          documentParty.setBookingID(bookingID);
-                          documentParty.setPartyFunction(dp.getPartyFunction());
-                          documentParty.setIsToBeNotified(dp.getIsToBeNotified());
-                          return documentPartyRepository
-                              .save(documentParty)
-                              .map(
-                                  savedDp -> {
-                                    DocumentPartyTO documentPartyTO = new DocumentPartyTO();
-                                    documentPartyTO.setParty(t.getT2());
-                                    documentPartyTO.setDisplayedAddress(dp.getDisplayedAddress());
-                                    documentPartyTO.setPartyFunction(savedDp.getPartyFunction());
-                                    documentPartyTO.setIsToBeNotified(savedDp.getIsToBeNotified());
-                                    return Tuples.of(savedDp.getId(), documentPartyTO);
-                                  });
-                        }))
-        .flatMap(
-            t -> {
-              Stream<DisplayedAddress> displayedAddressStream =
-                  t.getT2().getDisplayedAddress().stream()
-                      .map(
-                          da -> {
-                            DisplayedAddress displayedAddress = new DisplayedAddress();
-                            displayedAddress.setDocumentPartyID(t.getT1());
-                            displayedAddress.setAddressLine(da);
-                            displayedAddress.setAddressLineNumber(
-                                t.getT2().getDisplayedAddress().indexOf(da));
-                            return displayedAddress;
-                          });
-
-              return displayedAddressRepository
-                  .saveAll(Flux.fromStream(displayedAddressStream))
-                  .map(DisplayedAddress::getAddressLine)
-                  .collectList()
-                  .flatMap(
-                      s -> {
-                        t.getT2().setDisplayedAddress(s);
-                        return Mono.just(t.getT2());
-                      });
-            })
-        .collectList()
-        .map(Optional::of);
-  }
-
-  private Mono<Tuple2<String, PartyTO>> createPartyByTO(final PartyTO partyTO) {
-
-    Mono<Tuple2<String, PartyTO>> partyMap;
-
-    if (Objects.isNull(partyTO.getAddress())) {
-
-      partyMap =
-          partyRepository
-              .save(partyMapper.dtoToParty(partyTO))
-              .map(p -> Tuples.of(p.getId(), partyMapper.partyToDTO(p)));
-
-    } else {
-      // if there is an address connected to the party, we need to create it first.
-      partyMap =
-          addressService
-              .ensureResolvable(partyTO.getAddress())
-              .flatMap(
-                  a -> {
-                    Party party = partyMapper.dtoToParty(partyTO);
-                    party.setAddressID(a.getId());
-                    return partyRepository
-                        .save(party)
-                        .map(
-                            p -> {
-                              PartyTO pTO = partyMapper.partyToDTO(p);
-                              pTO.setAddress(a);
-                              return Tuples.of(p.getId(), pTO);
-                            });
-                  });
-    }
-
-    return partyMap
-        .flatMap(
-            t -> {
-              Stream<PartyContactDetails> partyContactDetailsStream =
-                  partyTO.getPartyContactDetails().stream()
-                      .map(
-                          pcdTO -> {
-                            PartyContactDetails pcd =
-                                partyContactDetailsMapper.dtoToPartyContactDetails(pcdTO);
-                            pcd.setPartyID(t.getT1());
-                            return pcd;
-                          });
-
-              return partyContactDetailsRepository
-                  .saveAll(Flux.fromStream(partyContactDetailsStream))
-                  .map(partyContactDetailsMapper::partyContactDetailsToDTO)
-                  .collectList()
-                  .flatMap(
-                      pcds -> {
-                        t.getT2().setPartyContactDetails(pcds);
-                        return Mono.just(t);
-                      });
-            })
-        .flatMap(
-            t -> {
-              Stream<PartyIdentifyingCode> partyIdentifyingCodeStream =
-                  partyTO.getIdentifyingCodes().stream()
-                      .map(
-                          idc -> {
-                            PartyIdentifyingCode partyIdentifyingCode = new PartyIdentifyingCode();
-                            partyIdentifyingCode.setPartyID(t.getT1());
-                            partyIdentifyingCode.setDcsaResponsibleAgencyCode(
-                                idc.getDcsaResponsibleAgencyCode());
-                            partyIdentifyingCode.setCodeListName(idc.getCodeListName());
-                            partyIdentifyingCode.setPartyCode(idc.getPartyCode());
-                            return partyIdentifyingCode;
-                          });
-              return partyIdentifyingCodeRepository
-                  .saveAll(
-                      Flux.fromStream(
-                          partyIdentifyingCodeStream)) // save identifying codes related to party
-                  // obj
-                  .map(
-                      savedIdcs ->
-                          PartyTO.IdentifyingCode.builder()
-                              .partyCode(savedIdcs.getPartyCode())
-                              .codeListName(savedIdcs.getCodeListName())
-                              .dcsaResponsibleAgencyCode(savedIdcs.getDcsaResponsibleAgencyCode())
-                              .build())
-                  .collectList()
-                  .flatMap(
-                      identifyingCodes -> {
-                        PartyTO pTO = t.getT2();
-                        pTO.setIdentifyingCodes(identifyingCodes);
-                        return Mono.just(Tuples.of(t.getT1(), pTO));
-                      });
-            });
-  }
-
   private Mono<Optional<List<ShipmentLocationTO>>> createShipmentLocationsByBookingIDAndTOs(
       final UUID bookingID, List<ShipmentLocationTO> shipmentLocations) {
 
@@ -636,16 +457,16 @@ public class BKGServiceImpl implements BKGService {
                                   bookingTO.setVesselIMONumber(v.getVesselIMONumber());
                                   return Mono.just(bookingTO);
                                 }),
-                        resolveLocationByTO(
+                        optionalInMono(locationService.resolveLocationByTO(
                             b.getInvoicePayableAt(),
                             bookingRequest.getInvoicePayableAt(),
                             invPayAT ->
-                                bookingRepository.setInvoicePayableAtFor(invPayAT, b.getId())),
-                        resolveLocationByTO(
+                                bookingRepository.setInvoicePayableAtFor(invPayAT, b.getId()))),
+                        optionalInMono(locationService.resolveLocationByTO(
                             b.getPlaceOfIssueID(),
                             bookingRequest.getPlaceOfIssue(),
                             placeOfIss ->
-                                bookingRepository.setPlaceOfIssueIDFor(placeOfIss, b.getId())),
+                                bookingRepository.setPlaceOfIssueIDFor(placeOfIss, b.getId()))),
                         resolveCommoditiesForBookingID(bookingRequest.getCommodities(), b.getId()),
                         resolveValueAddedServiceReqForBookingID(
                             bookingRequest.getValueAddedServiceRequests(), b.getId()),
@@ -692,29 +513,6 @@ public class BKGServiceImpl implements BKGService {
         .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
 
-  private Mono<Optional<LocationTO>> resolveLocationByTO(
-      String currentLocationIDInBooking,
-      LocationTO locationTO,
-      Function<String, Mono<Boolean>> updateBookingCallback) {
-
-    // locationTO is the location received from the update booking request
-    if (Objects.isNull(locationTO)) {
-      if (StringUtils.isEmpty(currentLocationIDInBooking)) {
-        // it's possible that there may be no location linked to booking
-        return Mono.just(Optional.empty());
-      } else {
-        return locationRepository
-            .deleteById(currentLocationIDInBooking)
-            .then(Mono.just(Optional.empty()));
-      }
-    } else {
-      return locationService
-          .ensureResolvable(locationTO)
-          .flatMap(lTO -> updateBookingCallback.apply(lTO.getId()).thenReturn(lTO))
-          .map(Optional::of);
-    }
-  }
-
   private Mono<Optional<List<CommodityTO>>> resolveCommoditiesForBookingID(
       List<CommodityTO> commodities, UUID bookingID) {
 
@@ -753,7 +551,7 @@ public class BKGServiceImpl implements BKGService {
     // this will create orphan parties
     return documentPartyRepository
         .deleteByBookingID(bookingID)
-        .then(createDocumentPartiesByBookingIDAndTOs(bookingID, documentPartyTOs));
+        .then(optionalInMono(documentPartyService.createDocumentPartiesByBookingID(bookingID, documentPartyTOs)));
   }
 
   private Mono<Optional<List<ShipmentLocationTO>>> resolveShipmentLocationsForBookingID(
@@ -895,41 +693,17 @@ public class BKGServiceImpl implements BKGService {
 
   private Mono<Tuple2<Optional<LocationTO>, Optional<LocationTO>>> fetchLocationTupleByID(
       String invoicePayableAtLocID, String placeOfIssueLocID) {
-    return Mono.zip(fetchLocationByID(invoicePayableAtLocID), fetchLocationByID(placeOfIssueLocID))
+    return Mono.zip(
+      optionalInMono(locationService.fetchLocationDeepObjByID(invoicePayableAtLocID)),
+      optionalInMono(locationService.fetchLocationDeepObjByID(placeOfIssueLocID)))
         .map(deepObjs -> Tuples.of(deepObjs.getT1(), deepObjs.getT2()));
-  }
-
-  private Mono<Optional<LocationTO>> fetchLocationByID(String id) {
-    if (id == null) return Mono.just(Optional.empty());
-    return locationRepository
-        .findById(id)
-        .flatMap(
-            location ->
-                Mono.zip(
-                        addressRepository
-                            .findByIdOrEmpty(location.getAddressID())
-                            .map(Optional::of)
-                            .defaultIfEmpty(Optional.empty()),
-                        facilityRepository
-                            .findByIdOrEmpty(location.getFacilityID())
-                            .map(Optional::of)
-                            .defaultIfEmpty(Optional.empty()))
-                    .flatMap(
-                        t2 -> {
-                          LocationTO locTO = locationMapper.locationToDTO(location);
-                          t2.getT1().ifPresent(locTO::setAddress);
-                          t2.getT2().ifPresent(locTO::setFacility);
-                          return Mono.just(locTO);
-                        }))
-        .onErrorReturn(new LocationTO())
-        .map(Optional::of);
   }
 
   private Mono<Optional<LocationTO>> fetchLocationByTransportCallId(String id) {
     if (id == null) return Mono.just(Optional.empty());
     return transportCallRepository
         .findById(id)
-        .flatMap(transportCall -> fetchLocationByID(transportCall.getLocationID()));
+        .flatMap(transportCall -> optionalInMono(locationService.fetchLocationDeepObjByID(transportCall.getLocationID())));
   }
 
   private Mono<Optional<List<CarrierClauseTO>>> fetchCarrierClausesByShipmentID(UUID shipmentID) {
@@ -967,8 +741,8 @@ public class BKGServiceImpl implements BKGService {
         .flatMap(
             booking ->
                 Mono.zip(
-                        fetchLocationByID(booking.getInvoicePayableAt()),
-                        fetchLocationByID(booking.getPlaceOfIssueID()),
+                        optionalInMono(locationService.fetchLocationDeepObjByID(booking.getInvoicePayableAt())),
+                        optionalInMono(locationService.fetchLocationDeepObjByID(booking.getPlaceOfIssueID())),
                         fetchCommoditiesByBookingID(booking.getId()),
                         fetchValueAddedServiceRequestsByBookingID(booking.getId()),
                         fetchReferencesByBookingID(booking.getId()),
@@ -1053,7 +827,7 @@ public class BKGServiceImpl implements BKGService {
         .flatMap(
             dp ->
                 Mono.zip(
-                        fetchPartyByID(dp.getPartyID()),
+                    optionalInMono(partyService.findTOById(dp.getPartyID())),
                         fetchDisplayAddressByDocumentID(dp.getId()))
                     .flatMap(
                         t -> {
@@ -1069,46 +843,6 @@ public class BKGServiceImpl implements BKGService {
                         }))
         .collectList()
         .map(Optional::of);
-  }
-
-  private Mono<Optional<PartyTO>> fetchPartyByID(String partyID) {
-    if (partyID == null) return Mono.empty();
-    return partyRepository
-        .findByIdOrEmpty(partyID)
-        .flatMap(
-            p ->
-                Mono.zip(
-                        addressRepository
-                            .findByIdOrEmpty(p.getAddressID())
-                            .map(Optional::of)
-                            .defaultIfEmpty(Optional.empty()),
-                        partyIdentifyingCodeRepository
-                            .findAllByPartyID(partyID)
-                            .map(
-                                idc ->
-                                    PartyTO.IdentifyingCode.builder()
-                                        .partyCode(idc.getPartyCode())
-                                        .codeListName(idc.getCodeListName())
-                                        .dcsaResponsibleAgencyCode(
-                                            idc.getDcsaResponsibleAgencyCode())
-                                        .build())
-                            .collectList()
-                            .map(Optional::of)
-                            .defaultIfEmpty(Optional.empty()),
-                        fetchPartyContactDetailsByPartyID(partyID))
-                    .flatMap(
-                        t -> {
-                          Optional<Address> addressOpt = t.getT1();
-                          Optional<List<PartyTO.IdentifyingCode>> identifyingCodesOpt = t.getT2();
-                          Optional<List<PartyContactDetailsTO>> partyContactDetailsOpt = t.getT3();
-                          PartyTO partyTO = partyMapper.partyToDTO(p);
-                          addressOpt.ifPresent(partyTO::setAddress);
-                          identifyingCodesOpt.ifPresent(partyTO::setIdentifyingCodes);
-                          partyContactDetailsOpt.ifPresent(partyTO::setPartyContactDetails);
-                          return Mono.just(partyTO);
-                        }))
-        .map(Optional::of)
-        .defaultIfEmpty(Optional.empty());
   }
 
   private Mono<Optional<List<PartyContactDetailsTO>>> fetchPartyContactDetailsByPartyID(
@@ -1137,7 +871,7 @@ public class BKGServiceImpl implements BKGService {
         .findByBookingID(bookingID)
         .flatMap(
             sl ->
-                fetchLocationByID(sl.getLocationID())
+                  optionalInMono(locationService.fetchLocationDeepObjByID(sl.getLocationID()))
                     .flatMap(
                         lopt -> {
                           ShipmentLocationTO shipmentLocationTO =
