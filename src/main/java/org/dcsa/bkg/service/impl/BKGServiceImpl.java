@@ -13,9 +13,11 @@ import org.dcsa.core.events.model.enums.EventClassifierCode;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.dcsa.core.events.model.enums.TransportEventTypeCode;
 import org.dcsa.core.events.model.mapper.LocationMapper;
+import org.dcsa.core.events.model.mapper.RequestedEquipmentMapper;
 import org.dcsa.core.events.model.transferobjects.*;
 import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.*;
+import org.dcsa.core.exception.ConcreteRequestErrorMessageException;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
@@ -60,6 +62,7 @@ public class BKGServiceImpl implements BKGService {
   private final TransportEventRepository transportEventRepository;
   private final ModeOfTransportRepository modeOfTransportRepository;
   private final VoyageRepository voyageRepository;
+  private final RequestedEquipmentEquipmentRepository requestedEquipmentEquipmentRepository;
 
   // mappers
   private final BookingMapper bookingMapper;
@@ -70,6 +73,7 @@ public class BKGServiceImpl implements BKGService {
   private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
   private final ChargeMapper chargeMapper;
   private final TransportMapper transportMapper;
+  private final RequestedEquipmentMapper requestedEquipmentMapper;
 
   // services
   private final ShipmentEventService shipmentEventService;
@@ -119,14 +123,16 @@ public class BKGServiceImpl implements BKGService {
                                 bookingTO.setVesselIMONumber(v.getVesselIMONumber());
                                 return Mono.just(bookingTO);
                               }),
-                      optionalInMono(locationService.createLocationByTO(
-                          bookingRequest.getInvoicePayableAt(),
-                          invPayAT ->
-                              bookingRepository.setInvoicePayableAtFor(invPayAT, bookingID))),
-                      optionalInMono(locationService.createLocationByTO(
-                          bookingRequest.getPlaceOfIssue(),
-                          placeOfIss ->
-                              bookingRepository.setPlaceOfIssueIDFor(placeOfIss, bookingID))),
+                      optionalInMono(
+                          locationService.createLocationByTO(
+                              bookingRequest.getInvoicePayableAt(),
+                              invPayAT ->
+                                  bookingRepository.setInvoicePayableAtFor(invPayAT, bookingID))),
+                      optionalInMono(
+                          locationService.createLocationByTO(
+                              bookingRequest.getPlaceOfIssue(),
+                              placeOfIss ->
+                                  bookingRepository.setPlaceOfIssueIDFor(placeOfIss, bookingID))),
                       createCommoditiesByBookingIDAndTOs(
                           bookingID, bookingRequest.getCommodities()),
                       createValueAddedServiceRequestsByBookingIDAndTOs(
@@ -134,8 +140,9 @@ public class BKGServiceImpl implements BKGService {
                       createReferencesByBookingIDAndTOs(bookingID, bookingRequest.getReferences()),
                       createRequestedEquipmentsByBookingIDAndTOs(
                           bookingID, bookingRequest.getRequestedEquipments()),
-                      optionalInMono(documentPartyService.createDocumentPartiesByBookingID(
-                          bookingID, bookingRequest.getDocumentParties())))
+                      optionalInMono(
+                          documentPartyService.createDocumentPartiesByBookingID(
+                              bookingID, bookingRequest.getDocumentParties())))
                   .zipWith(
                       createShipmentLocationsByBookingIDAndTOs(
                           bookingID, bookingRequest.getShipmentLocations()));
@@ -221,7 +228,8 @@ public class BKGServiceImpl implements BKGService {
   }
 
   /**
-   * TODO This is a hack. But I preferred to simply remove duplicate code and not re-writing it at the same time - https://dcsa.atlassian.net/browse/DDT-975 should address this.
+   * TODO This is a hack. But I preferred to simply remove duplicate code and not re-writing it at
+   * the same time - https://dcsa.atlassian.net/browse/DDT-975 should address this.
    */
   private <T> Mono<Optional<T>> optionalInMono(Mono<T> original) {
     return original.map(Optional::of).switchIfEmpty(Mono.just(Optional.empty()));
@@ -322,6 +330,16 @@ public class BKGServiceImpl implements BKGService {
       return Mono.just(Optional.of(Collections.emptyList()));
     }
 
+    if (requestedEquipments.stream()
+        .anyMatch(
+            r ->
+                r.getRequestedEquipmentUnits() != null
+                    && r.getEquipmentReferences().size() > r.getRequestedEquipmentUnits())) {
+      return Mono.error(
+          ConcreteRequestErrorMessageException.invalidParameter(
+              "Requested Equipment Units cannot be lower than quantity of Equipment References."));
+    }
+
     Stream<RequestedEquipment> requestedEquipmentsStream =
         requestedEquipments.stream()
             .map(
@@ -335,17 +353,29 @@ public class BKGServiceImpl implements BKGService {
                   return requestedEquipment;
                 });
 
-    return requestedEquipmentRepository
-        .saveAll(Flux.fromStream(requestedEquipmentsStream))
-        .map(
-            re -> {
-              RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
-              requestedEquipmentTO.setRequestedEquipmentSizetype(
-                  re.getRequestedEquipmentSizetype());
-              requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
-              requestedEquipmentTO.setShipperOwned(re.getIsShipperOwned());
-              return requestedEquipmentTO;
-            })
+    return Flux.fromIterable(requestedEquipments)
+        .flatMap(
+            requestedEquipmentTO ->
+                requestedEquipmentRepository
+                    .save(
+                        requestedEquipmentMapper.dtoToRequestedEquipmentWithBookingId(
+                            requestedEquipmentTO, bookingID))
+                    .flatMap(
+                        requestedEquipment ->
+                            Flux.fromIterable(requestedEquipmentTO.getEquipmentReferences())
+                                .flatMap(
+                                    equipmentReference -> {
+                                      RequestedEquipmentEquipment requestedEquipmentEquipment =
+                                          new RequestedEquipmentEquipment();
+                                      requestedEquipmentEquipment.setRequestedEquipmentId(
+                                          requestedEquipment.getId());
+                                      requestedEquipmentEquipment.setEquipmentReference(
+                                          equipmentReference);
+                                      return requestedEquipmentEquipmentRepository.save(
+                                          requestedEquipmentEquipment);
+                                    })
+                                .collectList())
+                    .thenReturn(requestedEquipmentTO))
         .collectList()
         .map(Optional::of);
   }
@@ -451,16 +481,18 @@ public class BKGServiceImpl implements BKGService {
                                   bookingTO.setVesselIMONumber(v.getVesselIMONumber());
                                   return Mono.just(bookingTO);
                                 }),
-                        optionalInMono(locationService.resolveLocationByTO(
-                            b.getInvoicePayableAt(),
-                            bookingRequest.getInvoicePayableAt(),
-                            invPayAT ->
-                                bookingRepository.setInvoicePayableAtFor(invPayAT, b.getId()))),
-                        optionalInMono(locationService.resolveLocationByTO(
-                            b.getPlaceOfIssueID(),
-                            bookingRequest.getPlaceOfIssue(),
-                            placeOfIss ->
-                                bookingRepository.setPlaceOfIssueIDFor(placeOfIss, b.getId()))),
+                        optionalInMono(
+                            locationService.resolveLocationByTO(
+                                b.getInvoicePayableAt(),
+                                bookingRequest.getInvoicePayableAt(),
+                                invPayAT ->
+                                    bookingRepository.setInvoicePayableAtFor(invPayAT, b.getId()))),
+                        optionalInMono(
+                            locationService.resolveLocationByTO(
+                                b.getPlaceOfIssueID(),
+                                bookingRequest.getPlaceOfIssue(),
+                                placeOfIss ->
+                                    bookingRepository.setPlaceOfIssueIDFor(placeOfIss, b.getId()))),
                         resolveCommoditiesForBookingID(bookingRequest.getCommodities(), b.getId()),
                         resolveValueAddedServiceReqForBookingID(
                             bookingRequest.getValueAddedServiceRequests(), b.getId()),
@@ -536,6 +568,7 @@ public class BKGServiceImpl implements BKGService {
 
     return requestedEquipmentRepository
         .deleteByBookingID(bookingID)
+        .then(requestedEquipmentEquipmentRepository.deleteByBookingId(bookingID))
         .then(createRequestedEquipmentsByBookingIDAndTOs(bookingID, requestedEquipments));
   }
 
@@ -545,7 +578,10 @@ public class BKGServiceImpl implements BKGService {
     // this will create orphan parties
     return documentPartyRepository
         .deleteByBookingID(bookingID)
-        .then(optionalInMono(documentPartyService.createDocumentPartiesByBookingID(bookingID, documentPartyTOs)));
+        .then(
+            optionalInMono(
+                documentPartyService.createDocumentPartiesByBookingID(
+                    bookingID, documentPartyTOs)));
   }
 
   private Mono<Optional<List<ShipmentLocationTO>>> resolveShipmentLocationsForBookingID(
@@ -688,8 +724,8 @@ public class BKGServiceImpl implements BKGService {
   private Mono<Tuple2<Optional<LocationTO>, Optional<LocationTO>>> fetchLocationTupleByID(
       String invoicePayableAtLocID, String placeOfIssueLocID) {
     return Mono.zip(
-      optionalInMono(locationService.fetchLocationDeepObjByID(invoicePayableAtLocID)),
-      optionalInMono(locationService.fetchLocationDeepObjByID(placeOfIssueLocID)))
+            optionalInMono(locationService.fetchLocationDeepObjByID(invoicePayableAtLocID)),
+            optionalInMono(locationService.fetchLocationDeepObjByID(placeOfIssueLocID)))
         .map(deepObjs -> Tuples.of(deepObjs.getT1(), deepObjs.getT2()));
   }
 
@@ -697,7 +733,10 @@ public class BKGServiceImpl implements BKGService {
     if (id == null) return Mono.just(Optional.empty());
     return transportCallRepository
         .findById(id)
-        .flatMap(transportCall -> optionalInMono(locationService.fetchLocationDeepObjByID(transportCall.getLocationID())));
+        .flatMap(
+            transportCall ->
+                optionalInMono(
+                    locationService.fetchLocationDeepObjByID(transportCall.getLocationID())));
   }
 
   private Mono<Optional<List<CarrierClauseTO>>> fetchCarrierClausesByShipmentID(UUID shipmentID) {
@@ -735,8 +774,11 @@ public class BKGServiceImpl implements BKGService {
         .flatMap(
             booking ->
                 Mono.zip(
-                        optionalInMono(locationService.fetchLocationDeepObjByID(booking.getInvoicePayableAt())),
-                        optionalInMono(locationService.fetchLocationDeepObjByID(booking.getPlaceOfIssueID())),
+                        optionalInMono(
+                            locationService.fetchLocationDeepObjByID(
+                                booking.getInvoicePayableAt())),
+                        optionalInMono(
+                            locationService.fetchLocationDeepObjByID(booking.getPlaceOfIssueID())),
                         fetchCommoditiesByBookingID(booking.getId()),
                         fetchValueAddedServiceRequestsByBookingID(booking.getId()),
                         fetchReferencesByBookingID(booking.getId()),
@@ -821,7 +863,7 @@ public class BKGServiceImpl implements BKGService {
         .flatMap(
             dp ->
                 Mono.zip(
-                    optionalInMono(partyService.findTOById(dp.getPartyID())),
+                        optionalInMono(partyService.findTOById(dp.getPartyID())),
                         fetchDisplayAddressByDocumentID(dp.getId()))
                     .flatMap(
                         t -> {
@@ -865,7 +907,7 @@ public class BKGServiceImpl implements BKGService {
         .findByBookingID(bookingID)
         .flatMap(
             sl ->
-                  optionalInMono(locationService.fetchLocationDeepObjByID(sl.getLocationID()))
+                optionalInMono(locationService.fetchLocationDeepObjByID(sl.getLocationID()))
                     .flatMap(
                         lopt -> {
                           ShipmentLocationTO shipmentLocationTO =
