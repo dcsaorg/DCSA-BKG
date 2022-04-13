@@ -115,13 +115,13 @@ class TransportTOTest {
 
   @Test
   @DisplayName(
-    "TransportTO should throw error if ExportVoyageNumber length exceeds max size of 50.")
+      "TransportTO should throw error if ExportVoyageNumber length exceeds max size of 50.")
   void testToVerifyExportVoyageNumberTypeIsNotAllowedToExceed50() {
     transportTO.setExportVoyageNumber("x".repeat(51));
     Set<ConstraintViolation<TransportTO>> violations = validator.validate(transportTO);
     Assertions.assertTrue(
-      violations.stream()
-        .anyMatch(v -> "ExportVoyageNumber has a max size of 50.".equals(v.getMessage())));
+        violations.stream()
+            .anyMatch(v -> "ExportVoyageNumber has a max size of 50.".equals(v.getMessage())));
   }
 
   @Test

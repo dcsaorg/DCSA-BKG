@@ -116,51 +116,55 @@ public class BKGServiceImpl implements BKGService {
                 // Also prefer setting the uuid value at db level and not application level to avoid
                 // collisions
                 bookingRepository.findById(bookingRefreshed.getId()))
-        .flatMap(
-            booking -> {
-              final UUID bookingID = booking.getId();
-              BookingTO bookingTO = bookingMapper.bookingToDTO(booking);
-              return Mono.when(
-                      findVesselAndUpdateBooking(
-                              bookingRequest.getVesselName(),
-                              bookingRequest.getVesselIMONumber(),
-                              bookingID)
-                          .doOnNext(vessel -> bookingTO.setVesselName(vessel.getVesselName()))
-                          .doOnNext(
-                              vessel -> bookingTO.setVesselIMONumber(vessel.getVesselIMONumber())),
-                      locationService
-                          .createLocationByTO(
-                              bookingRequest.getInvoicePayableAt(),
-                              invPayAT ->
-                                  bookingRepository.setInvoicePayableAtFor(invPayAT, bookingID))
-                          .doOnNext(bookingTO::setInvoicePayableAt),
-                      locationService
-                          .createLocationByTO(
-                              bookingRequest.getPlaceOfIssue(),
-                              placeOfIss ->
-                                  bookingRepository.setPlaceOfIssueIDFor(placeOfIss, bookingID))
-                          .doOnNext(bookingTO::setPlaceOfIssue),
-                      createCommoditiesByBookingIDAndTOs(bookingID, bookingRequest.getCommodities())
-                          .doOnNext(bookingTO::setCommodities),
-                      createValueAddedServiceRequestsByBookingIDAndTOs(
-                              bookingID, bookingRequest.getValueAddedServiceRequests())
-                          .doOnNext(bookingTO::setValueAddedServiceRequests),
-                      createReferencesByBookingIDAndTOs(bookingID, bookingRequest.getReferences())
-                          .doOnNext(bookingTO::setReferences),
-                      createRequestedEquipmentsByBookingIDAndTOs(
-                              bookingID, bookingRequest.getRequestedEquipments())
-                          .doOnNext(bookingTO::setRequestedEquipments),
-                      documentPartyService
-                          .createDocumentPartiesByBookingID(
-                              bookingID, bookingRequest.getDocumentParties())
-                          .doOnNext(bookingTO::setDocumentParties),
-                      createShipmentLocationsByBookingIDAndTOs(
-                              bookingID, bookingRequest.getShipmentLocations())
-                          .doOnNext(bookingTO::setShipmentLocations))
-                  .thenReturn(bookingTO);
-            })
+        .flatMap(booking -> createDeepObjectsForBooking(bookingRequest, booking))
         .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO))
         .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
+  }
+
+  private Mono<BookingTO> createDeepObjectsForBooking(BookingTO bookingRequest, Booking booking) {
+    UUID bookingID = booking.getId();
+    BookingTO bookingTO = bookingToDTOWithNullLocations(booking);
+    return Mono.when(
+            findVesselAndUpdateBooking(
+                    bookingRequest.getVesselName(), bookingRequest.getVesselIMONumber(), bookingID)
+                .doOnNext(
+                    v -> {
+                      bookingTO.setVesselName(v.getVesselName());
+                      bookingTO.setVesselIMONumber(v.getVesselIMONumber());
+                    }),
+            locationService
+                .ensureResolvable(bookingRequest.getInvoicePayableAt())
+                .flatMap(
+                    lTO ->
+                        bookingRepository
+                            .setInvoicePayableAtFor(lTO.getId(), bookingID)
+                            .thenReturn(lTO))
+                .doOnNext(bookingTO::setInvoicePayableAt),
+            locationService
+                .ensureResolvable(bookingRequest.getPlaceOfIssue())
+                .flatMap(
+                    lTO ->
+                        bookingRepository
+                            .setPlaceOfIssueIDFor(lTO.getId(), bookingID)
+                            .thenReturn(lTO))
+                .doOnNext(bookingTO::setPlaceOfIssue),
+            createCommoditiesByBookingIDAndTOs(bookingID, bookingRequest.getCommodities())
+                .doOnNext(bookingTO::setCommodities),
+            createValueAddedServiceRequestsByBookingIDAndTOs(
+                    bookingID, bookingRequest.getValueAddedServiceRequests())
+                .doOnNext(bookingTO::setValueAddedServiceRequests),
+            createReferencesByBookingIDAndTOs(bookingID, bookingRequest.getReferences())
+                .doOnNext(bookingTO::setReferences),
+            createRequestedEquipmentsByBookingIDAndTOs(
+                    bookingID, bookingRequest.getRequestedEquipments())
+                .doOnNext(bookingTO::setRequestedEquipments),
+            documentPartyService
+                .createDocumentPartiesByBookingID(bookingID, bookingRequest.getDocumentParties())
+                .doOnNext(bookingTO::setDocumentParties),
+            createShipmentLocationsByBookingIDAndTOs(
+                    bookingID, bookingRequest.getShipmentLocations())
+                .doOnNext(bookingTO::setShipmentLocations))
+        .thenReturn(bookingTO);
   }
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
@@ -236,8 +240,9 @@ public class BKGServiceImpl implements BKGService {
         .collectList();
   }
 
-  private Mono<List<ValueAddedServiceRequestTO>> createValueAddedServiceRequestsByBookingIDAndTOs(
-      UUID bookingID, List<ValueAddedServiceRequestTO> valueAddedServiceRequests) {
+  private Mono<List<ValueAddedServiceRequestTO>>
+      createValueAddedServiceRequestsByBookingIDAndTOs(
+          UUID bookingID, List<ValueAddedServiceRequestTO> valueAddedServiceRequests) {
 
     if (Objects.isNull(valueAddedServiceRequests) || valueAddedServiceRequests.isEmpty()) {
       return Mono.empty();
@@ -302,7 +307,7 @@ public class BKGServiceImpl implements BKGService {
       UUID bookingID, List<RequestedEquipmentTO> requestedEquipments) {
 
     if (Objects.isNull(requestedEquipments) || requestedEquipments.isEmpty()) {
-      return Mono.justOrEmpty(Collections.emptyList());
+      return Mono.empty();
     }
 
     return Flux.fromIterable(requestedEquipments)
@@ -363,7 +368,7 @@ public class BKGServiceImpl implements BKGService {
       final UUID bookingID, List<ShipmentLocationTO> shipmentLocations) {
 
     if (Objects.isNull(shipmentLocations) || shipmentLocations.isEmpty()) {
-      return Mono.empty();
+      return Mono.just(Collections.emptyList());
     }
 
     return Flux.fromStream(shipmentLocations.stream())
@@ -434,11 +439,18 @@ public class BKGServiceImpl implements BKGService {
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
         .flatMap(checkUpdateBookingStatus)
+        .flatMap(booking -> {
+          // update the valid_until field for to be copied booking
+          // to ensure the copy is unique and the one to be used
+          booking.setValidUntil(OffsetDateTime.now());
+          return bookingRepository.save(booking).thenReturn(booking);
+        })
         .flatMap(
             b -> {
               // update booking with new booking request
               Booking booking = bookingMapper.dtoToBooking(bookingRequest);
-              booking.setId(b.getId());
+              // set booking ID to null so that it creates a copy and inserts with a new ID
+              booking.setId(null);
               booking.setDocumentStatus(b.getDocumentStatus());
               booking.setBookingRequestDateTime(b.getBookingRequestDateTime());
               booking.setUpdatedDateTime(OffsetDateTime.now());
@@ -446,52 +458,8 @@ public class BKGServiceImpl implements BKGService {
             })
         .flatMap(
             booking ->
-            // resolve entities linked to booking
-            {
-              BookingTO bookingTO = bookingMapper.bookingToDTO(booking);
-              return Mono.when(
-                      findVesselAndUpdateBooking(
-                              bookingRequest.getVesselName(),
-                              bookingRequest.getVesselIMONumber(),
-                              booking.getId())
-                          .doOnNext(
-                              vessel -> bookingTO.setVesselIMONumber(vessel.getVesselIMONumber()))
-                          .doOnNext(vessel -> bookingTO.setVesselName(vessel.getVesselName())),
-                      locationService
-                          .resolveLocationByTO(
-                              booking.getInvoicePayableAt(),
-                              bookingRequest.getInvoicePayableAt(),
-                              invPayAT ->
-                                  bookingRepository.setInvoicePayableAtFor(
-                                      invPayAT, booking.getId()))
-                          .doOnNext(bookingTO::setInvoicePayableAt),
-                      locationService
-                          .resolveLocationByTO(
-                              booking.getPlaceOfIssueID(),
-                              bookingRequest.getPlaceOfIssue(),
-                              placeOfIss ->
-                                  bookingRepository.setPlaceOfIssueIDFor(
-                                      placeOfIss, booking.getId()))
-                          .doOnNext(bookingTO::setPlaceOfIssue),
-                      resolveCommoditiesForBookingID(
-                              bookingRequest.getCommodities(), booking.getId())
-                          .doOnNext(bookingTO::setCommodities),
-                      resolveValueAddedServiceReqForBookingID(
-                              bookingRequest.getValueAddedServiceRequests(), booking.getId())
-                          .doOnNext(bookingTO::setValueAddedServiceRequests),
-                      resolveReferencesForBookingID(bookingRequest.getReferences(), booking.getId())
-                          .doOnNext(bookingTO::setReferences),
-                      resolveReqEqForBookingID(
-                              bookingRequest.getRequestedEquipments(), booking.getId())
-                          .doOnNext(bookingTO::setRequestedEquipments),
-                      resolveDocumentPartiesForBookingID(
-                              bookingRequest.getDocumentParties(), booking.getId())
-                          .doOnNext(bookingTO::setDocumentParties),
-                      resolveShipmentLocationsForBookingID(
-                              bookingRequest.getShipmentLocations(), booking.getId())
-                          .doOnNext(bookingTO::setShipmentLocations))
-                  .thenReturn(bookingTO);
-            })
+                // resolve entities linked to booking
+                createDeepObjectsForBooking(bookingRequest, booking))
         .flatMap(bTO -> createShipmentEventFromBookingTO(bTO).thenReturn(bTO))
         .switchIfEmpty(
             Mono.defer(
@@ -1039,6 +1007,7 @@ public class BKGServiceImpl implements BKGService {
     shipmentEvent.setEventClassifierCode(EventClassifierCode.ACT);
     shipmentEvent.setEventType(null);
     shipmentEvent.setDocumentID(booking.getId());
+    shipmentEvent.setDocumentReference(booking.getCarrierBookingRequestReference());
     shipmentEvent.setEventDateTime(booking.getUpdatedDateTime());
     shipmentEvent.setEventCreatedDateTime(OffsetDateTime.now());
     shipmentEvent.setReason(reason);
