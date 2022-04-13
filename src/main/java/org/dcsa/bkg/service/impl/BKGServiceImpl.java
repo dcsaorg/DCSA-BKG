@@ -470,57 +470,6 @@ public class BKGServiceImpl implements BKGService {
         .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
 
-  private Mono<List<CommodityTO>> resolveCommoditiesForBookingID(
-      List<CommodityTO> commodities, UUID bookingID) {
-
-    return commodityRepository
-        .deleteByBookingID(bookingID)
-        .then(createCommoditiesByBookingIDAndTOs(bookingID, commodities));
-  }
-
-  private Mono<List<ValueAddedServiceRequestTO>> resolveValueAddedServiceReqForBookingID(
-      List<ValueAddedServiceRequestTO> valAddedSerReqs, UUID bookingID) {
-
-    return valueAddedServiceRequestRepository
-        .deleteByBookingID(bookingID)
-        .then(createValueAddedServiceRequestsByBookingIDAndTOs(bookingID, valAddedSerReqs));
-  }
-
-  private Mono<List<ReferenceTO>> resolveReferencesForBookingID(
-      List<ReferenceTO> references, UUID bookingID) {
-
-    return referenceRepository
-        .deleteByBookingID(bookingID)
-        .then(createReferencesByBookingIDAndTOs(bookingID, references));
-  }
-
-  private Mono<List<RequestedEquipmentTO>> resolveReqEqForBookingID(
-      List<RequestedEquipmentTO> requestedEquipments, UUID bookingID) {
-
-    return requestedEquipmentRepository
-        .deleteByBookingID(bookingID)
-        .then(requestedEquipmentEquipmentRepository.deleteByBookingId(bookingID))
-        .then(createRequestedEquipmentsByBookingIDAndTOs(bookingID, requestedEquipments));
-  }
-
-  private Mono<List<DocumentPartyTO>> resolveDocumentPartiesForBookingID(
-      List<DocumentPartyTO> documentPartyTOs, UUID bookingID) {
-
-    // this will create orphan parties
-    return documentPartyRepository
-        .deleteByBookingID(bookingID)
-        .then(documentPartyService.createDocumentPartiesByBookingID(bookingID, documentPartyTOs));
-  }
-
-  private Mono<List<ShipmentLocationTO>> resolveShipmentLocationsForBookingID(
-      List<ShipmentLocationTO> shipmentLocationTOs, UUID bookingID) {
-
-    // this will create orphan locations
-    return shipmentLocationRepository
-        .deleteByBookingID(bookingID)
-        .then(createShipmentLocationsByBookingIDAndTOs(bookingID, shipmentLocationTOs));
-  }
-
   @Override
   public Mono<BookingTO> getBookingByCarrierBookingRequestReference(
       String carrierBookingRequestReference) {
