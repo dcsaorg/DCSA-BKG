@@ -10,6 +10,7 @@ import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.mapper.LocationMapper;
 import org.dcsa.core.events.model.mapper.PartyMapper;
+import org.dcsa.core.events.model.mapper.RequestedEquipmentMapper;
 import org.dcsa.core.events.model.transferobjects.*;
 import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.AddressService;
@@ -17,6 +18,7 @@ import org.dcsa.core.events.service.DocumentPartyService;
 import org.dcsa.core.events.service.LocationService;
 import org.dcsa.core.events.service.PartyService;
 import org.dcsa.core.events.service.ShipmentEventService;
+import org.dcsa.core.exception.ConcreteRequestErrorMessageException;
 import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
@@ -56,6 +58,7 @@ class BKGServiceImplTest {
   @Mock ValueAddedServiceRequestRepository valueAddedServiceRequestRepository;
   @Mock ReferenceRepository referenceRepository;
   @Mock RequestedEquipmentRepository requestedEquipmentRepository;
+  @Mock RequestedEquipmentEquipmentRepository requestedEquipmentEquipmentRepository;
   @Mock DocumentPartyRepository documentPartyRepository;
   @Mock DocumentPartyService documentPartyService;
   @Mock PartyService partyService;
@@ -87,6 +90,7 @@ class BKGServiceImplTest {
   @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
   @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
   @Spy CarrierClauseMapper carrierClauseMapper = Mappers.getMapper(CarrierClauseMapper.class);
+  @Spy RequestedEquipmentMapper requestedEquipmentMapper = Mappers.getMapper(RequestedEquipmentMapper.class);
 
   @Spy
   ConfirmedEquipmentMapper confirmedEquipmentMapper =
@@ -1105,8 +1109,8 @@ class BKGServiceImplTest {
       when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(valueAddedServiceRequest));
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
-      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(requestedEquipment));
+      when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
+          .thenReturn(Mono.just(requestedEquipment));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
@@ -1121,7 +1125,7 @@ class BKGServiceImplTest {
                 verify(commodityRepository).saveAll(any(Flux.class));
                 verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
                 verify(referenceRepository).saveAll(any(Flux.class));
-                verify(requestedEquipmentRepository).saveAll(any(Flux.class));
+                verify(requestedEquipmentRepository).save(any(RequestedEquipment.class));
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals("Received", b.getDocumentStatus().getValue());
@@ -1160,6 +1164,43 @@ class BKGServiceImplTest {
                         .getRequestedEquipmentSizetype());
               })
           .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+      "Method should save and return booking with invalid list of equipment referenes in requestedEquipment should result in an error")
+    void testCreateBookingWithInvalidEquipmentReferencesinRequestedEquipmentShouldResultInError() {
+
+      bookingTO.setDocumentParties(null);
+      bookingTO.setShipmentLocations(null);
+      requestedEquipmentTO.setEquipmentReferences(List.of("This", "is", "not", "valid"));
+
+      when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
+      when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+
+      when(locationService.createLocationByTO(eq(invoicePayableAt), any()))
+        .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location1)));
+      when(locationService.createLocationByTO(eq(placeOfIssue), any()))
+        .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
+      when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
+      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
+        .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
+        .thenReturn(Mono.just(Collections.emptyList()));
+
+      ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
+
+      StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
+        .expectErrorSatisfies(
+          throwable -> {
+            Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
+            assertEquals(
+              "Requested Equipment Units cannot be lower than quantity of Equipment References.", throwable.getMessage());
+          })
+        .verify();
     }
 
     @Test
@@ -1229,8 +1270,8 @@ class BKGServiceImplTest {
       when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(valueAddedServiceRequest));
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
-      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(requestedEquipment));
+      when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
+          .thenReturn(Mono.just(requestedEquipment));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
@@ -1244,7 +1285,7 @@ class BKGServiceImplTest {
                 verify(commodityRepository).saveAll(any(Flux.class));
                 verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
                 verify(referenceRepository).saveAll(any(Flux.class));
-                verify(requestedEquipmentRepository).saveAll(any(Flux.class));
+                verify(requestedEquipmentRepository).save(any(RequestedEquipment.class));
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals("Received", b.getDocumentStatus().getValue());
@@ -1354,8 +1395,8 @@ class BKGServiceImplTest {
       when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
           .thenReturn(Flux.just(valueAddedServiceRequest));
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
-      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(requestedEquipment));
+      when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
+          .thenReturn(Mono.just(requestedEquipment));
       when(locationRepository.save(location1)).thenReturn(Mono.just(location1));
       when(shipmentLocationRepository.save(any())).thenReturn(Mono.just(shipmentLocation));
       when(shipmentEventService.create(any()))
@@ -1372,7 +1413,7 @@ class BKGServiceImplTest {
                 verify(commodityRepository).saveAll(any(Flux.class));
                 verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
                 verify(referenceRepository).saveAll(any(Flux.class));
-                verify(requestedEquipmentRepository).saveAll(any(Flux.class));
+                verify(requestedEquipmentRepository).save(any(RequestedEquipment.class));
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals("Received", b.getDocumentStatus().getValue());
@@ -1618,6 +1659,7 @@ class BKGServiceImplTest {
       when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -1691,6 +1733,7 @@ class BKGServiceImplTest {
       when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -1785,6 +1828,7 @@ class BKGServiceImplTest {
       when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -1847,6 +1891,7 @@ class BKGServiceImplTest {
       when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -1895,6 +1940,7 @@ class BKGServiceImplTest {
       when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -1944,6 +1990,7 @@ class BKGServiceImplTest {
       when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -1999,6 +2046,7 @@ class BKGServiceImplTest {
       when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
@@ -2072,6 +2120,7 @@ class BKGServiceImplTest {
       when(commodityRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -2139,6 +2188,7 @@ class BKGServiceImplTest {
 
       when(valueAddedServiceRequestRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -2212,6 +2262,7 @@ class BKGServiceImplTest {
           .thenReturn(Flux.just(valueAddedServiceRequest));
 
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -2292,6 +2343,7 @@ class BKGServiceImplTest {
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
 
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
@@ -2371,9 +2423,10 @@ class BKGServiceImplTest {
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
 
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
-      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(requestedEquipment));
+      when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
+          .thenReturn(Mono.just(requestedEquipment));
 
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
         .thenReturn(Mono.just(Collections.emptyList()));
@@ -2471,9 +2524,10 @@ class BKGServiceImplTest {
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
 
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
-      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(requestedEquipment));
+      when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
+          .thenReturn(Mono.just(requestedEquipment));
 
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
@@ -2615,9 +2669,10 @@ class BKGServiceImplTest {
       when(referenceRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
 
+      when(requestedEquipmentEquipmentRepository.deleteByBookingId((any()))).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
-      when(requestedEquipmentRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(requestedEquipment));
+      when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
+          .thenReturn(Mono.just(requestedEquipment));
 
       when(documentPartyRepository.deleteByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))

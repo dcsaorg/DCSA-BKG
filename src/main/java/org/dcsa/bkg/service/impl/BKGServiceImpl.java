@@ -156,7 +156,7 @@ public class BKGServiceImpl implements BKGService {
               Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt =
                   t.getT1().getT5();
               Optional<List<ReferenceTO>> referencesOpt = t.getT1().getT6();
-              Optional<List<RequestedEquipmentTO>> requestedEquipmentsOpt = t.getT1().getT7();
+              List<RequestedEquipmentTO> requestedEquipmentsOpt = t.getT1().getT7();
               Optional<List<DocumentPartyTO>> documentPartiesOpt = t.getT1().getT8();
               Optional<List<ShipmentLocationTO>> shipmentLocationsOpt = t.getT2();
 
@@ -166,7 +166,7 @@ public class BKGServiceImpl implements BKGService {
               commoditiesOpt.ifPresent(bookingTO::setCommodities);
               valueAddedServiceRequestsOpt.ifPresent(bookingTO::setValueAddedServiceRequests);
               referencesOpt.ifPresent(bookingTO::setReferences);
-              requestedEquipmentsOpt.ifPresent(bookingTO::setRequestedEquipments);
+              bookingTO.setRequestedEquipments(requestedEquipmentsOpt);
               documentPartiesOpt.ifPresent(bookingTO::setDocumentParties);
               shipmentLocationsOpt.ifPresent(bookingTO::setShipmentLocations);
 
@@ -323,61 +323,65 @@ public class BKGServiceImpl implements BKGService {
         .map(Optional::of);
   }
 
-  private Mono<Optional<List<RequestedEquipmentTO>>> createRequestedEquipmentsByBookingIDAndTOs(
+  private Mono<List<RequestedEquipmentTO>> createRequestedEquipmentsByBookingIDAndTOs(
       UUID bookingID, List<RequestedEquipmentTO> requestedEquipments) {
 
     if (Objects.isNull(requestedEquipments) || requestedEquipments.isEmpty()) {
-      return Mono.just(Optional.of(Collections.emptyList()));
+      return Mono.justOrEmpty(Collections.emptyList());
     }
-
-    if (requestedEquipments.stream()
-        .anyMatch(
-            r ->
-                r.getRequestedEquipmentUnits() != null
-                    && r.getEquipmentReferences().size() > r.getRequestedEquipmentUnits())) {
-      return Mono.error(
-          ConcreteRequestErrorMessageException.invalidParameter(
-              "Requested Equipment Units cannot be lower than quantity of Equipment References."));
-    }
-
-    Stream<RequestedEquipment> requestedEquipmentsStream =
-        requestedEquipments.stream()
-            .map(
-                reTo -> {
-                  RequestedEquipment requestedEquipment = new RequestedEquipment();
-                  requestedEquipment.setBookingID(bookingID);
-                  requestedEquipment.setRequestedEquipmentSizetype(
-                      reTo.getRequestedEquipmentSizetype());
-                  requestedEquipment.setRequestedEquipmentUnits(reTo.getRequestedEquipmentUnits());
-                  requestedEquipment.setIsShipperOwned(reTo.isShipperOwned());
-                  return requestedEquipment;
-                });
 
     return Flux.fromIterable(requestedEquipments)
+        .filter(this::isValidRequestedEquipmentTO)
+        .switchIfEmpty(
+            Mono.error(
+                ConcreteRequestErrorMessageException.invalidParameter(
+                    "Requested Equipment Units cannot be lower than quantity of Equipment References.")))
         .flatMap(
             requestedEquipmentTO ->
-                requestedEquipmentRepository
-                    .save(
-                        requestedEquipmentMapper.dtoToRequestedEquipmentWithBookingId(
-                            requestedEquipmentTO, bookingID))
-                    .flatMap(
-                        requestedEquipment ->
-                            Flux.fromIterable(requestedEquipmentTO.getEquipmentReferences())
-                                .flatMap(
-                                    equipmentReference -> {
-                                      RequestedEquipmentEquipment requestedEquipmentEquipment =
-                                          new RequestedEquipmentEquipment();
-                                      requestedEquipmentEquipment.setRequestedEquipmentId(
-                                          requestedEquipment.getId());
-                                      requestedEquipmentEquipment.setEquipmentReference(
-                                          equipmentReference);
-                                      return requestedEquipmentEquipmentRepository.save(
-                                          requestedEquipmentEquipment);
-                                    })
-                                .collectList())
-                    .thenReturn(requestedEquipmentTO))
-        .collectList()
-        .map(Optional::of);
+                saveRequestedEquipmentAndEquipmentReferences(bookingID, requestedEquipmentTO))
+        .collectList();
+  }
+
+  private Mono<RequestedEquipmentTO> saveRequestedEquipmentAndEquipmentReferences(
+      UUID bookingID, RequestedEquipmentTO requestedEquipmentTO) {
+    List<String> equipmentReferences = requestedEquipmentTO.getEquipmentReferences();
+    return Mono.just(
+            requestedEquipmentMapper.dtoToRequestedEquipmentWithBookingId(
+                requestedEquipmentTO, bookingID))
+        .flatMap(requestedEquipmentRepository::save)
+        .filter(requestedEquipment -> Objects.nonNull(equipmentReferences))
+        .flatMap(
+            requestedEquipment ->
+                mapAndSaveRequestedEquipmentEquipment(requestedEquipment, equipmentReferences))
+        .thenReturn(requestedEquipmentTO);
+  }
+
+  private Mono<List<RequestedEquipmentEquipment>> mapAndSaveRequestedEquipmentEquipment(
+      RequestedEquipment requestedEquipment, List<String> equipmentReferences) {
+    return Flux.fromIterable(equipmentReferences)
+        .flatMap(
+            equipmentReference ->
+                mapRequestedEquipmentToRequestedEquipmentEquipment(
+                    requestedEquipment, equipmentReference))
+        .collectList();
+  }
+
+  private Mono<RequestedEquipmentEquipment> mapRequestedEquipmentToRequestedEquipmentEquipment(
+      RequestedEquipment requestedEquipment, String equipmentReference) {
+    RequestedEquipmentEquipment requestedEquipmentEquipment = new RequestedEquipmentEquipment();
+    requestedEquipmentEquipment.setRequestedEquipmentId(requestedEquipment.getId());
+    requestedEquipmentEquipment.setEquipmentReference(equipmentReference);
+    return requestedEquipmentEquipmentRepository.save(requestedEquipmentEquipment);
+  }
+
+  private Boolean isValidRequestedEquipmentTO(RequestedEquipmentTO requestedEquipmentTO) {
+    Boolean isValid = true;
+    if (Objects.nonNull(requestedEquipmentTO.getEquipmentReferences())) {
+      isValid =
+          requestedEquipmentTO.getEquipmentReferences().size()
+              <= requestedEquipmentTO.getRequestedEquipmentUnits();
+    }
+    return isValid;
   }
 
   private Mono<Optional<List<ShipmentLocationTO>>> createShipmentLocationsByBookingIDAndTOs(
@@ -513,7 +517,7 @@ public class BKGServiceImpl implements BKGService {
               Optional<List<ValueAddedServiceRequestTO>> valueAddedServiceRequestsOpt =
                   t.getT1().getT5();
               Optional<List<ReferenceTO>> referencesOpt = t.getT1().getT6();
-              Optional<List<RequestedEquipmentTO>> requestedEquipmentsOpt = t.getT1().getT7();
+              List<RequestedEquipmentTO> requestedEquipmentsOpt = t.getT1().getT7();
               Optional<List<DocumentPartyTO>> documentPartiesOpt = t.getT1().getT8();
               Optional<List<ShipmentLocationTO>> shipmentLocationsOpt = t.getT2();
 
@@ -523,7 +527,7 @@ public class BKGServiceImpl implements BKGService {
               commoditiesOpt.ifPresent(bookingTO::setCommodities);
               valueAddedServiceRequestsOpt.ifPresent(bookingTO::setValueAddedServiceRequests);
               referencesOpt.ifPresent(bookingTO::setReferences);
-              requestedEquipmentsOpt.ifPresent(bookingTO::setRequestedEquipments);
+              bookingTO.setRequestedEquipments(requestedEquipmentsOpt);
               documentPartiesOpt.ifPresent(bookingTO::setDocumentParties);
               shipmentLocationsOpt.ifPresent(bookingTO::setShipmentLocations);
 
@@ -563,7 +567,7 @@ public class BKGServiceImpl implements BKGService {
         .then(createReferencesByBookingIDAndTOs(bookingID, references));
   }
 
-  private Mono<Optional<List<RequestedEquipmentTO>>> resolveReqEqForBookingID(
+  private Mono<List<RequestedEquipmentTO>> resolveReqEqForBookingID(
       List<RequestedEquipmentTO> requestedEquipments, UUID bookingID) {
 
     return requestedEquipmentRepository
