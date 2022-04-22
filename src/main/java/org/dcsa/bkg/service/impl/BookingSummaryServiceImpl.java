@@ -27,7 +27,7 @@ public class BookingSummaryServiceImpl
         booking ->
             vesselRepository
                 .findByIdOrEmpty(booking.getVesselId())
-                .mapNotNull(
+                .map(
                     vessel -> {
                       BookingSummaryTO bookingSummaryTO =
                           mapper.bookingSummaryTOFromBooking(booking);
