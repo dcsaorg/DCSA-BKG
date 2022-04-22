@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.dcsa.core.events.edocumentation.model.transferobject.TransportTO;
 import org.dcsa.core.events.model.enums.TransportPlanStageCode;
-import org.dcsa.core.events.model.transferobjects.LocationTO;
+import org.dcsa.skernel.model.transferobjects.LocationTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

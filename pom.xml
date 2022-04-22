@@ -6,11 +6,10 @@
 	<parent>
 		<groupId>org.dcsa</groupId>
 		<artifactId>dcsa-bom</artifactId>
-		<version>1.0-RELEASE</version>
+		<version>1.1-SNAPSHOT</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
-	<groupId>org.dcsa</groupId>
 	<artifactId>dcsa_bkg</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>DCSA-BKG</name>
@@ -23,20 +22,21 @@
 		<dcsa.artifacttype>-SNAPSHOT</dcsa.artifacttype>
 		<event-core.version>${dcsa.events.version}${dcsa.event.tag}${dcsa.artifacttype}</event-core.version>
 		<!-- End: Define DCSA-Event-Core version -->
+		<!-- Re-Define DCSA-Core version -->
+		<dcsa.core.tag/>
+		<!-- End: Re-Define DCSA-Core version -->
+		<!-- Define Shared Kernel version -->
+		<dcsa.shared-kernel.version>0.0.3</dcsa.shared-kernel.version>
+		<dcsa.shared-kernel.tag/>
+		<dcsa.shared-kernel.artifacttype>-SNAPSHOT</dcsa.shared-kernel.artifacttype>
+		<shared-kernel.version>${dcsa.shared-kernel.version}${dcsa.shared-kernel.tag}${dcsa.shared-kernel.artifacttype}</shared-kernel.version>
+		<!-- End: Define Shared kernel version -->
 	</properties>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-mail</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.dcsa</groupId>
 			<artifactId>dcsa_event_core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.mapstruct</groupId>
