@@ -2,10 +2,10 @@ package org.dcsa.bkg.service.impl;
 
 import org.dcsa.bkg.model.mappers.BookingSummaryMapper;
 import org.dcsa.core.events.model.Booking;
-import org.dcsa.core.events.model.Vessel;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.dcsa.core.events.repository.BookingRepository;
-import org.dcsa.core.events.repository.VesselRepository;
+import org.dcsa.skernel.model.Vessel;
+import org.dcsa.skernel.repositority.VesselRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

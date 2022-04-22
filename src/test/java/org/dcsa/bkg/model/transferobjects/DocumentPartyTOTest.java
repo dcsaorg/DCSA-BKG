@@ -1,10 +1,10 @@
 package org.dcsa.bkg.model.transferobjects;
 
-import org.dcsa.core.events.model.enums.PartyFunction;
 import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
-import org.dcsa.core.events.model.transferobjects.PartyContactDetailsTO;
-import org.dcsa.core.events.model.transferobjects.PartyTO;
 import org.dcsa.core.exception.ConcreteRequestErrorMessageException;
+import org.dcsa.skernel.model.enums.PartyFunction;
+import org.dcsa.skernel.model.transferobjects.PartyContactDetailsTO;
+import org.dcsa.skernel.model.transferobjects.PartyTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static org.dcsa.core.events.model.enums.PartyFunction.DOCUMENTATION_PARTY_FUNCTION_CODES;
+import static org.dcsa.skernel.model.enums.PartyFunction.DOCUMENTATION_PARTY_FUNCTION_CODES;
 
 @DisplayName("Tests for DocumentPartyTO")
 class DocumentPartyTOTest {
