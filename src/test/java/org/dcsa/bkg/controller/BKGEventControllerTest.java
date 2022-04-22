@@ -68,7 +68,7 @@ class BKGEventControllerTest {
     shipmentEvent.setEventClassifierCode(EventClassifierCode.PLN);
     shipmentEvent.setShipmentEventTypeCode(ShipmentEventTypeCode.CONF);
     shipmentEvent.setDocumentTypeCode(DocumentTypeCode.BKG);
-    shipmentEvent.setDocumentID("ABC123123123");
+    shipmentEvent.setDocumentID(UUID.randomUUID());
     Reference reference = new Reference();
     reference.setReferenceType(ReferenceTypeCode.FF);
     reference.setReferenceValue("String");

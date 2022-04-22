@@ -1031,7 +1031,7 @@ public class BKGServiceImpl implements BKGService {
     shipmentEvent.setDocumentTypeCode(DocumentTypeCode.CBR);
     shipmentEvent.setEventClassifierCode(EventClassifierCode.ACT);
     shipmentEvent.setEventType(null);
-    shipmentEvent.setDocumentID(booking.getCarrierBookingRequestReference());
+    shipmentEvent.setDocumentID(booking.getId());
     shipmentEvent.setEventDateTime(booking.getUpdatedDateTime());
     shipmentEvent.setEventCreatedDateTime(OffsetDateTime.now());
     shipmentEvent.setReason(reason);

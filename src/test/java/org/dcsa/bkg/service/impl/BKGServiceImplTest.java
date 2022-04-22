@@ -270,7 +270,6 @@ class BKGServiceImplTest {
     charge.setCurrencyCode("x".repeat(20));
     charge.setPaymentTermCode(PaymentTerm.PRE);
     charge.setQuantity(123d);
-    charge.setTransportDocumentReference("x".repeat(20));
     charge.setUnitPrice(12.12d);
 
     modeOfTransport = new ModeOfTransport();
@@ -3208,7 +3207,8 @@ class BKGServiceImplTest {
               new PartyContactDetailsTO(
                   partyContactDetails.getName(),
                   partyContactDetails.getEmail(),
-                  partyContactDetails.getPhone())));
+                  partyContactDetails.getPhone(),
+                  partyContactDetails.getUrl())));
       partyTO.setIdentifyingCodes(
           List.of(
               PartyTO.IdentifyingCode.builder()
@@ -3303,7 +3303,8 @@ class BKGServiceImplTest {
               new PartyContactDetailsTO(
                   partyContactDetails.getName(),
                   partyContactDetails.getEmail(),
-                  partyContactDetails.getPhone())));
+                  partyContactDetails.getPhone(),
+                  partyContactDetails.getUrl())));
       partyTO.setIdentifyingCodes(
           List.of(
               PartyTO.IdentifyingCode.builder()
@@ -3829,7 +3830,8 @@ class BKGServiceImplTest {
               new PartyContactDetailsTO(
                   partyContactDetails.getName(),
                   partyContactDetails.getEmail(),
-                  partyContactDetails.getPhone())));
+                  partyContactDetails.getPhone(),
+                  partyContactDetails.getUrl())));
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any()))
