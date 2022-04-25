@@ -23,18 +23,20 @@ public class BookingSummaryServiceImpl
 
   @Override
   protected Flux<BookingSummaryTO> bulkMapDM2TO(Flux<Booking> bookingFlux) {
-    return bookingFlux.concatMap(
-        booking ->
-            vesselRepository
-                .findByIdOrEmpty(booking.getVesselId())
-                .map(
-                    vessel -> {
-                      BookingSummaryTO bookingSummaryTO =
-                          mapper.bookingSummaryTOFromBooking(booking);
-                      bookingSummaryTO.setVesselIMONumber(vessel.getVesselIMONumber());
-                      return bookingSummaryTO;
-                    })
-                .defaultIfEmpty(mapper.bookingSummaryTOFromBooking(booking)));
+    return bookingFlux
+        .flatMap(booking -> booking.getValidUntil() == null ? Mono.just(booking) : Mono.empty())
+        .concatMap(
+            booking ->
+                vesselRepository
+                    .findByIdOrEmpty(booking.getVesselId())
+                    .map(
+                        vessel -> {
+                          BookingSummaryTO bookingSummaryTO =
+                              mapper.bookingSummaryTOFromBooking(booking);
+                          bookingSummaryTO.setVesselIMONumber(vessel.getVesselIMONumber());
+                          return bookingSummaryTO;
+                        })
+                    .defaultIfEmpty(mapper.bookingSummaryTOFromBooking(booking)));
   }
 
   @Override
