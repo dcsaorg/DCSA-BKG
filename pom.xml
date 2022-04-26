@@ -24,6 +24,8 @@
 		<!-- End: Define DCSA-Event-Core version -->
 		<!-- Re-Define DCSA-Core version -->
 		<dcsa.core.tag/>
+		<dcsa.core.version>0.8.32</dcsa.core.version>
+		<core.version>${dcsa.core.version}${dcsa.core.tag}${dcsa.artifacttype}</core.version>
 		<!-- End: Re-Define DCSA-Core version -->
 		<!-- Define Shared Kernel version -->
 		<dcsa.shared-kernel.version>0.0.3</dcsa.shared-kernel.version>
@@ -37,6 +39,10 @@
 		<dependency>
 			<groupId>org.dcsa</groupId>
 			<artifactId>dcsa_event_core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.dcsa</groupId>
+			<artifactId>dcsa_core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.mapstruct</groupId>
