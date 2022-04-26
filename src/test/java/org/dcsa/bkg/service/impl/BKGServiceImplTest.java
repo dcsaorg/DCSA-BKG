@@ -993,8 +993,8 @@ class BKGServiceImplTest {
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
           .thenReturn(Mono.just(Collections.emptyList()));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1003,7 +1003,7 @@ class BKGServiceImplTest {
               b -> {
                 verify(locationService, times(2)).ensureResolvable(any());
                 verify(commodityRepository).saveAll(any(Flux.class));
-                verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
+                verify(valueAddedServiceRequestRepository).save(any());
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals("Received", b.getDocumentStatus().getValue());
@@ -1059,9 +1059,9 @@ class BKGServiceImplTest {
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
           .thenReturn(Mono.just(Collections.emptyList()));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
-      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
+      when(referenceRepository.save(any())).thenReturn(Mono.just(reference));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
@@ -1072,8 +1072,8 @@ class BKGServiceImplTest {
               b -> {
                 verify(locationService, times(2)).ensureResolvable(any());
                 verify(commodityRepository).saveAll(any(Flux.class));
-                verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
-                verify(referenceRepository).saveAll(any(Flux.class));
+                verify(valueAddedServiceRequestRepository).save(any());
+                verify(referenceRepository).save(any());
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals("Received", b.getDocumentStatus().getValue());
@@ -1128,9 +1128,9 @@ class BKGServiceImplTest {
       LocationTO locationTO2 = locationMapper.locationToDTO(location2);
       when(locationService.ensureResolvable(eq(placeOfIssue))).thenReturn(Mono.just(locationTO2));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
-      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
+      when(referenceRepository.save(any())).thenReturn(Mono.just(reference));
       when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
           .thenReturn(Mono.just(requestedEquipment));
       when(shipmentEventService.create(any()))
@@ -1145,8 +1145,8 @@ class BKGServiceImplTest {
               b -> {
                 verify(locationService, times(2)).ensureResolvable(any());
                 verify(commodityRepository).saveAll(any(Flux.class));
-                verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
-                verify(referenceRepository).saveAll(any(Flux.class));
+                verify(valueAddedServiceRequestRepository).save(any());
+                verify(referenceRepository).save(any());
                 verify(requestedEquipmentRepository).save(any(RequestedEquipment.class));
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
@@ -1209,9 +1209,9 @@ class BKGServiceImplTest {
       when(locationService.ensureResolvable(eq(placeOfIssue)))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
-      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
+      when(referenceRepository.save(any())).thenReturn(Mono.just(reference));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
           .thenReturn(Mono.just(Collections.emptyList()));
 
@@ -1295,9 +1295,9 @@ class BKGServiceImplTest {
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
           .thenReturn(Mono.just(List.of(documentPartyTO)));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
-      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
+      when(referenceRepository.save(any())).thenReturn(Mono.just(reference));
       when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
           .thenReturn(Mono.just(requestedEquipment));
       when(shipmentEventService.create(any()))
@@ -1311,8 +1311,8 @@ class BKGServiceImplTest {
                 verify(locationService, times(2)).ensureResolvable(any());
                 verify(documentPartyService).createDocumentPartiesByBookingID(any(), any());
                 verify(commodityRepository).saveAll(any(Flux.class));
-                verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
-                verify(referenceRepository).saveAll(any(Flux.class));
+                verify(valueAddedServiceRequestRepository).save(any());
+                verify(referenceRepository).save(any());
                 verify(requestedEquipmentRepository).save(any(RequestedEquipment.class));
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
@@ -1423,9 +1423,9 @@ class BKGServiceImplTest {
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
           .thenReturn(Mono.just(List.of(documentPartyTO)));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
-      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
+      when(referenceRepository.save(any())).thenReturn(Mono.just(reference));
       when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
           .thenReturn(Mono.just(requestedEquipment));
       when(locationRepository.save(location1)).thenReturn(Mono.just(location1));
@@ -1442,8 +1442,8 @@ class BKGServiceImplTest {
                 verify(locationService, times(2)).ensureResolvable(any());
                 verify(documentPartyService).createDocumentPartiesByBookingID(any(), any());
                 verify(commodityRepository).saveAll(any(Flux.class));
-                verify(valueAddedServiceRequestRepository).saveAll(any(Flux.class));
-                verify(referenceRepository).saveAll(any(Flux.class));
+                verify(valueAddedServiceRequestRepository).save(any());
+                verify(referenceRepository).save(any());
                 verify(requestedEquipmentRepository).save(any(RequestedEquipment.class));
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
@@ -1658,7 +1658,7 @@ class BKGServiceImplTest {
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof UpdateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "No booking found for given carrierBookingRequestReference.",
                     throwable.getMessage());
@@ -1808,7 +1808,7 @@ class BKGServiceImplTest {
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
                     throwable.getMessage());
@@ -2220,8 +2220,8 @@ class BKGServiceImplTest {
 
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
 
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
@@ -2292,10 +2292,10 @@ class BKGServiceImplTest {
 
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
 
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
 
-      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(referenceRepository.save(any())).thenReturn(Mono.just(reference));
 
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
@@ -2366,10 +2366,10 @@ class BKGServiceImplTest {
 
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
 
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
 
-      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(referenceRepository.save(any())).thenReturn(Mono.just(reference));
 
       when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
           .thenReturn(Mono.just(requestedEquipment));
@@ -2466,10 +2466,10 @@ class BKGServiceImplTest {
 
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
 
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
 
-      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(referenceRepository.save(any())).thenReturn(Mono.just(reference));
 
       when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
           .thenReturn(Mono.just(requestedEquipment));
@@ -2606,10 +2606,10 @@ class BKGServiceImplTest {
 
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
 
-      when(valueAddedServiceRequestRepository.saveAll(any(Flux.class)))
-          .thenReturn(Flux.just(valueAddedServiceRequest));
+      when(valueAddedServiceRequestRepository.save(any()))
+          .thenReturn(Mono.just(valueAddedServiceRequest));
 
-      when(referenceRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(reference));
+      when(referenceRepository.save(any())).thenReturn(Mono.just(reference));
 
       when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
           .thenReturn(Mono.just(requestedEquipment));

@@ -246,20 +246,16 @@ public class BKGServiceImpl implements BKGService {
       return Mono.empty();
     }
 
-    Stream<ValueAddedServiceRequest> vasrStream =
-        valueAddedServiceRequests.stream()
-            .map(
-                vasr -> {
-                  ValueAddedServiceRequest valueAddedServiceRequest =
-                      new ValueAddedServiceRequest();
-                  valueAddedServiceRequest.setBookingID(bookingID);
-                  valueAddedServiceRequest.setValueAddedServiceCode(
-                      vasr.getValueAddedServiceCode());
-                  return valueAddedServiceRequest;
-                });
-
-    return valueAddedServiceRequestRepository
-        .saveAll(Flux.fromStream(vasrStream))
+    return Flux.fromIterable(valueAddedServiceRequests)
+        .map(
+            valueAddedServiceRequestTO -> {
+              ValueAddedServiceRequest valueAddedServiceRequest = new ValueAddedServiceRequest();
+              valueAddedServiceRequest.setBookingID(bookingID);
+              valueAddedServiceRequest.setValueAddedServiceCode(
+                  valueAddedServiceRequestTO.getValueAddedServiceCode());
+              return valueAddedServiceRequest;
+            })
+        .flatMap(valueAddedServiceRequestRepository::save)
         .map(
             savedVasr -> {
               ValueAddedServiceRequestTO valueAddedServiceRequestTO =
@@ -278,24 +274,21 @@ public class BKGServiceImpl implements BKGService {
       return Mono.empty();
     }
 
-    Stream<Reference> referenceStream =
-        references.stream()
-            .map(
-                r -> {
-                  Reference reference = new Reference();
-                  reference.setBookingID(bookingID);
-                  reference.setReferenceType(r.getReferenceType());
-                  reference.setReferenceValue(r.getReferenceValue());
-                  return reference;
-                });
-
-    return referenceRepository
-        .saveAll(Flux.fromStream(referenceStream))
+    return Flux.fromIterable(references)
         .map(
-            r -> {
+            referenceTO -> {
+              Reference reference = new Reference();
+              reference.setBookingID(bookingID);
+              reference.setReferenceType(referenceTO.getReferenceType());
+              reference.setReferenceValue(referenceTO.getReferenceValue());
+              return reference;
+            })
+        .flatMap(referenceRepository::save)
+        .map(
+            reference -> {
               ReferenceTO referenceTO = new ReferenceTO();
-              referenceTO.setReferenceType(r.getReferenceType());
-              referenceTO.setReferenceValue(r.getReferenceValue());
+              referenceTO.setReferenceType(reference.getReferenceType());
+              referenceTO.setReferenceValue(reference.getReferenceValue());
               return referenceTO;
             })
         .collectList();
@@ -431,7 +424,7 @@ public class BKGServiceImpl implements BKGService {
 
     String bookingRequestError = validateBookingRequest(bookingRequest);
     if (!bookingRequestError.isEmpty()) {
-      return Mono.error(new CreateException(bookingRequestError));
+      return Mono.error(ConcreteRequestErrorMessageException.invalidInput(bookingRequestError));
     }
 
     return bookingRepository
@@ -464,7 +457,7 @@ public class BKGServiceImpl implements BKGService {
             Mono.defer(
                 () ->
                     Mono.error(
-                        new UpdateException(
+                        ConcreteRequestErrorMessageException.notFound(
                             "No booking found for given carrierBookingRequestReference."))))
         .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
