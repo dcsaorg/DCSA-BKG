@@ -2742,7 +2742,7 @@ class BKGServiceImplTest {
       booking.setInvoicePayableAt(null);
       booking.setPlaceOfIssueID(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -2777,7 +2777,7 @@ class BKGServiceImplTest {
         "Method should return shallow booking with shallow location for given carrierBookingRequestReference")
     void testGETBookingShallowWithLocationShallow() {
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
       when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
@@ -2820,7 +2820,7 @@ class BKGServiceImplTest {
       locationTO1.setAddress(address);
       locationTO1.setFacility(facility);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
       when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
@@ -2868,7 +2868,7 @@ class BKGServiceImplTest {
       locationTO1.setAddress(address);
       locationTO1.setFacility(facility);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
       when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
@@ -2916,7 +2916,7 @@ class BKGServiceImplTest {
       locationTO1.setAddress(address);
       locationTO1.setFacility(facility);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
       when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
@@ -2968,7 +2968,7 @@ class BKGServiceImplTest {
       locationTO1.setAddress(address);
       locationTO1.setFacility(facility);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
       when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
@@ -3021,7 +3021,7 @@ class BKGServiceImplTest {
       locationTO1.setFacility(facility);
       LocationTO locationTO2 = locationMapper.locationToDTO(location2);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
       when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
@@ -3092,7 +3092,7 @@ class BKGServiceImplTest {
                   .dcsaResponsibleAgencyCode(partyIdentifyingCode.getDcsaResponsibleAgencyCode())
                   .build()));
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
       when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
@@ -3188,7 +3188,7 @@ class BKGServiceImplTest {
                   .dcsaResponsibleAgencyCode(partyIdentifyingCode.getDcsaResponsibleAgencyCode())
                   .build()));
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
       when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
@@ -3268,10 +3268,54 @@ class BKGServiceImplTest {
     @DisplayName("Method should return shallow booking for given carrierBookingRequestReference")
     void testGETBookingNotFound() {
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.empty());
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.empty());
 
       StepVerifier.create(bkgServiceImpl.getBookingByCarrierBookingRequestReference("IdoNotExist"))
           .expectError(NotFoundException.class);
+    }
+
+    @Test
+    @DisplayName(
+      "Method should return an error when no booking is found for given carrierBookingRequestReference")
+    void testGETBookingNoBookingFound() {
+
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
+        .thenReturn(Mono.empty());
+
+      StepVerifier.create(
+          bkgServiceImpl.getBookingByCarrierBookingRequestReference(
+            booking.getCarrierBookingRequestReference()))
+        .expectErrorSatisfies(
+          throwable -> {
+            Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
+            assertEquals(
+              "No booking found with carrier booking request reference: "
+                + booking.getCarrierBookingRequestReference(),
+              throwable.getMessage());
+          })
+        .verify();
+    }
+
+    @Test
+    @DisplayName(
+      "Method should return an error when no active booking is found for given carrierBookingRequestReference")
+    void testGETShipmentNoActiveShipmentFound() {
+      booking.setValidUntil(OffsetDateTime.now());
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
+        .thenReturn(Mono.just(booking));
+
+      StepVerifier.create(
+          bkgServiceImpl.getBookingByCarrierBookingRequestReference(
+            booking.getCarrierBookingRequestReference()))
+        .expectErrorSatisfies(
+          throwable -> {
+            Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
+            assertEquals(
+              "All bookings are inactive, at least one active booking should be present.",
+              throwable.getMessage());
+          })
+        .verify();
     }
   }
 
@@ -3282,7 +3326,8 @@ class BKGServiceImplTest {
     @DisplayName("Method should return shallow shipment for given carrierBookingReference")
     void testGETShipmentShallow() {
 
-      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -3318,7 +3363,8 @@ class BKGServiceImplTest {
       locationTO1.setAddress(address);
       locationTO1.setFacility(facility);
 
-      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any()))
           .thenReturn(Flux.just(shipmentLocation));
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any()))
@@ -3371,7 +3417,8 @@ class BKGServiceImplTest {
       locationTO1.setAddress(address);
       locationTO1.setFacility(facility);
 
-      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any()))
           .thenReturn(Flux.just(shipmentLocation));
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any()))
@@ -3424,7 +3471,8 @@ class BKGServiceImplTest {
         "Method should return shipment for given carrierBookingRequestReference with confirmedEquipment")
     void testGETShipmentWithConfirmedEquipment() {
 
-      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
       when(requestedEquipmentRepository.findByBookingID(any()))
@@ -3458,7 +3506,8 @@ class BKGServiceImplTest {
         "Method should return shipment for given carrierBookingRequestReference with charges")
     void testGETShipmentWithCharges() {
 
-      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -3505,7 +3554,8 @@ class BKGServiceImplTest {
       when(locationService.fetchLocationDeepObjByID(location2.getId()))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
 
-      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.just(shipment));
       when(shipmentTransportRepository.findAllByShipmentID(any()))
           .thenReturn(Flux.just(shipmentTransport));
       when(transportRepository.findById(transport.getTransportID()))
@@ -3611,7 +3661,8 @@ class BKGServiceImplTest {
       when(locationService.fetchLocationDeepObjByID(location2.getId()))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
 
-      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.just(shipment));
       when(shipmentTransportRepository.findAllByShipmentID(any()))
           .thenReturn(Flux.just(shipmentTransport));
       when(transportRepository.findById(transport.getTransportID()))
@@ -3708,7 +3759,8 @@ class BKGServiceImplTest {
                   partyContactDetails.getPhone(),
                   partyContactDetails.getUrl())));
 
-      when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any()))
           .thenReturn(Flux.just(shipmentLocation));
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any()))
@@ -3806,6 +3858,49 @@ class BKGServiceImplTest {
                     b.getConfirmedEquipments().get(0).getConfirmedEquipmentSizetype());
               })
           .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should return an error when no shipment is found for given carrierBookingReference")
+    void testGETShipmentNoShipmentFound() {
+
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.empty());
+
+      StepVerifier.create(
+              bkgServiceImpl.getShipmentByCarrierBookingReference(
+                  shipment.getCarrierBookingReference()))
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
+                assertEquals(
+                    "No shipment found with carrier booking reference: "
+                        + shipment.getCarrierBookingReference(),
+                    throwable.getMessage());
+              })
+          .verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Method should return an error when no active shipment is found for given carrierBookingReference")
+    void testGETShipmentNoActiveShipmentFound() {
+      shipment.setValidUntil(OffsetDateTime.now());
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
+          .thenReturn(Mono.just(shipment));
+
+      StepVerifier.create(
+              bkgServiceImpl.getShipmentByCarrierBookingReference(
+                  shipment.getCarrierBookingReference()))
+          .expectErrorSatisfies(
+              throwable -> {
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
+                assertEquals(
+                    "All shipments are inactive, at least one active shipment should be present.",
+                    throwable.getMessage());
+              })
+          .verify();
     }
   }
 

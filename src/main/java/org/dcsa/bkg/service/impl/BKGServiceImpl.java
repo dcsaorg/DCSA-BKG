@@ -20,7 +20,6 @@ import org.dcsa.core.events.service.DocumentPartyService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.ConcreteRequestErrorMessageException;
 import org.dcsa.core.exception.CreateException;
-import org.dcsa.core.exception.NotFoundException;
 import org.dcsa.core.exception.UpdateException;
 import org.dcsa.skernel.model.Location;
 import org.dcsa.skernel.model.Vessel;
@@ -240,9 +239,8 @@ public class BKGServiceImpl implements BKGService {
         .collectList();
   }
 
-  private Mono<List<ValueAddedServiceRequestTO>>
-      createValueAddedServiceRequestsByBookingIDAndTOs(
-          UUID bookingID, List<ValueAddedServiceRequestTO> valueAddedServiceRequests) {
+  private Mono<List<ValueAddedServiceRequestTO>> createValueAddedServiceRequestsByBookingIDAndTOs(
+      UUID bookingID, List<ValueAddedServiceRequestTO> valueAddedServiceRequests) {
 
     if (Objects.isNull(valueAddedServiceRequests) || valueAddedServiceRequests.isEmpty()) {
       return Mono.empty();
@@ -439,12 +437,13 @@ public class BKGServiceImpl implements BKGService {
     return bookingRepository
         .findByCarrierBookingRequestReference(carrierBookingRequestReference)
         .flatMap(checkUpdateBookingStatus)
-        .flatMap(booking -> {
-          // update the valid_until field for to be copied booking
-          // to ensure the copy is unique and the one to be used
-          booking.setValidUntil(OffsetDateTime.now());
-          return bookingRepository.save(booking).thenReturn(booking);
-        })
+        .flatMap(
+            booking -> {
+              // update the valid_until field for to be copied booking
+              // to ensure the copy is unique and the one to be used
+              booking.setValidUntil(OffsetDateTime.now());
+              return bookingRepository.save(booking).thenReturn(booking);
+            })
         .flatMap(
             b -> {
               // update booking with new booking request
@@ -474,28 +473,33 @@ public class BKGServiceImpl implements BKGService {
   public Mono<BookingTO> getBookingByCarrierBookingRequestReference(
       String carrierBookingRequestReference) {
     return bookingRepository
-        .findByCarrierBookingRequestReference(carrierBookingRequestReference)
-        .map(b -> Tuples.of(b.getId(), bookingMapper.bookingToDTO(b), b))
+        .findByCarrierBookingRequestReferenceAndValidUntilIsNull(carrierBookingRequestReference)
         .switchIfEmpty(
             Mono.error(
-                new NotFoundException(
+                ConcreteRequestErrorMessageException.notFound(
                     "No booking found with carrier booking request reference: "
                         + carrierBookingRequestReference)))
+        .filter(booking -> Objects.isNull(booking.getValidUntil()))
+        .switchIfEmpty(
+            Mono.error(
+                ConcreteRequestErrorMessageException.internalServerError(
+                    "All bookings are inactive, at least one active booking should be present.")))
+        .map(b -> Tuples.of(bookingMapper.bookingToDTO(b), b))
         .doOnSuccess(
             t -> {
               // the mapper creates a new instance of location even if value of invoicePayableAt
               // is null in booking hence we set it to null if it's a null object
-              if (t.getT2().getInvoicePayableAt().getId() == null) {
-                t.getT2().setInvoicePayableAt(null);
+              if (t.getT1().getInvoicePayableAt().getId() == null) {
+                t.getT1().setInvoicePayableAt(null);
               }
-              if (t.getT2().getPlaceOfIssue().getId() == null) {
-                t.getT2().setPlaceOfIssue(null);
+              if (t.getT1().getPlaceOfIssue().getId() == null) {
+                t.getT1().setPlaceOfIssue(null);
               }
             })
         .flatMap(
             t -> {
-              BookingTO bookingTO = t.getT2();
-              Booking booking = t.getT3();
+              BookingTO bookingTO = t.getT1();
+              Booking booking = t.getT2();
 
               String invoicePayableAtLocID =
                   Objects.isNull(bookingTO.getInvoicePayableAt())
@@ -536,12 +540,17 @@ public class BKGServiceImpl implements BKGService {
       String carrierBookingRequestReference) {
 
     return shipmentRepository
-        .findByCarrierBookingReference(carrierBookingRequestReference)
+        .findByCarrierBookingReferenceAndValidUntilIsNull(carrierBookingRequestReference)
         .switchIfEmpty(
             Mono.error(
                 ConcreteRequestErrorMessageException.notFound(
-                    "No booking found with carrier booking reference: "
+                    "No shipment found with carrier booking reference: "
                         + carrierBookingRequestReference)))
+        .filter(shipment -> Objects.isNull(shipment.getValidUntil()))
+        .switchIfEmpty(
+            Mono.error(
+                ConcreteRequestErrorMessageException.internalServerError(
+                    "All shipments are inactive, at least one active shipment should be present.")))
         .flatMap(
             shipment -> {
               ShipmentTO shipmentTO = shipmentMapper.shipmentToDTO(shipment);
@@ -1025,6 +1034,7 @@ public class BKGServiceImpl implements BKGService {
           return Mono.just(booking);
         }
         return Mono.error(
-          ConcreteRequestErrorMessageException.invalidParameter("Cannot Update Booking that is not in status RECE or PENU"));
+            ConcreteRequestErrorMessageException.invalidParameter(
+                "Cannot Update Booking that is not in status RECE or PENU"));
       };
 }
