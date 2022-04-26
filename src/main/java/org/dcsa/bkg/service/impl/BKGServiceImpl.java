@@ -255,7 +255,7 @@ public class BKGServiceImpl implements BKGService {
                   valueAddedServiceRequestTO.getValueAddedServiceCode());
               return valueAddedServiceRequest;
             })
-        .flatMap(valueAddedServiceRequestRepository::save)
+        .concatMap(valueAddedServiceRequestRepository::save)
         .map(
             savedVasr -> {
               ValueAddedServiceRequestTO valueAddedServiceRequestTO =
@@ -283,7 +283,7 @@ public class BKGServiceImpl implements BKGService {
               reference.setReferenceValue(referenceTO.getReferenceValue());
               return reference;
             })
-        .flatMap(referenceRepository::save)
+        .concatMap(referenceRepository::save)
         .map(
             reference -> {
               ReferenceTO referenceTO = new ReferenceTO();
