@@ -8,6 +8,8 @@ import org.dcsa.core.events.model.Booking;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.dcsa.core.extendedrequest.ExtendedParameters;
 import org.dcsa.core.extendedrequest.ExtendedRequest;
+import org.dcsa.core.extendedrequest.QueryFieldRestriction;
+import org.dcsa.core.query.DBEntityAnalysis;
 import org.dcsa.core.validator.EnumSubset;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.http.MediaType;
@@ -59,10 +61,9 @@ public class BKGSummariesController
   protected ExtendedRequest<Booking> newExtendedRequest() {
     return new ExtendedRequest<>(extendedParameters, r2dbcDialect, Booking.class) {
       @Override
-      public void parseParameter(Map<String, List<String>> params) {
-        Map<String, List<String>> allowedParams = new HashMap<>(params);
-        allowedParams.putIfAbsent("documentStatus", List.of(BOOKING_DOCUMENT_STATUSES));
-        super.parseParameter(allowedParams);
+      protected DBEntityAnalysis.DBEntityAnalysisBuilder<Booking> prepareDBEntityAnalysis() {
+        return super.prepareDBEntityAnalysis()
+          .registerRestrictionOnQueryField("documentStatus", QueryFieldRestriction.enumSubset(BOOKING_DOCUMENT_STATUSES));
       }
     };
   }
