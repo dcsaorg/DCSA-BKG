@@ -1651,7 +1651,7 @@ class BKGServiceImplTest {
     @DisplayName("Failing to find a booking should result in an error")
     void testUpdateBookingShouldResultInError() {
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.empty());
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
@@ -1683,7 +1683,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
 
@@ -1738,7 +1738,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(vessel.getVesselIMONumber()))
@@ -1833,7 +1833,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
@@ -1889,7 +1889,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
@@ -1929,7 +1929,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselNameOrEmpty(any()))
@@ -1969,7 +1969,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselNameOrEmpty(any())).thenReturn(Flux.just(vessel));
@@ -2018,7 +2018,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
@@ -2085,7 +2085,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
@@ -2135,7 +2135,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
 
@@ -2200,7 +2200,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
 
@@ -2272,7 +2272,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
 
@@ -2348,7 +2348,7 @@ class BKGServiceImplTest {
       bookingTO.setDocumentParties(null);
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
 
@@ -2448,7 +2448,7 @@ class BKGServiceImplTest {
 
       bookingTO.setShipmentLocations(null);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
 
@@ -2588,7 +2588,7 @@ class BKGServiceImplTest {
       documentPartyTO.setDisplayedAddress(List.of(displayedAddress.getAddressLine()));
       documentPartyTO.setPartyFunction(PartyFunction.DDS);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any()))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
 
@@ -3917,7 +3917,7 @@ class BKGServiceImplTest {
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
       mockBookingResponse.setDocumentStatus(ShipmentEventTypeCode.CANC);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
 
       Mono<BookingResponseTO> cancelBookingResponse =
@@ -3941,7 +3941,7 @@ class BKGServiceImplTest {
 
       String carrierBookingRequestReference = UUID.randomUUID().toString();
 
-      when(bookingRepository.findByCarrierBookingRequestReference(any())).thenReturn(Mono.empty());
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any())).thenReturn(Mono.empty());
 
       Mono<BookingResponseTO> cancelBookingResponse =
           bkgServiceImpl.cancelBookingByCarrierBookingReference(
@@ -3967,7 +3967,7 @@ class BKGServiceImplTest {
       mockBookingResponse.setCarrierBookingRequestReference(carrierBookingRequestReference);
       mockBookingResponse.setDocumentStatus(ShipmentEventTypeCode.PENU);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
       when(bookingRepository
               .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(
@@ -3998,7 +3998,7 @@ class BKGServiceImplTest {
       mockBookingResponse.setBookingRequestDateTime(now);
       mockBookingResponse.setDocumentStatus(ShipmentEventTypeCode.RECE);
 
-      when(bookingRepository.findByCarrierBookingRequestReference(carrierBookingRequestReference))
+      when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(carrierBookingRequestReference))
           .thenReturn(Mono.just(mockBookingResponse));
       when(bookingRepository
               .updateDocumentStatusAndUpdatedDateTimeForCarrierBookingRequestReference(

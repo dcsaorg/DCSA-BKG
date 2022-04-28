@@ -428,7 +428,7 @@ public class BKGServiceImpl implements BKGService {
     }
 
     return bookingRepository
-        .findByCarrierBookingRequestReference(carrierBookingRequestReference)
+        .findByCarrierBookingRequestReferenceAndValidUntilIsNull(carrierBookingRequestReference)
         .flatMap(checkUpdateBookingStatus)
         .flatMap(
             booking -> {
@@ -887,7 +887,7 @@ public class BKGServiceImpl implements BKGService {
       BookingCancellationRequestTO bookingCancellationRequestTO) {
     OffsetDateTime updatedDateTime = OffsetDateTime.now();
     return bookingRepository
-        .findByCarrierBookingRequestReference(carrierBookingRequestReference)
+        .findByCarrierBookingRequestReferenceAndValidUntilIsNull(carrierBookingRequestReference)
         .switchIfEmpty(
             Mono.error(
                 ConcreteRequestErrorMessageException.invalidParameter(
