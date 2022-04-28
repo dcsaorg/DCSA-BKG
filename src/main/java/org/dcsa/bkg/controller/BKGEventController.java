@@ -9,6 +9,8 @@ import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.dcsa.core.events.model.enums.TransportDocumentTypeCode;
 import org.dcsa.core.events.util.ExtendedGenericEventRequest;
 import org.dcsa.core.extendedrequest.ExtendedRequest;
+import org.dcsa.core.extendedrequest.QueryFieldRestriction;
+import org.dcsa.core.query.DBEntityAnalysis;
 import org.dcsa.core.validator.ValidEnum;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -22,9 +24,8 @@ import reactor.core.publisher.Flux;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import static org.dcsa.core.events.model.enums.DocumentTypeCode.BKG_DOCUMENT_TYPE_CODES;
 
 @RestController
 @Validated
@@ -45,12 +46,10 @@ public class BKGEventController extends AbstractEventController<BKGEventService,
   protected ExtendedRequest<Event> newExtendedRequest() {
     return new ExtendedGenericEventRequest(extendedParameters, r2dbcDialect) {
       @Override
-      public void parseParameter(Map<String, List<String>> params) {
-        Map<String, List<String>> p = new HashMap<>(params);
-        // Add the eventType parameter (if it is missing) in order to limit the resultset
-        // to *only* SHIPMENT events
-        p.putIfAbsent("eventType", List.of(EventType.SHIPMENT.name()));
-        super.parseParameter(p);
+      protected DBEntityAnalysis.DBEntityAnalysisBuilder<Event> prepareDBEntityAnalysis() {
+        return super.prepareDBEntityAnalysis()
+          .registerRestrictionOnQueryField("eventType", QueryFieldRestriction.enumSubset(EventType.SHIPMENT.name()))
+          .registerRestrictionOnQueryField("documentTypeCode", QueryFieldRestriction.enumSubset(BKG_DOCUMENT_TYPE_CODES));
       }
     };
   }
