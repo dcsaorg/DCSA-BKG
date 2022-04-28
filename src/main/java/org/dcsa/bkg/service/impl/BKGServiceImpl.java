@@ -13,7 +13,6 @@ import org.dcsa.core.events.model.enums.EventClassifierCode;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.dcsa.core.events.model.enums.TransportEventTypeCode;
 import org.dcsa.core.events.model.mapper.RequestedEquipmentMapper;
-import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
 import org.dcsa.core.events.repository.*;
 import org.dcsa.core.events.service.DocumentPartyService;
 import org.dcsa.core.events.service.ReferenceService;
@@ -29,7 +28,6 @@ import org.dcsa.skernel.repositority.LocationRepository;
 import org.dcsa.skernel.repositority.VesselRepository;
 import org.dcsa.skernel.service.AddressService;
 import org.dcsa.skernel.service.LocationService;
-import org.dcsa.skernel.service.PartyService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -149,7 +147,8 @@ public class BKGServiceImpl implements BKGService {
             createValueAddedServiceRequestsByBookingIDAndTOs(
                     bookingID, bookingRequest.getValueAddedServiceRequests())
                 .doOnNext(bookingTO::setValueAddedServiceRequests),
-            referenceService.createReferencesByBookingIDAndTOs(bookingID, bookingRequest.getReferences())
+            referenceService
+                .createReferencesByBookingIDAndTOs(bookingID, bookingRequest.getReferences())
                 .doOnNext(bookingTO::setReferences),
             createRequestedEquipmentsByBookingIDAndTOs(
                     bookingID, bookingRequest.getRequestedEquipments())
@@ -397,8 +396,7 @@ public class BKGServiceImpl implements BKGService {
       return Mono.error(ConcreteRequestErrorMessageException.invalidInput(bookingRequestError));
     }
 
-    return bookingRepository
-        .findByCarrierBookingRequestReference(carrierBookingRequestReference)
+    return getActiveBooking(carrierBookingRequestReference)
         .flatMap(checkUpdateBookingStatus)
         .flatMap(
             booking -> {
@@ -475,7 +473,8 @@ public class BKGServiceImpl implements BKGService {
             referenceService.findByBookingID(booking.getId()).doOnNext(bookingTO::setReferences),
             fetchRequestedEquipmentsByBookingID(booking.getId())
                 .doOnNext(bookingTO::setRequestedEquipments),
-            documentPartyService.fetchDocumentPartiesByBookingID(booking.getId())
+            documentPartyService
+                .fetchDocumentPartiesByBookingID(booking.getId())
                 .doOnNext(bookingTO::setDocumentParties),
             fetchShipmentLocationsByBookingID(booking.getId())
                 .doOnNext(bookingTO::setShipmentLocations))
