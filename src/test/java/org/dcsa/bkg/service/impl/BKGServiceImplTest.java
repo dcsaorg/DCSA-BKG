@@ -3208,7 +3208,8 @@ class BKGServiceImplTest {
               new PartyContactDetailsTO(
                   partyContactDetails.getName(),
                   partyContactDetails.getEmail(),
-                  partyContactDetails.getPhone())));
+                  partyContactDetails.getPhone(),
+                  partyContactDetails.getUrl())));
       partyTO.setIdentifyingCodes(
           List.of(
               PartyTO.IdentifyingCode.builder()
@@ -3303,7 +3304,8 @@ class BKGServiceImplTest {
               new PartyContactDetailsTO(
                   partyContactDetails.getName(),
                   partyContactDetails.getEmail(),
-                  partyContactDetails.getPhone())));
+                  partyContactDetails.getPhone(),
+                  partyContactDetails.getUrl())));
       partyTO.setIdentifyingCodes(
           List.of(
               PartyTO.IdentifyingCode.builder()
@@ -3829,7 +3831,8 @@ class BKGServiceImplTest {
               new PartyContactDetailsTO(
                   partyContactDetails.getName(),
                   partyContactDetails.getEmail(),
-                  partyContactDetails.getPhone())));
+                  partyContactDetails.getPhone(),
+                  partyContactDetails.getUrl())));
 
       when(shipmentRepository.findByCarrierBookingReference(any())).thenReturn(Mono.just(shipment));
       when(shipmentLocationRepository.findByBookingID(any()))
