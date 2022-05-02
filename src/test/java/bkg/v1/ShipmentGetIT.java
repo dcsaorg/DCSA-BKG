@@ -1,4 +1,4 @@
-package bkg.v2;
+package bkg.v1;
 
 import bkg.config.TestConfig;
 import org.apache.http.HttpStatus;
@@ -6,13 +6,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 
 import static bkg.config.TestConfig.SHIPMENT;
 import static bkg.config.TestConfig.jsonSchemaValidator;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class ShipmentGetIT {
 
@@ -41,7 +41,7 @@ public class ShipmentGetIT {
   void getShipmentInvalidCarrierBookingReference() {
     given()
         .contentType("application/json")
-        .get(SHIPMENT + UUID.randomUUID().toString().substring(0,20))
+        .get(SHIPMENT + UUID.randomUUID().toString().substring(0, 20))
         .then()
         .assertThat()
         .statusCode(HttpStatus.SC_NOT_FOUND);
