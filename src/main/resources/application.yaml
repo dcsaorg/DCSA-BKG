@@ -30,7 +30,7 @@ spring:
   application:
     name: DCSA-Backend
   r2dbc:
-    url: r2dbc:postgresql://${DB_HOSTNAME:localhost:5432}
+    url: r2dbc:postgresql://${db_hostname}
     name: dcsa_openapi
     properties:
       schema: dcsa_im_v3_0
@@ -66,4 +66,3 @@ management:
 dcsa:
   specification:
     version: 1.0.0
-    
