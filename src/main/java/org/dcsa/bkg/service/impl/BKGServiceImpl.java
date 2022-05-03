@@ -115,15 +115,16 @@ public class BKGServiceImpl implements BKGService {
                 // Also prefer setting the uuid value at db level and not application level to avoid
                 // collisions
                 bookingRepository.findById(bookingRefreshed.getId()))
-        .flatMap(booking -> createDeepObjectsForBooking(bookingRequest, booking))
         .flatMap(
-            bTO ->
-                createShipmentEventFromBookingTO(bTO.getT1(), bTO.getT2()).thenReturn(bTO.getT2()))
+            booking ->
+                createDeepObjectsForBooking(bookingRequest, booking)
+                    .flatMap(
+                        bTO ->
+                            createShipmentEventFromBookingTO(booking.getId(), bTO).thenReturn(bTO)))
         .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
 
-  private Mono<Tuple2<UUID, BookingTO>> createDeepObjectsForBooking(
-      BookingTO bookingRequest, Booking booking) {
+  private Mono<BookingTO> createDeepObjectsForBooking(BookingTO bookingRequest, Booking booking) {
     UUID bookingID = booking.getId();
     if (bookingID == null)
       return Mono.error(
@@ -170,8 +171,7 @@ public class BKGServiceImpl implements BKGService {
             createShipmentLocationsByBookingIDAndTOs(
                     bookingID, bookingRequest.getShipmentLocations())
                 .doOnNext(bookingTO::setShipmentLocations))
-        .thenReturn(bookingTO)
-        .map(b -> Tuples.of(bookingID, b));
+        .thenReturn(bookingTO);
   }
 
   private BookingTO bookingToDTOWithNullLocations(Booking booking) {
@@ -430,18 +430,19 @@ public class BKGServiceImpl implements BKGService {
               return bookingRepository.save(booking);
             })
         .flatMap(
-            booking -> {
-              // resolve entities linked to booking
-              return createDeepObjectsForBooking(bookingRequest, booking);
-            })
-        .flatMap(bTO -> createShipmentEventFromBookingTO(bTO.getT1(), bTO.getT2()).thenReturn(bTO))
+            booking ->
+                // resolve entities linked to booking
+                createDeepObjectsForBooking(bookingRequest, booking)
+                    .flatMap(
+                        bTO ->
+                            createShipmentEventFromBookingTO(booking.getId(), bTO).thenReturn(bTO)))
         .switchIfEmpty(
             Mono.defer(
                 () ->
                     Mono.error(
                         ConcreteRequestErrorMessageException.notFound(
                             "No booking found for given carrierBookingRequestReference."))))
-        .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO.getT2())));
+        .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
 
   @Override
