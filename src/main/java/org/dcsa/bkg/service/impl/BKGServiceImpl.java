@@ -6,7 +6,12 @@ import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
 import org.dcsa.bkg.service.BKGService;
 import org.dcsa.core.events.edocumentation.model.mapper.*;
 import org.dcsa.core.events.edocumentation.model.transferobject.*;
-import org.dcsa.core.events.edocumentation.repository.*;
+import org.dcsa.core.events.edocumentation.repository.RequestedEquipmentRepository;
+import org.dcsa.core.events.edocumentation.repository.ShipmentCutOffTimeRepository;
+import org.dcsa.core.events.edocumentation.repository.ShipmentLocationRepository;
+import org.dcsa.core.events.edocumentation.repository.ShipmentTransportRepository;
+import org.dcsa.core.events.edocumentation.service.CarrierClauseService;
+import org.dcsa.core.events.edocumentation.service.ChargeService;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.DocumentTypeCode;
 import org.dcsa.core.events.model.enums.EventClassifierCode;
@@ -28,6 +33,7 @@ import org.dcsa.skernel.repositority.LocationRepository;
 import org.dcsa.skernel.repositority.VesselRepository;
 import org.dcsa.skernel.service.AddressService;
 import org.dcsa.skernel.service.LocationService;
+import org.dcsa.skernel.service.VesselService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -38,6 +44,7 @@ import reactor.util.function.Tuples;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 @Service
@@ -55,9 +62,6 @@ public class BKGServiceImpl implements BKGService {
   private final ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   private final ShipmentRepository shipmentRepository;
   private final VesselRepository vesselRepository;
-  private final ShipmentCarrierClausesRepository shipmentCarrierClausesRepository;
-  private final CarrierClauseRepository carrierClauseRepository;
-  private final ChargeRepository chargeRepository;
   private final TransportRepository transportRepository;
   private final ShipmentTransportRepository shipmentTransportRepository;
   private final TransportCallRepository transportCallRepository;
@@ -71,9 +75,7 @@ public class BKGServiceImpl implements BKGService {
   private final LocationMapper locationMapper;
   private final CommodityMapper commodityMapper;
   private final ShipmentMapper shipmentMapper;
-  private final CarrierClauseMapper carrierClauseMapper;
   private final ConfirmedEquipmentMapper confirmedEquipmentMapper;
-  private final ChargeMapper chargeMapper;
   private final TransportMapper transportMapper;
   private final RequestedEquipmentMapper requestedEquipmentMapper;
 
@@ -82,6 +84,9 @@ public class BKGServiceImpl implements BKGService {
   private final LocationService locationService;
   private final AddressService addressService;
   private final ReferenceService referenceService;
+  private final ChargeService chargeService;
+  private final VesselService vesselService;
+  private final CarrierClauseService carrierClauseService;
 
   @Override
   @Transactional
@@ -397,7 +402,7 @@ public class BKGServiceImpl implements BKGService {
     }
 
     return getActiveBooking(carrierBookingRequestReference)
-        .flatMap(checkUpdateBookingStatus)
+        .map(checkUpdateBookingStatus)
         .flatMap(
             booking -> {
               // update the valid_until field for to be copied booking
@@ -464,7 +469,8 @@ public class BKGServiceImpl implements BKGService {
             locationService
                 .fetchLocationDeepObjByID(booking.getPlaceOfIssueID())
                 .doOnNext(bookingTO::setPlaceOfIssue),
-            fetchVesselByVesselID(booking.getVesselId())
+            vesselService
+                .findById(booking.getVesselId())
                 .doOnNext(vessel -> bookingTO.setVesselName(vessel.getVesselName()))
                 .doOnNext(vessel -> bookingTO.setVesselIMONumber(vessel.getVesselIMONumber())),
             fetchCommoditiesByBookingID(booking.getId()).doOnNext(bookingTO::setCommodities),
@@ -505,11 +511,15 @@ public class BKGServiceImpl implements BKGService {
                           .doOnNext(shipmentTO::setShipmentCutOffTimes),
                       fetchShipmentLocationsByBookingID(shipment.getBookingID())
                           .doOnNext(shipmentTO::setShipmentLocations),
-                      fetchCarrierClausesByShipmentID(shipment.getShipmentID())
+                      carrierClauseService
+                          .fetchCarrierClausesByShipmentID(shipment.getShipmentID())
+                          .collectList()
                           .doOnNext(shipmentTO::setCarrierClauses),
                       fetchConfirmedEquipmentByByBookingID(shipment.getBookingID())
                           .doOnNext(shipmentTO::setConfirmedEquipments),
-                      fetchChargesByShipmentID(shipment.getShipmentID())
+                      chargeService
+                          .fetchChargesByShipmentID(shipment.getShipmentID())
+                          .collectList()
                           .doOnNext(shipmentTO::setCharges),
                       fetchBookingByBookingID(shipment.getBookingID())
                           .doOnNext(shipmentTO::setBooking),
@@ -527,28 +537,10 @@ public class BKGServiceImpl implements BKGService {
                 locationService.fetchLocationDeepObjByID(transportCall.getLocationID()));
   }
 
-  private Mono<List<CarrierClauseTO>> fetchCarrierClausesByShipmentID(UUID shipmentID) {
-    if (shipmentID == null) return Mono.empty();
-    return shipmentCarrierClausesRepository
-        .findAllByShipmentID(shipmentID)
-        .flatMap(
-            shipmentCarrierClause ->
-                carrierClauseRepository.findById(shipmentCarrierClause.getCarrierClauseID()))
-        .flatMap(x -> Mono.just(carrierClauseMapper.carrierClauseToDTO(x)))
-        .collectList();
-  }
-
   private Mono<List<CommodityTO>> fetchCommoditiesByBookingID(UUID bookingID) {
     return commodityRepository
         .findByBookingID(bookingID)
         .map(commodityMapper::commodityToDTO)
-        .collectList();
-  }
-
-  private Mono<List<ChargeTO>> fetchChargesByShipmentID(UUID shipmentID) {
-    return chargeRepository
-        .findAllByShipmentID(shipmentID)
-        .map(chargeMapper::chargeToDTO)
         .collectList();
   }
 
@@ -646,15 +638,10 @@ public class BKGServiceImpl implements BKGService {
   private Mono<Vessel> fetchVesselByTransportCallId(String transportCallId) {
 
     if (transportCallId == null) return Mono.empty();
-    return transportCallRepository
-        .findById(transportCallId)
-        .flatMap(
-            x -> {
-              if (x.getVesselID() == null) {
-                return Mono.empty();
-              }
-              return vesselRepository.findById(x.getVesselID());
-            });
+    return fetchTransportCallById(transportCallId)
+        .filter(transportCall -> Objects.nonNull(transportCall.getVesselID()))
+        .switchIfEmpty(Mono.empty())
+        .flatMap(transportCall -> vesselService.findById(transportCall.getVesselID()));
   }
 
   private Mono<TransportCall> fetchTransportCallById(String transportCallId) {
@@ -686,11 +673,6 @@ public class BKGServiceImpl implements BKGService {
                     voyages.getT1().getCarrierVoyageNumber(),
                     "exportVoyageNumber",
                     voyages.getT2().getCarrierVoyageNumber()));
-  }
-
-  private Mono<Vessel> fetchVesselByVesselID(UUID vesselID) {
-    if (vesselID == null) return Mono.empty();
-    return vesselRepository.findById(vesselID);
   }
 
   private Mono<ModeOfTransport> fetchModeOfTransportByTransportCallId(String transportCallId) {
@@ -900,15 +882,16 @@ public class BKGServiceImpl implements BKGService {
                 "Cannot Cancel Booking that is not in status RECE, PENU, CONF or PENC"));
       };
 
-  private final Function<Booking, Mono<Booking>> checkUpdateBookingStatus =
-      booking -> {
-        EnumSet<ShipmentEventTypeCode> allowedDocumentStatuses =
-            EnumSet.of(ShipmentEventTypeCode.RECE, ShipmentEventTypeCode.PENU);
-        if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
-          return Mono.just(booking);
-        }
-        return Mono.error(
-            ConcreteRequestErrorMessageException.invalidParameter(
-                "Cannot Update Booking that is not in status RECE or PENU"));
-      };
+  private final UnaryOperator<Booking> checkUpdateBookingStatus =
+    booking -> {
+      EnumSet<ShipmentEventTypeCode> allowedDocumentStatuses =
+        EnumSet.of(ShipmentEventTypeCode.RECE, ShipmentEventTypeCode.PENU);
+      if (allowedDocumentStatuses.contains(booking.getDocumentStatus())) {
+        return booking;
+      }
+      throw
+        ConcreteRequestErrorMessageException.invalidParameter(
+          "Cannot Update Booking that is not in status RECE or PENU");
+    };
+
 }
