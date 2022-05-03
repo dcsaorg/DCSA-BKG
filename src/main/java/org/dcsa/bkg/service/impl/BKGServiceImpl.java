@@ -640,7 +640,6 @@ public class BKGServiceImpl implements BKGService {
     if (transportCallId == null) return Mono.empty();
     return fetchTransportCallById(transportCallId)
         .filter(transportCall -> Objects.nonNull(transportCall.getVesselID()))
-        .switchIfEmpty(Mono.empty())
         .flatMap(transportCall -> vesselService.findById(transportCall.getVesselID()));
   }
 
