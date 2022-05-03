@@ -61,7 +61,6 @@ class BKGEventControllerTest {
     event.setEventClassifierCode(EventClassifierCode.PLN);
     event.setEventDateTime(OffsetDateTime.now());
     event.setEventCreatedDateTime(OffsetDateTime.now());
-    event.setCarrierBookingReference("DUMMY");
 
     shipmentEvent = new ShipmentEvent();
     shipmentEvent.setEventID(UUID.fromString("5e51e72c-d872-11ea-811c-0f8f10a32ea1"));
@@ -69,7 +68,7 @@ class BKGEventControllerTest {
     shipmentEvent.setEventClassifierCode(EventClassifierCode.PLN);
     shipmentEvent.setShipmentEventTypeCode(ShipmentEventTypeCode.CONF);
     shipmentEvent.setDocumentTypeCode(DocumentTypeCode.BKG);
-    shipmentEvent.setDocumentID("ABC123123123");
+    shipmentEvent.setDocumentID(UUID.randomUUID());
     Reference reference = new Reference();
     reference.setReferenceType(ReferenceTypeCode.FF);
     reference.setReferenceValue("String");
@@ -156,7 +155,7 @@ class BKGEventControllerTest {
 
   @Test
   @DisplayName("Get events should throw bad request for incorrect documentTypeCode format.")
-  void testEventsShouldFailForIncorrectTransportDocumentReference() {
+  void testEventsShouldFailForIncorrectTransportDocumentTypeCode() {
     webTestClient
         .get()
         .uri(
@@ -188,7 +187,7 @@ class BKGEventControllerTest {
   @Test
   @DisplayName(
       "Get events should throw bad request for incorrect transportDocumentReference length.")
-  void testEventsShouldFailForIncorrectTransportDocumentTypeCode() {
+  void testEventsShouldFailForIncorrectTransportDocumentReference() {
     webTestClient
         .get()
         .uri(

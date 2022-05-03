@@ -22,7 +22,7 @@ pagination:
   #    # Change name of first-page header name
   #    firstPageName:
   #  # Possibility to change the default pagination size. If not specified all results will be returned as default
-  defaultPageSize: 20
+  defaultPageSize: 100
 
 spring:
   profiles:
@@ -30,7 +30,7 @@ spring:
   application:
     name: DCSA-Backend
   r2dbc:
-    url: r2dbc:postgresql://${DB_HOSTNAME:localhost:5432}
+    url: r2dbc:postgresql://${db_hostname}
     name: dcsa_openapi
     properties:
       schema: dcsa_im_v3_0
@@ -51,7 +51,7 @@ logging:
     root: ${LOG_LEVEL:INFO}
     org:
       springframework:
-        r2dbc: ${LOG_LEVEL:INFO}
+        r2dbc: ${LOG_LEVEL:DEBUG}
 
 management:
   endpoint:
@@ -63,3 +63,6 @@ management:
       exposure:
         include: health
 
+dcsa:
+  specification:
+    version: 1.0.0

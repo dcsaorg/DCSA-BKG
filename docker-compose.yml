@@ -2,7 +2,8 @@ version: '3.5'
 services:
     web:
         environment:
-            - DB_HOSTNAME=db
+            - "DB_HOSTNAME=dcsa-test-db"
+            - "SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}"
         container_name: dcsa_bkg
         build:
             .
@@ -13,7 +14,7 @@ services:
                 max-file: '10'
                 max-size: 200k
 
-    db:
+    dcsa-test-db:
         container_name: dcsa_db
         environment:
             POSTGRES_PASSWORD: "change_this_password"

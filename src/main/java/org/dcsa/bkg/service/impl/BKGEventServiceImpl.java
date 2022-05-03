@@ -3,6 +3,7 @@ package org.dcsa.bkg.service.impl;
 import org.dcsa.bkg.service.BKGEventService;
 import org.dcsa.core.events.model.Event;
 import org.dcsa.core.events.model.ShipmentEvent;
+import org.dcsa.core.events.model.enums.DocumentTypeCode;
 import org.dcsa.core.events.model.enums.EventType;
 import org.dcsa.core.events.repository.EventRepository;
 import org.dcsa.core.events.repository.PendingEventRepository;
@@ -50,7 +51,9 @@ public class BKGEventServiceImpl extends GenericEventServiceImpl implements BKGE
     return super.findAllExtended(extendedRequest)
         .concatMap(
             event -> {
-              if (event.getEventType() == EventType.SHIPMENT) {
+              if (event.getEventType() == EventType.SHIPMENT
+                  && (((ShipmentEvent) event).getDocumentTypeCode() == DocumentTypeCode.CBR
+                      || ((ShipmentEvent) event).getDocumentTypeCode() == DocumentTypeCode.BKG)) {
                 return shipmentEventService.loadRelatedEntities((ShipmentEvent) event);
               }
               return Mono.empty();
