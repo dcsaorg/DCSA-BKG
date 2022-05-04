@@ -563,7 +563,7 @@ class BKGServiceImplTest {
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
                 assertEquals(
-                    "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
+                    "The attributes expectedArrivalAtPlaceOfDeliveryStartDate, expectedArrivalAtPlaceOfDeliveryEndDate, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
                     throwable.getMessage());
               })
           .verify();
@@ -597,7 +597,7 @@ class BKGServiceImplTest {
               throwable -> {
                 Assertions.assertTrue(throwable instanceof CreateException);
                 assertEquals(
-                    "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart.",
+                    "The attribute expectedArrivalAtPlaceOfDeliveryEndDate must be the same or after expectedArrivalAtPlaceOfDeliveryStartDate.",
                     throwable.getMessage());
               })
           .verify();
@@ -1831,7 +1831,7 @@ class BKGServiceImplTest {
               throwable -> {
                 Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
-                    "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
+                    "The attributes expectedArrivalAtPlaceOfDeliveryStartDate, expectedArrivalAtPlaceOfDeliveryEndDate, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
                     throwable.getMessage());
               })
           .verify();

@@ -857,7 +857,7 @@ public class BKGServiceImpl implements BKGService {
         && bookingRequest.getExpectedDepartureDate() == null
         && bookingRequest.getVesselIMONumber() == null
         && bookingRequest.getExportVoyageNumber() == null) {
-      return "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.";
+      return "The attributes expectedArrivalAtPlaceOfDeliveryStartDate, expectedArrivalAtPlaceOfDeliveryEndDate, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.";
     }
 
     if (bookingRequest.getExpectedArrivalAtPlaceOfDeliveryStartDate() != null
@@ -865,7 +865,7 @@ public class BKGServiceImpl implements BKGService {
         && bookingRequest
             .getExpectedArrivalAtPlaceOfDeliveryStartDate()
             .isAfter(bookingRequest.getExpectedArrivalAtPlaceOfDeliveryEndDate())) {
-      return "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart.";
+      return "The attribute expectedArrivalAtPlaceOfDeliveryEndDate must be the same or after expectedArrivalAtPlaceOfDeliveryStartDate.";
     }
     return StringUtils.EMPTY;
   }
