@@ -5,6 +5,7 @@ import org.dcsa.core.events.model.Event;
 import org.dcsa.core.events.model.Reference;
 import org.dcsa.core.events.model.ShipmentEvent;
 import org.dcsa.core.events.model.enums.*;
+import org.dcsa.core.events.repository.EventRepository;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.extendedrequest.ExtendedParameters;
 import org.dcsa.core.extendedrequest.ExtendedRequest;
@@ -44,6 +45,8 @@ class BKGEventControllerTest {
   @Qualifier("BKGEventServiceImpl")
   BKGEventService eventService;
 
+  @MockBean
+  EventRepository eventRepository;
   @MockBean ExtendedParameters extendedParameters;
 
   @MockBean R2dbcDialect r2dbcDialect;
@@ -234,6 +237,8 @@ class BKGEventControllerTest {
   @DisplayName("Get events should return list of shipment events for valid request.")
   void testEventsShouldReturnShipmentEvents() {
 
+    Mockito.when(eventRepository.countAllExtended(Mockito.any())).thenReturn(Mono.just(1));
+    Mockito.when(eventRepository.findAllExtended(Mockito.any())).thenReturn(Flux.just(shipmentEvent));
     Mockito.when(eventService.findAllExtended(Mockito.any())).thenReturn(Flux.just(shipmentEvent));
 
     webTestClient
