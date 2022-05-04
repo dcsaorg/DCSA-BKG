@@ -852,19 +852,19 @@ public class BKGServiceImpl implements BKGService {
       return "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true.";
     }
 
-    if (bookingRequest.getExpectedArrivalDateStart() == null
-        && bookingRequest.getExpectedArrivalDateEnd() == null
+    if (bookingRequest.getExpectedArrivalAtPlaceOfDeliveryStartDate() == null
+        && bookingRequest.getExpectedArrivalAtPlaceOfDeliveryEndDate() == null
         && bookingRequest.getExpectedDepartureDate() == null
         && bookingRequest.getVesselIMONumber() == null
         && bookingRequest.getExportVoyageNumber() == null) {
       return "The attributes expectedArrivalDateStart, expectedArrivalDateEnd, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.";
     }
 
-    if (bookingRequest.getExpectedArrivalDateStart() != null
-        && bookingRequest.getExpectedArrivalDateEnd() != null
+    if (bookingRequest.getExpectedArrivalAtPlaceOfDeliveryStartDate() != null
+        && bookingRequest.getExpectedArrivalAtPlaceOfDeliveryEndDate() != null
         && bookingRequest
-            .getExpectedArrivalDateStart()
-            .isAfter(bookingRequest.getExpectedArrivalDateEnd())) {
+            .getExpectedArrivalAtPlaceOfDeliveryStartDate()
+            .isAfter(bookingRequest.getExpectedArrivalAtPlaceOfDeliveryEndDate())) {
       return "The attribute expectedArrivalDateEnd must be the same or after expectedArrivalDateStart.";
     }
     return StringUtils.EMPTY;

@@ -13,8 +13,8 @@
     "isAMSACIFilingRequired": true,
     "isDestinationFilingRequired": true,
     "expectedDepartureDate": "2020-03-08",
-    "expectedArrivalDateStart": "2020-03-08",
-    "expectedArrivalDateEnd": "2020-03-09",
+    "expectedArrivalAtPlaceOfDeliveryStartDate": "2020-03-08",
+    "expectedArrivalAtPlaceOfDeliveryEndDate": "2020-03-09",
     "communicationChannelCode": "AO",
     "isEquipmentSubstitutionAllowed": true,
     "invoicePayableAt": {

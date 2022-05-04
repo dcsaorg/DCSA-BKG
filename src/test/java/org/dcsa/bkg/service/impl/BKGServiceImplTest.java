@@ -371,8 +371,8 @@ class BKGServiceImplTest {
     void init() {
       bookingTO = new BookingTO();
 
-      bookingTO.setExpectedArrivalDateStart(LocalDate.now());
-      bookingTO.setExpectedArrivalDateEnd(LocalDate.now().plusDays(1));
+      bookingTO.setExpectedArrivalAtPlaceOfDeliveryStartDate(LocalDate.now());
+      bookingTO.setExpectedArrivalAtPlaceOfDeliveryEndDate(LocalDate.now().plusDays(1));
       bookingTO.setExpectedDepartureDate(LocalDate.now().plusDays(10));
 
       bookingTO.setIsImportLicenseRequired(true);
@@ -519,8 +519,8 @@ class BKGServiceImplTest {
         bookingTO.setVesselIMONumber("9321483");
         bookingTO.setExportVoyageNumber("export-voyage-number");
         bookingTO.setExpectedDepartureDate(LocalDate.now());
-        bookingTO.setExpectedArrivalDateStart(LocalDate.now().plusDays(1));
-        bookingTO.setExpectedArrivalDateEnd(LocalDate.now().plusDays(2));
+        bookingTO.setExpectedArrivalAtPlaceOfDeliveryStartDate(LocalDate.now().plusDays(1));
+        bookingTO.setExpectedArrivalAtPlaceOfDeliveryEndDate(LocalDate.now().plusDays(2));
 
         if (binary[0] == '1') {
           bookingTO.setVesselName("Rum Runner");
@@ -529,8 +529,8 @@ class BKGServiceImplTest {
         } else if (binary[1] == '1') {
           bookingTO.setExpectedDepartureDate(null);
         } else if (binary[2] == '1') {
-          bookingTO.setExpectedArrivalDateStart(null);
-          bookingTO.setExpectedArrivalDateEnd(null);
+          bookingTO.setExpectedArrivalAtPlaceOfDeliveryStartDate(null);
+          bookingTO.setExpectedArrivalAtPlaceOfDeliveryEndDate(null);
         }
 
         StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
@@ -556,8 +556,8 @@ class BKGServiceImplTest {
       bookingTO.setVesselIMONumber(null);
       bookingTO.setExportVoyageNumber(null);
       bookingTO.setExpectedDepartureDate(null);
-      bookingTO.setExpectedArrivalDateStart(null);
-      bookingTO.setExpectedArrivalDateEnd(null);
+      bookingTO.setExpectedArrivalAtPlaceOfDeliveryStartDate(null);
+      bookingTO.setExpectedArrivalAtPlaceOfDeliveryEndDate(null);
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
@@ -590,8 +590,8 @@ class BKGServiceImplTest {
     @Test
     @DisplayName("Method should validate expected arrival dates")
     void testCreateBookingWhenExpectedArrivalDatesAreInvalid() {
-      bookingTO.setExpectedArrivalDateStart(LocalDate.now());
-      bookingTO.setExpectedArrivalDateEnd(LocalDate.now().minus(1, ChronoUnit.DAYS));
+      bookingTO.setExpectedArrivalAtPlaceOfDeliveryStartDate(LocalDate.now());
+      bookingTO.setExpectedArrivalAtPlaceOfDeliveryEndDate(LocalDate.now().minus(1, ChronoUnit.DAYS));
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
@@ -1580,8 +1580,8 @@ class BKGServiceImplTest {
     void init() {
       bookingTO = new BookingTO();
 
-      bookingTO.setExpectedArrivalDateStart(LocalDate.now());
-      bookingTO.setExpectedArrivalDateEnd(LocalDate.now().plusDays(1));
+      bookingTO.setExpectedArrivalAtPlaceOfDeliveryStartDate(LocalDate.now());
+      bookingTO.setExpectedArrivalAtPlaceOfDeliveryEndDate(LocalDate.now().plusDays(1));
       bookingTO.setExpectedDepartureDate(LocalDate.now().plusDays(10));
       // carrierBookingRequestReference needs to be set for PUT request
       bookingTO.setCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11");
@@ -1782,8 +1782,8 @@ class BKGServiceImplTest {
         bookingTO.setVesselIMONumber("9321483");
         bookingTO.setExportVoyageNumber("export-voyage-number");
         bookingTO.setExpectedDepartureDate(LocalDate.now());
-        bookingTO.setExpectedArrivalDateStart(LocalDate.now().plusDays(1));
-        bookingTO.setExpectedArrivalDateEnd(LocalDate.now().plusDays(2));
+        bookingTO.setExpectedArrivalAtPlaceOfDeliveryStartDate(LocalDate.now().plusDays(1));
+        bookingTO.setExpectedArrivalAtPlaceOfDeliveryEndDate(LocalDate.now().plusDays(2));
         booking.setValidUntil(null);
 
         if (binary[0] == '1') {
@@ -1793,8 +1793,8 @@ class BKGServiceImplTest {
         } else if (binary[1] == '1') {
           bookingTO.setExpectedDepartureDate(null);
         } else if (binary[2] == '1') {
-          bookingTO.setExpectedArrivalDateStart(null);
-          bookingTO.setExpectedArrivalDateEnd(null);
+          bookingTO.setExpectedArrivalAtPlaceOfDeliveryStartDate(null);
+          bookingTO.setExpectedArrivalAtPlaceOfDeliveryEndDate(null);
         }
 
         StepVerifier.create(
@@ -1822,8 +1822,8 @@ class BKGServiceImplTest {
       bookingTO.setExportVoyageNumber(null);
       bookingTO.setVesselIMONumber(null);
       bookingTO.setExpectedDepartureDate(null);
-      bookingTO.setExpectedArrivalDateStart(null);
-      bookingTO.setExpectedArrivalDateEnd(null);
+      bookingTO.setExpectedArrivalAtPlaceOfDeliveryStartDate(null);
+      bookingTO.setExpectedArrivalAtPlaceOfDeliveryEndDate(null);
       StepVerifier.create(
               bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
