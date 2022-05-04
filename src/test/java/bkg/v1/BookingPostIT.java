@@ -65,7 +65,6 @@ public class BookingPostIT {
     map.put("transportDocumentReference", null);
     map.put("bookingChannelReference", null);
     map.put("incoTerms", null);
-    map.put("communicationChannelCode", null);
     map.put("vesselName", null);
     map.put("vesselIMONumber", null);
     map.put("exportVoyageNumber", null);
