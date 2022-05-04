@@ -68,7 +68,7 @@ class BKGControllerTest {
     bookingTO.setCargoMovementTypeAtOrigin(CargoMovementType.FCL);
     bookingTO.setCargoMovementTypeAtDestination(CargoMovementType.LCL);
     bookingTO.setServiceContractReference("x".repeat(30));
-    bookingTO.setCommunicationChannel(CommunicationChannel.AO);
+    bookingTO.setCommunicationChannelCode(CommunicationChannelCode.AO);
     bookingTO.setSubmissionDateTime(OffsetDateTime.now());
     bookingTO.setExpectedDepartureDate(LocalDate.now());
     bookingTO.setInvoicePayableAt(new LocationTO());

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.dcsa.core.events.edocumentation.model.transferobject.*;
 import org.dcsa.core.events.model.enums.CargoGrossWeight;
 import org.dcsa.core.events.model.enums.CargoMovementType;
-import org.dcsa.core.events.model.enums.CommunicationChannel;
+import org.dcsa.core.events.model.enums.CommunicationChannelCode;
 import org.dcsa.core.events.model.enums.ReceiptDeliveryType;
 import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
 import org.dcsa.core.events.model.transferobjects.ReferenceTO;
@@ -57,7 +57,7 @@ class BookingTOTest {
     validBookingTO.setIsExportDeclarationRequired(true);
     validBookingTO.setIsImportLicenseRequired(true);
     validBookingTO.setSubmissionDateTime(OffsetDateTime.now());
-    validBookingTO.setCommunicationChannel(CommunicationChannel.AO);
+    validBookingTO.setCommunicationChannelCode(CommunicationChannelCode.AO);
     validBookingTO.setIsEquipmentSubstitutionAllowed(false);
     CommodityTO commodityTO = new CommodityTO();
     commodityTO.setCommodityType("x".repeat(20));
@@ -283,14 +283,14 @@ class BookingTOTest {
   }
 
   @Test
-  @DisplayName("BookingTO should throw error if communicationChannel is not set.")
+  @DisplayName("BookingTO should throw error if communicationChannelCode is not set.")
   void testToVerifyCommunicationChannelIsRequired() {
-    validBookingTO.setCommunicationChannel(null);
+    validBookingTO.setCommunicationChannelCode(null);
     Set<ConstraintViolation<BookingTO>> violations = validator.validate(validBookingTO);
     Assertions.assertTrue(
         violations.stream()
             .anyMatch(
-                v -> "The attribute communicationChannel is required.".equals(v.getMessage())));
+                v -> "The attribute communicationChannelCode is required.".equals(v.getMessage())));
   }
 
   @Test
