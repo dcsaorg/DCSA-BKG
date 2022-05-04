@@ -414,7 +414,7 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.placeOfIssue")
                   .hasJsonPath()
-                  .jsonPath("$.communicationChannel")
+                  .jsonPath("$.communicationChannelCode")
                   .hasJsonPath()
                   .jsonPath("$.isEquipmentSubstitutionAllowed")
                   .hasJsonPath()
