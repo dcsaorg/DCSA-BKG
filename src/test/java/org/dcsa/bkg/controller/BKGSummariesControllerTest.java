@@ -110,7 +110,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setTransportDocumentReference("ASV23142ASD");
     bookingSummaryTo.setBookingChannelReference("ABC12313");
     bookingSummaryTo.setIncoTerms(IncoTerms.FCA);
-    bookingSummaryTo.setCommunicationChannel(CommunicationChannel.AO);
+    bookingSummaryTo.setCommunicationChannelCode(CommunicationChannelCode.AO);
     bookingSummaryTo.setIsEquipmentSubstitutionAllowed(true);
 
     when(bookingSummaryService.findAllExtended(any())).thenReturn(Flux.just(bookingSummaryTo));
@@ -166,7 +166,7 @@ class BKGSummariesControllerTest {
     bookingSummaryTo.setTransportDocumentReference("ASV23142ASD");
     bookingSummaryTo.setBookingChannelReference("ABC12313");
     bookingSummaryTo.setIncoTerms(IncoTerms.FCA);
-    bookingSummaryTo.setCommunicationChannel(CommunicationChannel.AO);
+    bookingSummaryTo.setCommunicationChannelCode(CommunicationChannelCode.AO);
     bookingSummaryTo.setIsEquipmentSubstitutionAllowed(true);
 
     when(bookingSummaryService.findAllExtended(any())).thenReturn(Flux.just(bookingSummaryTo));
