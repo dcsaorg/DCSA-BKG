@@ -58,9 +58,8 @@ public class BookingPostIT {
     map.put("isDestinationFilingRequired", null);
     map.put("contractQuotationReference", null);
     map.put("expectedDepartureDate", null);
-//    TODO: https://dcsa.atlassian.net/browse/DDT-1032
-//    map.put("expectedArrivalAtPlaceOfDeliveryStartDate", null);
-//    map.put("expectedArrivalAtPlaceOfDeliveryEndDate", null);
+    map.put("expectedArrivalAtPlaceOfDeliveryStartDate", null);
+    map.put("expectedArrivalAtPlaceOfDeliveryEndDate", null);
     map.put("transportDocumentTypeCode", null);
     map.put("transportDocumentReference", null);
     map.put("bookingChannelReference", null);
