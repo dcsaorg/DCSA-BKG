@@ -15,7 +15,7 @@
     "expectedDepartureDate": "2020-03-08",
     "expectedArrivalDateStart": "2020-03-08",
     "expectedArrivalDateEnd": "2020-03-09",
-    "communicationChannel": "AO",
+    "communicationChannelCode": "AO",
     "isEquipmentSubstitutionAllowed": true,
     "invoicePayableAt": {
         "latitude": "53.554?? N",
