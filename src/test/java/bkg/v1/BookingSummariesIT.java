@@ -14,7 +14,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 
-public class BookingSummaries2IT {
+public class BookingSummariesIT {
 
   @BeforeAll
   static void configs() throws IOException {
