@@ -109,8 +109,7 @@ public class BookingPostIT {
         .statusCode(HttpStatus.SC_BAD_REQUEST)
         .body(
             containsString(
-                "The attributes expectedArrivalAtPlaceOfDeliveryStartDate, expectedArrivalAtPlaceOfDeliveryEndDate, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty."))
-        .body(jsonSchemaValidator("Booking"));
+                "The attributes expectedArrivalAtPlaceOfDeliveryStartDate, expectedArrivalAtPlaceOfDeliveryEndDate, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty."));
   }
 
   @Test
@@ -129,8 +128,7 @@ public class BookingPostIT {
         .statusCode(HttpStatus.SC_BAD_REQUEST)
         .body(
             containsString(
-                "exportDeclarationReference cannot be null if isExportDeclarationRequired is true."))
-        .body(jsonSchemaValidator("Booking"));
+                "exportDeclarationReference cannot be null if isExportDeclarationRequired is true."));
   }
 
   @Test
@@ -149,8 +147,7 @@ public class BookingPostIT {
         .statusCode(HttpStatus.SC_BAD_REQUEST)
         .body(
             containsString(
-                "importLicenseReference cannot be null if isImportLicenseRequired is true."))
-        .body(jsonSchemaValidator("Booking"));
+                "importLicenseReference cannot be null if isImportLicenseRequired is true."));
   }
 
   @Test
@@ -184,7 +181,6 @@ public class BookingPostIT {
         .body(containsString("field 'isExportDeclarationRequired': rejected value [null]"))
         .body(containsString("field 'submissionDateTime': rejected value [null]"))
         .body(containsString("field 'isEquipmentSubstitutionAllowed': rejected value [null]"))
-        .body(containsString("field 'commodities': rejected value [null]"))
-        .body(jsonSchemaValidator("Booking"));
+        .body(containsString("field 'commodities': rejected value [null]"));
   }
 }
