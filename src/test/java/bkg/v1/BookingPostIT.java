@@ -42,7 +42,7 @@ public class BookingPostIT {
         .body("documentStatus", equalTo(ShipmentEventTypeCode.RECE.toString()))
         .body("bookingRequestCreatedDateTime", notNullValue())
         .body("bookingRequestUpdatedDateTime", notNullValue())
-        .body(jsonSchemaValidator("Booking"));
+        .body(jsonSchemaValidator("bookingResponse"));
   }
 
   @Test
@@ -86,7 +86,7 @@ public class BookingPostIT {
         .body("documentStatus", equalTo(ShipmentEventTypeCode.RECE.toString()))
         .body("bookingRequestCreatedDateTime", notNullValue())
         .body("bookingRequestUpdatedDateTime", notNullValue())
-        .body(jsonSchemaValidator("Booking"));
+        .body(jsonSchemaValidator("bookingResponse"));
   }
 
   @Test
