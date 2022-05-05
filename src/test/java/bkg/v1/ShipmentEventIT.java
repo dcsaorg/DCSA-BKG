@@ -113,12 +113,11 @@ public class ShipmentEventIT {
     ;
   }
 
-  /* No existing events
   @Test
   void testGetAllEventsByCarrierBookingReference() {
     given()
       .contentType("application/json")
-      .queryParam("carrierBookingReference", "832deb4bd4ea4b728430b857c59bd057")
+      .queryParam("carrierBookingReference", "cbr-b83765166707812c8ff4")
       .get("/v1/events")
       .then()
       .assertThat()
@@ -126,23 +125,21 @@ public class ShipmentEventIT {
       .contentType(ContentType.JSON)
       // The test data includes at least 3 shipment events related to the reference. But something adding additional
       // events.
-      .body("size()", greaterThanOrEqualTo(3))
+      .body("size()", equalTo(1))
       .body("eventType", everyItem(equalTo("SHIPMENT")))
       .body("eventClassifierCode", everyItem(equalTo("ACT")))
       .body("documentTypeCode", everyItem(anyOf(equalTo("BKG"), equalTo("CBR"))))
-      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'BKG' }.size()", greaterThanOrEqualTo(3))
-      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'BKG' }.documentReferenceValue", everyItem(equalTo("832deb4bd4ea4b728430b857c59bd057")))
+      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'BKG' }.size()", equalTo(1))
+      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'BKG' }.documentReferenceValue", everyItem(equalTo("cbr-b83765166707812c8ff4")))
       .body(jsonSchemaValidator("shipmentEvent"))
     ;
   }
-   */
 
-  /* No existing events
   @Test
   void testGetAllEventsByCarrierBookingRequestReference() {
     given()
       .contentType("application/json")
-      .queryParam("carrierBookingRequestReference", "CARRIER_BOOKING_REQUEST_REFERENCE_01")
+      .queryParam("carrierBookingRequestReference", "cbrr-b83765166707812c8ff4")
       .get("/v1/events")
       .then()
       .assertThat()
@@ -150,16 +147,15 @@ public class ShipmentEventIT {
       .contentType(ContentType.JSON)
       // The test data includes at least 3 shipment events related to the reference. But something adding additional
       // events.
-      .body("size()", greaterThanOrEqualTo(3))
+      .body("size()", equalTo(1))
       .body("eventType", everyItem(equalTo("SHIPMENT")))
       .body("eventClassifierCode", everyItem(equalTo("ACT")))
       .body("documentTypeCode", everyItem(anyOf(equalTo("BKG"), equalTo("CBR"))))
-      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'CBR' }.size()", greaterThanOrEqualTo(3))
-      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'CBR' }.documentReferenceValue", everyItem(equalTo("CARRIER_BOOKING_REQUEST_REFERENCE_01")))
+      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'CBR' }.size()", equalTo(1))
+      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'CBR' }.documentReferenceValue", everyItem(equalTo("cbrr-b83765166707812c8ff4")))
       .body(jsonSchemaValidator("shipmentEvent"))
     ;
   }
-   */
 
   @Test
   void testEventCreatedDateTimeRange() {
