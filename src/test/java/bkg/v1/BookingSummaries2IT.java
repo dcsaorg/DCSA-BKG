@@ -1,4 +1,4 @@
-package bkg.b2;
+package bkg.v1;
 
 import bkg.config.TestConfig;
 import org.apache.http.HttpStatus;
@@ -14,7 +14,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 
-public class bookingSummariesIT {
+public class BookingSummaries2IT {
 
   @BeforeAll
   static void configs() throws IOException {
