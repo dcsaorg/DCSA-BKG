@@ -21,6 +21,7 @@ public class TestConfig {
   // API endpoints
   public static final String BOOKING = "/v1/bookings";
   public static final String BOOKING_SUMMARIES_ENDPOINT = "/v1/booking-summaries";
+  public static final String SHIPMENT_SUMMARIES_ENDPOINT = "/v1/shipment-summaries";
   public static final String SHIPMENT = "/v1/shipments/";
 
   private TestConfig() {}
