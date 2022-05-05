@@ -58,9 +58,6 @@ public class BookingPostIT {
     map.put("isDestinationFilingRequired", null);
     map.put("contractQuotationReference", null);
     map.put("expectedDepartureDate", null);
-//    TODO: https://dcsa.atlassian.net/browse/DDT-1032
-//    map.put("expectedArrivalAtPlaceOfDeliveryStartDate", null);
-//    map.put("expectedArrivalAtPlaceOfDeliveryEndDate", null);
     map.put("transportDocumentTypeCode", null);
     map.put("transportDocumentReference", null);
     map.put("bookingChannelReference", null);
@@ -93,6 +90,30 @@ public class BookingPostIT {
   }
 
   @Test
+  void postInvalidBookingVessel() throws JsonProcessingException {
+    Map<String, Object> map = jsonToMap(VALID_BOOKING);
+    assert map != null;
+    map.put("vesselIMONumber", null);
+    map.put("expectedArrivalAtPlaceOfDeliveryStartDate", null);
+    map.put("expectedArrivalAtPlaceOfDeliveryEndDate", null);
+    map.put("expectedDepartureDate", null);
+    map.put("exportVoyageNumber", null);
+    System.out.println(objectMapper.writeValueAsString(map));
+
+    given()
+        .contentType("application/json")
+        .body(map)
+        .post(BOOKING)
+        .then()
+        .assertThat()
+        .statusCode(HttpStatus.SC_BAD_REQUEST)
+        .body(
+            containsString(
+                "The attributes expectedArrivalAtPlaceOfDeliveryStartDate, expectedArrivalAtPlaceOfDeliveryEndDate, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty."))
+        .body(jsonSchemaValidator("Booking"));
+  }
+
+  @Test
   void postInvalidBookingExportDeclarationIsRequiredWithNullReference() {
     Map<String, Object> map = jsonToMap(VALID_BOOKING);
     assert map != null;
@@ -106,7 +127,9 @@ public class BookingPostIT {
         .then()
         .assertThat()
         .statusCode(HttpStatus.SC_BAD_REQUEST)
-        .body(containsString("exportDeclarationReference cannot be null if isExportDeclarationRequired is true."))
+        .body(
+            containsString(
+                "exportDeclarationReference cannot be null if isExportDeclarationRequired is true."))
         .body(jsonSchemaValidator("Booking"));
   }
 
@@ -124,7 +147,9 @@ public class BookingPostIT {
         .then()
         .assertThat()
         .statusCode(HttpStatus.SC_BAD_REQUEST)
-        .body(containsString("importLicenseReference cannot be null if isImportLicenseRequired is true."))
+        .body(
+            containsString(
+                "importLicenseReference cannot be null if isImportLicenseRequired is true."))
         .body(jsonSchemaValidator("Booking"));
   }
 
