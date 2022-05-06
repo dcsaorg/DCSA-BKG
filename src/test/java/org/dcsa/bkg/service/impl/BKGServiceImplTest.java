@@ -2803,7 +2803,6 @@ class BKGServiceImplTest {
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(locationService.fetchLocationDeepObjByID(isNull())).thenReturn(Mono.empty());
-      when(vesselService.findById(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -2843,7 +2842,6 @@ class BKGServiceImplTest {
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
-      when(vesselService.findById(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -2886,7 +2884,6 @@ class BKGServiceImplTest {
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(vesselService.findById(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -2935,7 +2932,6 @@ class BKGServiceImplTest {
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(vesselService.findById(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -2985,7 +2981,6 @@ class BKGServiceImplTest {
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(vesselService.findById(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -3038,7 +3033,6 @@ class BKGServiceImplTest {
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(vesselService.findById(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -3093,7 +3087,6 @@ class BKGServiceImplTest {
           .thenReturn(Flux.just(requestedEquipment));
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(vesselService.findById(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -3168,7 +3161,6 @@ class BKGServiceImplTest {
       when(documentPartyService.fetchDocumentPartiesByBookingID(any()))
           .thenReturn(Mono.just(List.of(documentPartyTO)));
       when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(vesselService.findById(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -3266,7 +3258,6 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(List.of(documentPartyTO)));
       when(shipmentLocationRepository.findByBookingID(any()))
           .thenReturn(Flux.just(shipmentLocation));
-      when(vesselService.findById(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(

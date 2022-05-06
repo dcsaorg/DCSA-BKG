@@ -479,8 +479,8 @@ public class BKGServiceImpl implements BKGService {
             locationService
                 .fetchLocationDeepObjByID(booking.getPlaceOfIssueID())
                 .doOnNext(bookingTO::setPlaceOfIssue),
-            vesselService
-                .findById(booking.getVesselId())
+            Mono.justOrEmpty(booking.getVesselId())
+                .flatMap(vesselService::findById)
                 .doOnNext(vessel -> bookingTO.setVesselName(vessel.getVesselName()))
                 .doOnNext(vessel -> bookingTO.setVesselIMONumber(vessel.getVesselIMONumber())),
             fetchCommoditiesByBookingID(booking.getId()).doOnNext(bookingTO::setCommodities),
