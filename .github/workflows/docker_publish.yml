@@ -6,10 +6,9 @@ name: Docker
 # documentation.
 
 on:
-  push:
-    branches:
-      - v1.0-beta1
-      - v1.0-beta2
+  create:
+    tags:
+      - v*
 
 env:
   # Use docker.io for Docker Hub if empty

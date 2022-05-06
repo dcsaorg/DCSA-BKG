@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build:
@@ -50,3 +53,7 @@ jobs:
       with:
         script: |
           core.setFailed('The DCSA-BKG service is down.')
+
+    - name: Run Integration Tests
+      run: |
+        cd DCSA-BKG && mvn verify -B failsafe:verify -Ddcsa.artifacttype=-SNAPSHOT
