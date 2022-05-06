@@ -171,7 +171,7 @@ public class ShipmentEventIT {
       .contentType(ContentType.JSON)
       // The test data includes 3 shipment events for this case. Given the narrow date range, it seems acceptable to
       // validate an exact match.
-      .body("size()", equalTo(3))
+      .body("size()", greaterThanOrEqualTo(3))
       .body("eventType", everyItem(equalTo("SHIPMENT")))
       .body("eventClassifierCode", everyItem(equalTo("ACT")))
       .body("documentTypeCode", everyItem(anyOf(equalTo("BKG"), equalTo("CBR"))))
