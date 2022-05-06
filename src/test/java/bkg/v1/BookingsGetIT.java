@@ -8,9 +8,10 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.UUID;
 
-import static bkg.config.TestConfig.*;
+import static bkg.config.TestConfig.BOOKING;
+import static bkg.config.TestConfig.jsonSchemaValidator;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 public class BookingsGetIT {
