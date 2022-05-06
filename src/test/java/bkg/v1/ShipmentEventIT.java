@@ -43,8 +43,6 @@ public class ShipmentEventIT {
       .contentType(ContentType.JSON)
       .header("API-Version", equalTo("1.0.0"))
       .header("Current-Page", matchesRegex("^https?://.*/v1/events\\?cursor=[a-zA-Z\\d]*$"))
-      // .header("Next-Page", matchesRegex("^https?://.*/v1/events\\?cursor=[a-zA-Z\\d]*$"))
-      // .header("Last-Page", matchesRegex("^https?://.*/v1/events\\?cursor=[a-zA-Z\\d]*$"))
       .body("size()", greaterThanOrEqualTo(0))
       .body("eventType", everyItem(equalTo("SHIPMENT")))
       .body("eventClassifierCode", everyItem(equalTo("ACT")))
