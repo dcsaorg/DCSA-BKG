@@ -2,6 +2,9 @@ package bkg.v1;
 
 import bkg.config.TestConfig;
 import org.apache.http.HttpStatus;
+import org.dcsa.core.events.model.enums.CargoMovementType;
+import org.dcsa.core.events.model.enums.ReceiptDeliveryType;
+import org.dcsa.skernel.model.enums.FacilityCodeListProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,17 +35,18 @@ public class BookingsGetIT {
         .body("carrierBookingRequestReference", equalTo("ef223019-ff16-4870-be69-9dbaaaae9b11"))
         .body("bookingRequestCreatedDateTime", notNullValue())
         .body("bookingRequestUpdatedDateTime", notNullValue())
-        .body("cargoMovementTypeAtDestination", notNullValue())
-        .body("cargoMovementTypeAtOrigin", notNullValue())
-        .body("carrierBookingRequestReference", notNullValue())
-        .body("deliveryTypeAtDestination", notNullValue())
+        .body("cargoMovementTypeAtOrigin", equalTo(CargoMovementType.FCL.toString()))
+        .body("cargoMovementTypeAtDestination", equalTo(CargoMovementType.LCL.toString()))
+        .body("deliveryTypeAtDestination", equalTo(ReceiptDeliveryType.CY.toString()))
+        .body("receiptTypeAtOrigin", equalTo(ReceiptDeliveryType.CY.toString()))
         .body("documentStatus", equalTo("PENU"))
-        .body("isEquipmentSubstitutionAllowed", notNullValue())
-        .body("isExportDeclarationRequired", notNullValue())
-        .body("isImportLicenseRequired", notNullValue())
-        .body("isPartialLoadAllowed", notNullValue())
-        .body("receiptTypeAtOrigin", notNullValue())
-        .body("serviceContractReference", notNullValue())
+        .body("isEquipmentSubstitutionAllowed", equalTo(true))
+        .body("isExportDeclarationRequired", equalTo(true))
+        .body("exportDeclarationReference", notNullValue())
+        .body("isImportLicenseRequired", equalTo(true))
+        .body("importLicenseReference", notNullValue())
+        .body("isPartialLoadAllowed", equalTo(true))
+        .body("serviceContractReference", equalTo("Test"))
         .body("submissionDateTime", notNullValue())
         .body("commodities", notNullValue())
         .body(jsonSchemaValidator("booking"));
