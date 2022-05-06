@@ -125,11 +125,11 @@ public class ShipmentEventIT {
       .contentType(ContentType.JSON)
       // The test data includes at least 3 shipment events related to the reference. But something adding additional
       // events.
-      .body("size()", equalTo(1))
+      .body("size()", equalTo(2))
       .body("eventType", everyItem(equalTo("SHIPMENT")))
       .body("eventClassifierCode", everyItem(equalTo("ACT")))
       .body("documentTypeCode", everyItem(anyOf(equalTo("BKG"), equalTo("CBR"))))
-      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'BKG' }.size()", equalTo(1))
+      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'BKG' }.size()", equalTo(2))
       .body("documentReferences.flatten().findAll { it.documentReferenceType == 'BKG' }.documentReferenceValue", everyItem(equalTo("cbr-b83765166707812c8ff4")))
       .body(jsonSchemaValidator("shipmentEvent"))
     ;
@@ -147,11 +147,11 @@ public class ShipmentEventIT {
       .contentType(ContentType.JSON)
       // The test data includes at least 3 shipment events related to the reference. But something adding additional
       // events.
-      .body("size()", equalTo(1))
+      .body("size()", equalTo(2))
       .body("eventType", everyItem(equalTo("SHIPMENT")))
       .body("eventClassifierCode", everyItem(equalTo("ACT")))
       .body("documentTypeCode", everyItem(anyOf(equalTo("BKG"), equalTo("CBR"))))
-      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'CBR' }.size()", equalTo(1))
+      .body("documentReferences.flatten().findAll { it.documentReferenceType == 'CBR' }.size()", equalTo(2))
       .body("documentReferences.flatten().findAll { it.documentReferenceType == 'CBR' }.documentReferenceValue", everyItem(equalTo("cbrr-b83765166707812c8ff4")))
       .body(jsonSchemaValidator("shipmentEvent"))
     ;
