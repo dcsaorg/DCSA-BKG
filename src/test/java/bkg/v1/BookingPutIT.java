@@ -117,7 +117,7 @@ public class BookingPutIT {
   }
 
   @Test
-  void postInvalidBookingVessel() throws JsonProcessingException {
+  void putInvalidBookingVessel() throws JsonProcessingException {
     BookingResponseTO bookingResponse = postBooking();
 
     Map<String, Object> map = jsonToMap(VALID_BOOKING);
@@ -142,7 +142,7 @@ public class BookingPutIT {
   }
 
   @Test
-  void postInvalidBookingExportDeclarationIsRequiredWithNullReference() {
+  void putInvalidBookingExportDeclarationIsRequiredWithNullReference() {
     BookingResponseTO bookingResponse = postBooking();
 
     Map<String, Object> map = jsonToMap(VALID_BOOKING);
@@ -163,7 +163,7 @@ public class BookingPutIT {
   }
 
   @Test
-  void postInvalidBookingImportLicenseIsRequiredWithNullReference() {
+  void putInvalidBookingImportLicenseIsRequiredWithNullReference() {
     BookingResponseTO bookingResponse = postBooking();
 
     Map<String, Object> map = jsonToMap(VALID_BOOKING);
@@ -184,7 +184,7 @@ public class BookingPutIT {
   }
 
   @Test
-  void postInvalidBooking() {
+  void putInvalidBooking() {
     BookingResponseTO bookingResponse = postBooking();
 
     Map<String, Object> map = jsonToMap(VALID_BOOKING);
