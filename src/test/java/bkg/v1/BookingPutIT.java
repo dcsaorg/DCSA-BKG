@@ -49,7 +49,7 @@ public class BookingPutIT {
   }
 
   @Test
-  void putValidBookingOnlyRequired() throws JsonProcessingException {
+  void putValidBookingOnlyRequired() {
     BookingResponseTO bookingResponse = postBooking();
 
     Map<String, Object> map = jsonToMap(VALID_BOOKING);
@@ -113,7 +113,7 @@ public class BookingPutIT {
   }
 
   @Test
-  void putInvalidBookingVessel() throws JsonProcessingException {
+  void putInvalidBookingVessel() {
     BookingResponseTO bookingResponse = postBooking();
 
     Map<String, Object> map = jsonToMap(VALID_BOOKING);
