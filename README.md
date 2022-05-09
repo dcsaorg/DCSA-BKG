@@ -1,7 +1,6 @@
 # DCSA-BKG - Booking
 
-![DCSA-BKG MASTER](https://github.com/dcsaorg/DCSA-BKG/actions/workflows/master.yml/badge.svg?branch=master) ![DCSA-BKG DEV](https://github.com/dcsaorg/DCSA-BKG/actions/workflows/dev.yml/badge.svg?branch=dev)
-
+![DCSA-BKG MASTER](https://github.com/dcsaorg/DCSA-BKG/actions/workflows/master.yml/badge.svg?branch=master)
 ------------------------------------------------------------------------------------------------------------------------
 
 Code standard
@@ -56,21 +55,28 @@ curl http://localhost:9090/v2/actuator/health
 
 ### DEVELOPMENT FLOW
 
-We maintain two branches, `master` and `dev`. \
-`master` is always stable and updated with ongoing development (provided it's stable) at the end of every sprint.
+`master` is the main development branch.
 
-Development continues on `dev` and feature branches are created based on `dev`.
+`pre-release` and `release` are tagged and should be used as a stable version.
+
+Development continues on `master` and feature branches are created based on `master`.
 
 A typical development flow would look like:
 
-1) Create feature branch with `dev` as base.
-2) Raise PR against `dev`, dev CI validates the PR ensuring everything is fine.
-3) Merge with dev.
-4) At the end of a sprint, we sync the core dependencies (`dev-<project>`) with their respective `master`,\
- update the dependency versions in `dev` and merge with `master` after successful CI validation.
-5) Continue development on `dev` for new sprint.
-   update the dependency versions in `dev` and merge with `master` after successful CI validation.
-5) Continue development on `dev` for new sprint.
+1) Create a feature branch with `master` as base, proceed to make changes to feature branch.
+2) Raise PR against `master`. When a PR is raised against master a CI is run to ensure everything is fine.
+3) Merge with `master` after approval by at least one verified code owner and successful CI run.
+
+> Note: If changes are required in the `DCSA-Event-Core` or `DCSA-Core`, those changes should first be merged into their respective `master` branches before continuing development in this repository.
+
+4) If development has been completed as per requirements for a given API version, `master` must be tagged to <br>
+create a `release` or `pre-release` accordingly.
+
+When bug fixes are required or changes in pre-release versions are needed, we branch off using the respective <br>
+tags and continue development on that branch. It is important to note that these changes must be cherry-picked <br>
+and included into `master`.
+
+------------------------------------------------------------------------------------------------------------------------
 
 ## Json schemas used for validation
 
