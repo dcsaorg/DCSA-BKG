@@ -295,7 +295,7 @@ class BKGServiceImplTest {
     voyage.setCarrierVoyageNumber("CarrierVoyageNumber");
 
     loadTransportCall = new TransportCall();
-    loadTransportCall.setTransportCallID(UUID.randomUUID().toString());
+    loadTransportCall.setTransportCallID(UUID.randomUUID());
     loadTransportCall.setFacilityID(facility.getFacilityID());
     loadTransportCall.setLocationID(location1.getId());
     loadTransportCall.setModeOfTransportID(modeOfTransport.getId());
@@ -304,7 +304,7 @@ class BKGServiceImplTest {
     loadTransportCall.setExportVoyageID(voyage.getId());
 
     dischargeTransportCall = new TransportCall();
-    dischargeTransportCall.setTransportCallID(UUID.randomUUID().toString());
+    dischargeTransportCall.setTransportCallID(UUID.randomUUID());
     dischargeTransportCall.setFacilityID(facility.getFacilityID());
     dischargeTransportCall.setLocationID(location2.getId());
     dischargeTransportCall.setModeOfTransportID(modeOfTransport.getId());
