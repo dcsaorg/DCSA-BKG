@@ -120,7 +120,7 @@ public class BKGServiceImpl implements BKGService {
                                     shipmentEventMapper.shipmentEventFromBookingTO(
                                         bookingTO, booking.getId(), null))
                                 .thenReturn(bookingTO)))
-        .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
+        .map(bookingMapper::dtoToBookingResponseTO);
   }
 
   private Mono<BookingTO> createDeepObjectsForBooking(BookingTO bookingRequest, Booking booking) {
