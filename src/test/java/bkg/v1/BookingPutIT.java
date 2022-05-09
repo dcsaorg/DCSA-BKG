@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.dcsa.core.events.edocumentation.model.transferobject.BookingResponseTO;
-import org.dcsa.core.events.edocumentation.model.transferobject.BookingTO;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
