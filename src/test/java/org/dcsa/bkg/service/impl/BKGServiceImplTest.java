@@ -21,9 +21,7 @@ import org.dcsa.core.events.service.DocumentPartyService;
 import org.dcsa.core.events.service.ReferenceService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.ConcreteRequestErrorMessageException;
-import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.NotFoundException;
-import org.dcsa.core.exception.UpdateException;
 import org.dcsa.skernel.model.*;
 import org.dcsa.skernel.model.enums.DCSAResponsibleAgencyCode;
 import org.dcsa.skernel.model.enums.PartyFunction;
@@ -98,6 +96,7 @@ class BKGServiceImplTest {
   @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
   @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
   @Spy CarrierClauseMapper carrierClauseMapper = Mappers.getMapper(CarrierClauseMapper.class);
+  @Spy ShipmentEventMapper shipmentEventMapper = Mappers.getMapper(ShipmentEventMapper.class);
 
   @Spy
   RequestedEquipmentMapper requestedEquipmentMapper =
@@ -459,6 +458,34 @@ class BKGServiceImplTest {
       bookingTO.setExportVoyageNumber("export-voyage-number");
     }
 
+
+    @Test
+    void testShipmentEventFromBooking() {
+      ShipmentEventMapper mapper = Mappers.getMapper(ShipmentEventMapper.class);
+//    ShipmentEvent shipmentEvent = bkgServiceImpl.shipmentEventFromBooking2(booking.getId(), booking, "reason");
+      ShipmentEvent shipmentEvent = mapper.shipmentEventFromBooking(booking, "reason");
+
+      assertEquals(DocumentTypeCode.CBR, shipmentEvent.getDocumentTypeCode());
+      assertEquals(booking.getId(), shipmentEvent.getDocumentID());
+      assertEquals(ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()), shipmentEvent.getShipmentEventTypeCode());
+      assertEquals("reason", shipmentEvent.getReason());
+      assertEquals(booking.getCarrierBookingRequestReference(), shipmentEvent.getDocumentReference());
+    }
+
+    @Test
+    void testShipmentEventFromBookingTO() {
+      ShipmentEventMapper mapper = Mappers.getMapper(ShipmentEventMapper.class);
+//    ShipmentEvent shipmentEvent = bkgServiceImpl.shipmentEventFromBooking2(booking.getId(), booking, "reason");
+      bookingTO.setDocumentStatus(booking.getDocumentStatus());
+      ShipmentEvent shipmentEvent = mapper.shipmentEventFromBookingTO(bookingTO, booking.getId(), "reason");
+
+      assertEquals(DocumentTypeCode.CBR, shipmentEvent.getDocumentTypeCode());
+      assertEquals(booking.getId(), shipmentEvent.getDocumentID());
+      assertEquals(ShipmentEventTypeCode.valueOf(bookingTO.getDocumentStatus().name()), shipmentEvent.getShipmentEventTypeCode());
+      assertEquals("reason", shipmentEvent.getReason());
+      assertEquals(bookingTO.getCarrierBookingRequestReference(), shipmentEvent.getDocumentReference());
+    }
+
     @Test
     @DisplayName(
         "Method should throw an exception when isImportLicenseRequired is true and importLicenseReference null")
@@ -469,7 +496,7 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true.",
                     throwable.getMessage());
@@ -561,7 +588,7 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "The attributes expectedArrivalAtPlaceOfDeliveryStartDate, expectedArrivalAtPlaceOfDeliveryEndDate, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
                     throwable.getMessage());
@@ -579,7 +606,7 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true.",
                     throwable.getMessage());
@@ -595,7 +622,7 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "The attribute expectedArrivalAtPlaceOfDeliveryEndDate must be the same or after expectedArrivalAtPlaceOfDeliveryStartDate.",
                     throwable.getMessage());
@@ -779,7 +806,7 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "Unable to identify unique vessel, please provide a vesselIMONumber.",
                     throwable.getMessage());
@@ -1967,7 +1994,7 @@ class BKGServiceImplTest {
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "Unable to identify unique vessel, please provide a vesselIMONumber.",
                     throwable.getMessage());
@@ -4050,7 +4077,7 @@ class BKGServiceImplTest {
       StepVerifier.create(cancelBookingResponse)
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof UpdateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals("Cancellation of booking failed.", throwable.getMessage());
               })
           .verify();
