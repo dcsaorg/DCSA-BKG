@@ -11,6 +11,7 @@ import org.dcsa.core.events.edocumentation.repository.ShipmentLocationRepository
 import org.dcsa.core.events.edocumentation.repository.ShipmentTransportRepository;
 import org.dcsa.core.events.edocumentation.service.CarrierClauseService;
 import org.dcsa.core.events.edocumentation.service.ChargeService;
+import org.dcsa.core.events.edocumentation.service.TransportService;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.mapper.RequestedEquipmentMapper;
@@ -21,11 +22,10 @@ import org.dcsa.core.events.service.DocumentPartyService;
 import org.dcsa.core.events.service.ReferenceService;
 import org.dcsa.core.events.service.ShipmentEventService;
 import org.dcsa.core.exception.ConcreteRequestErrorMessageException;
-import org.dcsa.core.exception.CreateException;
 import org.dcsa.core.exception.NotFoundException;
-import org.dcsa.core.exception.UpdateException;
 import org.dcsa.skernel.model.*;
 import org.dcsa.skernel.model.enums.DCSAResponsibleAgencyCode;
+import org.dcsa.skernel.model.enums.FacilityCodeListProvider;
 import org.dcsa.skernel.model.enums.PartyFunction;
 import org.dcsa.skernel.model.mapper.LocationMapper;
 import org.dcsa.skernel.model.mapper.PartyMapper;
@@ -75,12 +75,7 @@ class BKGServiceImplTest {
   @Mock ShipmentLocationRepository shipmentLocationRepository;
   @Mock ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   @Mock VesselRepository vesselRepository;
-  @Mock TransportEventRepository transportEventRepository;
-  @Mock TransportCallRepository transportCallRepository;
-  @Mock ModeOfTransportRepository modeOfTransportRepository;
-  @Mock TransportRepository transportRepository;
   @Mock ShipmentTransportRepository shipmentTransportRepository;
-  @Mock VoyageRepository voyageRepository;
 
   @Mock ShipmentEventService shipmentEventService;
   @Mock LocationService locationService;
@@ -88,6 +83,7 @@ class BKGServiceImplTest {
   @Mock ChargeService chargeService;
   @Mock VesselService vesselService;
   @Mock CarrierClauseService carrierClauseService;
+  @Mock TransportService transportService;
 
   @InjectMocks BKGServiceImpl bkgServiceImpl;
 
@@ -98,6 +94,7 @@ class BKGServiceImplTest {
   @Spy ShipmentMapper shipmentMapper = Mappers.getMapper(ShipmentMapper.class);
   @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
   @Spy CarrierClauseMapper carrierClauseMapper = Mappers.getMapper(CarrierClauseMapper.class);
+  @Spy ShipmentEventMapper shipmentEventMapper = Mappers.getMapper(ShipmentEventMapper.class);
 
   @Spy
   RequestedEquipmentMapper requestedEquipmentMapper =
@@ -112,8 +109,6 @@ class BKGServiceImplTest {
   @Spy
   PartyContactDetailsMapper partyContactDetailsMapper =
       Mappers.getMapper(PartyContactDetailsMapper.class);
-
-  @Spy TransportMapper transportMapper = Mappers.getMapper(TransportMapper.class);
 
   Booking booking;
   Location location1;
@@ -295,7 +290,7 @@ class BKGServiceImplTest {
     voyage.setCarrierVoyageNumber("CarrierVoyageNumber");
 
     loadTransportCall = new TransportCall();
-    loadTransportCall.setTransportCallID(UUID.randomUUID().toString());
+    loadTransportCall.setTransportCallID(UUID.randomUUID());
     loadTransportCall.setFacilityID(facility.getFacilityID());
     loadTransportCall.setLocationID(location1.getId());
     loadTransportCall.setModeOfTransportID(modeOfTransport.getId());
@@ -304,7 +299,7 @@ class BKGServiceImplTest {
     loadTransportCall.setExportVoyageID(voyage.getId());
 
     dischargeTransportCall = new TransportCall();
-    dischargeTransportCall.setTransportCallID(UUID.randomUUID().toString());
+    dischargeTransportCall.setTransportCallID(UUID.randomUUID());
     dischargeTransportCall.setFacilityID(facility.getFacilityID());
     dischargeTransportCall.setLocationID(location2.getId());
     dischargeTransportCall.setModeOfTransportID(modeOfTransport.getId());
@@ -459,6 +454,34 @@ class BKGServiceImplTest {
       bookingTO.setExportVoyageNumber("export-voyage-number");
     }
 
+
+    @Test
+    void testShipmentEventFromBooking() {
+      ShipmentEventMapper mapper = Mappers.getMapper(ShipmentEventMapper.class);
+//    ShipmentEvent shipmentEvent = bkgServiceImpl.shipmentEventFromBooking2(booking.getId(), booking, "reason");
+      ShipmentEvent shipmentEvent = mapper.shipmentEventFromBooking(booking, "reason");
+
+      assertEquals(DocumentTypeCode.CBR, shipmentEvent.getDocumentTypeCode());
+      assertEquals(booking.getId(), shipmentEvent.getDocumentID());
+      assertEquals(ShipmentEventTypeCode.valueOf(booking.getDocumentStatus().name()), shipmentEvent.getShipmentEventTypeCode());
+      assertEquals("reason", shipmentEvent.getReason());
+      assertEquals(booking.getCarrierBookingRequestReference(), shipmentEvent.getDocumentReference());
+    }
+
+    @Test
+    void testShipmentEventFromBookingTO() {
+      ShipmentEventMapper mapper = Mappers.getMapper(ShipmentEventMapper.class);
+//    ShipmentEvent shipmentEvent = bkgServiceImpl.shipmentEventFromBooking2(booking.getId(), booking, "reason");
+      bookingTO.setDocumentStatus(booking.getDocumentStatus());
+      ShipmentEvent shipmentEvent = mapper.shipmentEventFromBookingTO(bookingTO, booking.getId(), "reason");
+
+      assertEquals(DocumentTypeCode.CBR, shipmentEvent.getDocumentTypeCode());
+      assertEquals(booking.getId(), shipmentEvent.getDocumentID());
+      assertEquals(ShipmentEventTypeCode.valueOf(bookingTO.getDocumentStatus().name()), shipmentEvent.getShipmentEventTypeCode());
+      assertEquals("reason", shipmentEvent.getReason());
+      assertEquals(bookingTO.getCarrierBookingRequestReference(), shipmentEvent.getDocumentReference());
+    }
+
     @Test
     @DisplayName(
         "Method should throw an exception when isImportLicenseRequired is true and importLicenseReference null")
@@ -469,7 +492,7 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "The attribute importLicenseReference cannot be null if isImportLicenseRequired is true.",
                     throwable.getMessage());
@@ -561,7 +584,7 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "The attributes expectedArrivalAtPlaceOfDeliveryStartDate, expectedArrivalAtPlaceOfDeliveryEndDate, expectedDepartureDate and vesselIMONumber/exportVoyageNumber cannot all be null at the same time. These fields are conditional and require that at least one of them is not empty.",
                     throwable.getMessage());
@@ -579,7 +602,7 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "The attribute exportDeclarationReference cannot be null if isExportDeclarationRequired is true.",
                     throwable.getMessage());
@@ -595,7 +618,7 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "The attribute expectedArrivalAtPlaceOfDeliveryEndDate must be the same or after expectedArrivalAtPlaceOfDeliveryStartDate.",
                     throwable.getMessage());
@@ -779,7 +802,7 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "Unable to identify unique vessel, please provide a vesselIMONumber.",
                     throwable.getMessage());
@@ -1967,7 +1990,7 @@ class BKGServiceImplTest {
                   "ef223019-ff16-4870-be69-9dbaaaae9b11", bookingTO))
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof CreateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals(
                     "Unable to identify unique vessel, please provide a vesselIMONumber.",
                     throwable.getMessage());
@@ -3378,6 +3401,7 @@ class BKGServiceImplTest {
     DocumentPartyTO documentPartyTO;
     ChargeTO chargeTO;
     CarrierClauseTO carrierClauseTO;
+    TransportTO transportTO;
 
     @BeforeEach
     public void init() {
@@ -3392,6 +3416,34 @@ class BKGServiceImplTest {
 
       chargeTO = chargeMapper.chargeToDTO(charge);
       carrierClauseTO = carrierClauseMapper.carrierClauseToDTO(carrierClause);
+
+      LocationTO dischargeLocation = new LocationTO();
+      dischargeLocation.setFacilityCode("123456");
+      dischargeLocation.setFacilityCodeListProvider(FacilityCodeListProvider.SMDG);
+      dischargeLocation.setId("7bf6f428-58f0-4347-9ce8-d6be2f5d5745");
+      dischargeLocation.setAddressID(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
+      dischargeLocation.setFacilityID(UUID.fromString("74dcf8e6-4ed4-439e-a935-ec183df73013"));
+
+      LocationTO loadLocation = new LocationTO();
+      loadLocation.setFacilityCode("654321");
+      loadLocation.setFacilityCodeListProvider(FacilityCodeListProvider.SMDG);
+      loadLocation.setId("c703277f-84ca-4816-9ccf-fad8e202d3b6");
+
+      transportTO = new TransportTO();
+      transportTO.setTransportPlanStageSequenceNumber(shipmentTransport.getTransportPlanStageSequenceNumber());
+      transportTO.setTransportPlanStage(shipmentTransport.getTransportPlanStageCode());
+      transportTO.setIsUnderShippersResponsibility(false);
+      transportTO.setModeOfTransport(DCSATransportType.VESSEL);
+      transportTO.setVesselName(vessel.getVesselName());
+      transportTO.setVesselIMONumber(vessel.getVesselIMONumber());
+      transportTO.setImportVoyageNumber(voyage.getCarrierVoyageNumber());
+      transportTO.setExportVoyageNumber(voyage.getCarrierVoyageNumber());
+      transportTO.setPlannedArrivalDate(arrivalTransportEvent.getEventDateTime());
+      transportTO.setPlannedDepartureDate(departureTransportEvent.getEventDateTime());
+      transportTO.setTransportName(transport.getTransportName());
+      transportTO.setTransportReference(transport.getTransportReference());
+      transportTO.setDischargeLocation(dischargeLocation);
+      transportTO.setLoadLocation(loadLocation);
     }
 
     @Test
@@ -3406,7 +3458,7 @@ class BKGServiceImplTest {
       when(carrierClauseService.fetchCarrierClausesByShipmentID(any())).thenReturn(Flux.empty());
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.empty());
       when(chargeService.fetchChargesByShipmentID(any())).thenReturn(Flux.empty());
-      when(shipmentTransportRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(transportService.findByShipmentID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getShipmentByCarrierBookingReference(
@@ -3449,7 +3501,7 @@ class BKGServiceImplTest {
           .thenReturn(Flux.just(carrierClauseTO));
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.empty());
       when(chargeService.fetchChargesByShipmentID(any())).thenReturn(Flux.empty());
-      when(shipmentTransportRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(transportService.findByShipmentID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getShipmentByCarrierBookingReference(
@@ -3501,7 +3553,7 @@ class BKGServiceImplTest {
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(chargeService.fetchChargesByShipmentID(any())).thenReturn(Flux.empty());
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.empty());
-      when(shipmentTransportRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(transportService.findByShipmentID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getShipmentByCarrierBookingReference(
@@ -3553,7 +3605,7 @@ class BKGServiceImplTest {
       when(chargeService.fetchChargesByShipmentID(any())).thenReturn(Flux.empty());
       when(requestedEquipmentRepository.findByBookingID(any()))
           .thenReturn(Flux.just(confirmedEquipment));
-      when(shipmentTransportRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(transportService.findByShipmentID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getShipmentByCarrierBookingReference(
@@ -3583,7 +3635,7 @@ class BKGServiceImplTest {
       when(carrierClauseService.fetchCarrierClausesByShipmentID(any())).thenReturn(Flux.empty());
       when(chargeService.fetchChargesByShipmentID(any())).thenReturn(Flux.just(chargeTO));
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.empty());
-      when(shipmentTransportRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
+      when(transportService.findByShipmentID(any())).thenReturn(Flux.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getShipmentByCarrierBookingReference(
@@ -3613,40 +3665,9 @@ class BKGServiceImplTest {
       when(carrierClauseService.fetchCarrierClausesByShipmentID(any())).thenReturn(Flux.empty());
       when(chargeService.fetchChargesByShipmentID(any())).thenReturn(Flux.empty());
 
-      when(transportCallRepository.findById(loadTransportCall.getTransportCallID()))
-          .thenReturn(Mono.just(loadTransportCall));
-      when(transportCallRepository.findById(dischargeTransportCall.getTransportCallID()))
-          .thenReturn(Mono.just(dischargeTransportCall));
-
-      when(locationService.fetchLocationDeepObjByID(location1.getId()))
-          .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location1)));
-      when(locationService.fetchLocationDeepObjByID(location2.getId()))
-          .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
-
       when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(shipment));
-      when(shipmentTransportRepository.findAllByShipmentID(any()))
-          .thenReturn(Flux.just(shipmentTransport));
-      when(transportRepository.findById(transport.getTransportID()))
-          .thenReturn(Mono.just(transport));
-      when(transportRepository.findAllById(Collections.singleton(any())))
-          .thenReturn(Flux.just(transport));
-      when(modeOfTransportRepository.findByTransportCallID(any()))
-          .thenReturn(Mono.just(modeOfTransport));
-      when(vesselService.findById(any())).thenReturn(Mono.just(vessel));
-      when(voyageRepository.findById((UUID) any())).thenReturn(Mono.just(voyage));
-      when(transportEventRepository
-              .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
-                  transport.getLoadTransportCallID(),
-                  TransportEventTypeCode.ARRI,
-                  EventClassifierCode.PLN))
-          .thenReturn(Mono.just(departureTransportEvent));
-      when(transportEventRepository
-              .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
-                  transport.getDischargeTransportCallID(),
-                  TransportEventTypeCode.DEPA,
-                  EventClassifierCode.PLN))
-          .thenReturn(Mono.just(arrivalTransportEvent));
+      when(transportService.findByShipmentID(any())).thenReturn(Flux.just(transportTO));
 
       StepVerifier.create(
               bkgServiceImpl.getShipmentByCarrierBookingReference(
@@ -3710,6 +3731,7 @@ class BKGServiceImplTest {
       Voyage exportVoyage = new Voyage();
       exportVoyage.setId(UUID.randomUUID());
       exportVoyage.setCarrierVoyageNumber("exportCarrierVoyageNumber");
+      transportTO.setExportVoyageNumber(exportVoyage.getCarrierVoyageNumber());
 
       loadTransportCall.setExportVoyageID(exportVoyage.getId());
 
@@ -3719,42 +3741,10 @@ class BKGServiceImplTest {
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(chargeService.fetchChargesByShipmentID(any())).thenReturn(Flux.empty());
       when(carrierClauseService.fetchCarrierClausesByShipmentID(any())).thenReturn(Flux.empty());
-
-      when(transportCallRepository.findById(loadTransportCall.getTransportCallID()))
-          .thenReturn(Mono.just(loadTransportCall));
-      when(transportCallRepository.findById(dischargeTransportCall.getTransportCallID()))
-          .thenReturn(Mono.just(dischargeTransportCall));
-
-      when(locationService.fetchLocationDeepObjByID(location1.getId()))
-          .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location1)));
-      when(locationService.fetchLocationDeepObjByID(location2.getId()))
-          .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
+      when(transportService.findByShipmentID(any())).thenReturn(Flux.just(transportTO));
 
       when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(shipment));
-      when(shipmentTransportRepository.findAllByShipmentID(any()))
-          .thenReturn(Flux.just(shipmentTransport));
-      when(transportRepository.findById(transport.getTransportID()))
-          .thenReturn(Mono.just(transport));
-      when(transportRepository.findAllById(Collections.singleton(any())))
-          .thenReturn(Flux.just(transport));
-      when(modeOfTransportRepository.findByTransportCallID(any()))
-          .thenReturn(Mono.just(modeOfTransport));
-      when(vesselService.findById(any())).thenReturn(Mono.just(vessel));
-      when(voyageRepository.findById(voyage.getId())).thenReturn(Mono.just(voyage));
-      when(voyageRepository.findById(exportVoyage.getId())).thenReturn(Mono.just(exportVoyage));
-      when(transportEventRepository
-              .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
-                  transport.getLoadTransportCallID(),
-                  TransportEventTypeCode.ARRI,
-                  EventClassifierCode.PLN))
-          .thenReturn(Mono.just(departureTransportEvent));
-      when(transportEventRepository
-              .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
-                  transport.getDischargeTransportCallID(),
-                  TransportEventTypeCode.DEPA,
-                  EventClassifierCode.PLN))
-          .thenReturn(Mono.just(arrivalTransportEvent));
 
       StepVerifier.create(
               bkgServiceImpl.getShipmentByCarrierBookingReference(
@@ -3851,32 +3841,7 @@ class BKGServiceImplTest {
       when(referenceService.findByBookingID(any())).thenReturn(Mono.just(List.of(referenceTO)));
       when(documentPartyService.fetchDocumentPartiesByBookingID(any(UUID.class)))
           .thenReturn(Mono.just(List.of(documentPartyTO)));
-      when(shipmentTransportRepository.findAllByShipmentID(any()))
-          .thenReturn(Flux.just(shipmentTransport));
-      when(transportCallRepository.findById(loadTransportCall.getTransportCallID()))
-          .thenReturn(Mono.just(loadTransportCall));
-      when(transportCallRepository.findById(dischargeTransportCall.getTransportCallID()))
-          .thenReturn(Mono.just(dischargeTransportCall));
-      when(transportRepository.findById(transport.getTransportID()))
-          .thenReturn(Mono.just(transport));
-      when(transportRepository.findAllById(Collections.singleton(any())))
-          .thenReturn(Flux.just(transport));
-      when(modeOfTransportRepository.findByTransportCallID(any()))
-          .thenReturn(Mono.just(modeOfTransport));
-      when(vesselService.findById(any())).thenReturn(Mono.just(vessel));
-      when(voyageRepository.findById((UUID) any())).thenReturn(Mono.just(voyage));
-      when(transportEventRepository
-              .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
-                  transport.getLoadTransportCallID(),
-                  TransportEventTypeCode.ARRI,
-                  EventClassifierCode.PLN))
-          .thenReturn(Mono.just(departureTransportEvent));
-      when(transportEventRepository
-              .findFirstByTransportCallIDAndEventTypeCodeAndEventClassifierCodeOrderByEventDateTimeDesc(
-                  transport.getDischargeTransportCallID(),
-                  TransportEventTypeCode.DEPA,
-                  EventClassifierCode.PLN))
-          .thenReturn(Mono.just(arrivalTransportEvent));
+      when(transportService.findByShipmentID(any())).thenReturn(Flux.just(transportTO));
 
       StepVerifier.create(
               bkgServiceImpl.getShipmentByCarrierBookingReference(
@@ -4050,7 +4015,7 @@ class BKGServiceImplTest {
       StepVerifier.create(cancelBookingResponse)
           .expectErrorSatisfies(
               throwable -> {
-                Assertions.assertTrue(throwable instanceof UpdateException);
+                Assertions.assertTrue(throwable instanceof ConcreteRequestErrorMessageException);
                 assertEquals("Cancellation of booking failed.", throwable.getMessage());
               })
           .verify();
