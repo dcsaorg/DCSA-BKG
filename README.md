@@ -80,9 +80,11 @@ and included into `master`.
 
 ## Json schemas used for validation
 
-Generated from resolved OAS Yaml file using: https://github.com/adzubla/schema-convert
+Generated from resolved OAS Yaml file using: https://github.com/Abdiiir/openapi2schema
 
-This will generate JSON schemas from the definitions in the OAS Yaml file.
+This will generate a tree of request/response JSON Schemas from the definitions in the OAS Yaml file.
 
-**Note! This will only generate JSON schemas from definitions in the components or domains. In the case of summaries
-endpoints the outer array is defined in the API and therefore excluded in the generated JSON schema file!**
+To generate the JSON schemas follow the instructions listed in the [project](https://github.com/Abdiiir/openapi2schema).
+
+The OAS Yaml file can be downloaded at [BKG OpenAPI specification](https://app.swaggerhub.com/apis/dcsaorg/DCSA_BKG).
+
