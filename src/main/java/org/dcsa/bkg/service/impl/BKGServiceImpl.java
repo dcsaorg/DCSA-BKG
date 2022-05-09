@@ -116,10 +116,9 @@ public class BKGServiceImpl implements BKGService {
                 createDeepObjectsForBooking(bookingRequest, booking)
                     .flatMap(
                         bookingTO ->
-                            Mono.just(
+                            this.createShipmentEvent(
                                     shipmentEventMapper.shipmentEventFromBookingTO(
                                         bookingTO, booking.getId(), null))
-                                .flatMap(this::createShipmentEvent)
                                 .thenReturn(bookingTO)))
         .flatMap(bTO -> Mono.just(bookingMapper.dtoToBookingResponseTO(bTO)));
   }
@@ -435,10 +434,9 @@ public class BKGServiceImpl implements BKGService {
                 createDeepObjectsForBooking(bookingRequest, booking)
                     .flatMap(
                         bookingTO ->
-                            Mono.just(
+                            this.createShipmentEvent(
                                     shipmentEventMapper.shipmentEventFromBookingTO(
                                         bookingTO, booking.getId(), null))
-                                .flatMap(this::createShipmentEvent)
                                 .thenReturn(bookingTO)))
         .switchIfEmpty(
             Mono.defer(
@@ -658,8 +656,7 @@ public class BKGServiceImpl implements BKGService {
   }
 
   private Mono<TransportCall> fetchTransportCallById(UUID transportCallId) {
-    return Mono.justOrEmpty(transportCallId)
-      .flatMap(transportCallRepository::findById);
+    return Mono.justOrEmpty(transportCallId).flatMap(transportCallRepository::findById);
   }
 
   private Mono<Map<String, String>> fetchImportExportVoyageNumberByTransportCallId(
@@ -771,19 +768,17 @@ public class BKGServiceImpl implements BKGService {
             booking ->
                 performBookingCancellation(
                     bookingCancellationRequestTO.getDocumentStatus(), updatedDateTime, booking))
-        .map(
-            booking -> {
-              // Note the update to the version is applied to the active version. No new version is
-              // created as a result of the cancelBookingByCarrierBookingReference
-              booking.setDocumentStatus(ShipmentEventTypeCode.CANC);
-              ShipmentEvent shipmentEvent =
-                  shipmentEventMapper.shipmentEventFromBooking(
-                      booking, bookingCancellationRequestTO.getReason());
-              createShipmentEvent(shipmentEvent);
-              return booking;
-            })
+        .doOnNext(booking -> booking.setDocumentStatus(ShipmentEventTypeCode.CANC))
+        .flatMap(
+            booking ->
+                this.createShipmentEvent(
+                        shipmentEventMapper.shipmentEventFromBooking(
+                            booking, bookingCancellationRequestTO.getReason()))
+                    .thenReturn(booking))
         .map(bookingMapper::bookingToBookingResponseTO)
-        .doOnNext(bookingResponseTO -> bookingResponseTO.setBookingRequestUpdatedDateTime(updatedDateTime));
+        .doOnNext(
+            bookingResponseTO ->
+                bookingResponseTO.setBookingRequestUpdatedDateTime(updatedDateTime));
   }
 
   private Mono<Booking> performBookingCancellation(
