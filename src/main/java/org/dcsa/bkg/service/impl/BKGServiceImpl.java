@@ -538,7 +538,7 @@ public class BKGServiceImpl implements BKGService {
             });
   }
 
-  private Mono<LocationTO> fetchLocationByTransportCallId(String id) {
+  private Mono<LocationTO> fetchLocationByTransportCallId(UUID id) {
     if (id == null) return Mono.empty();
     return transportCallRepository
         .findById(id)
@@ -645,7 +645,7 @@ public class BKGServiceImpl implements BKGService {
                     .flatMap(y -> Mono.just(Tuples.of(y.getT1(), y.getT2()))));
   }
 
-  private Mono<Vessel> fetchVesselByTransportCallId(String transportCallId) {
+  private Mono<Vessel> fetchVesselByTransportCallId(UUID transportCallId) {
 
     if (transportCallId == null) return Mono.empty();
     return fetchTransportCallById(transportCallId)
@@ -653,9 +653,9 @@ public class BKGServiceImpl implements BKGService {
         .flatMap(transportCall -> vesselService.findById(transportCall.getVesselID()));
   }
 
-  private Mono<TransportCall> fetchTransportCallById(String transportCallId) {
-    if (transportCallId == null) return Mono.empty();
-    return transportCallRepository.findById(transportCallId);
+  private Mono<TransportCall> fetchTransportCallById(UUID transportCallId) {
+    return Mono.justOrEmpty(transportCallId)
+      .flatMap(transportCallRepository::findById);
   }
 
   private Mono<Map<String, String>> fetchImportExportVoyageNumberByTransportCallId(
@@ -684,7 +684,7 @@ public class BKGServiceImpl implements BKGService {
                     voyages.getT2().getCarrierVoyageNumber()));
   }
 
-  private Mono<ModeOfTransport> fetchModeOfTransportByTransportCallId(String transportCallId) {
+  private Mono<ModeOfTransport> fetchModeOfTransportByTransportCallId(UUID transportCallId) {
     if (transportCallId == null) return Mono.empty();
     return modeOfTransportRepository.findByTransportCallID(transportCallId);
   }
