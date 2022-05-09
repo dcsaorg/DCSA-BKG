@@ -3,6 +3,7 @@ package bkg.v1;
 import bkg.config.TestConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.restassured.response.ValidatableResponse;
 import org.apache.http.HttpStatus;
 import org.dcsa.core.events.edocumentation.model.transferobject.BookingResponseTO;
 import org.dcsa.core.events.model.enums.ShipmentEventTypeCode;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Function;
 
 import static bkg.config.TestConfig.BOOKING;
 import static bkg.config.TestConfig.jsonSchemaValidator;
@@ -34,18 +36,16 @@ public class BookingPutIT {
   void putValidBooking() {
     BookingResponseTO bookingResponse = postBooking();
 
-    given()
-        .contentType("application/json")
-        .body(VALID_BOOKING)
-        .put(BOOKING + "/" + bookingResponse.getCarrierBookingRequestReference())
-        .then()
-        .assertThat()
-        .statusCode(HttpStatus.SC_OK)
-        .body("carrierBookingRequestReference", notNullValue())
-        .body("documentStatus", equalTo(ShipmentEventTypeCode.RECE.toString()))
-        .body("bookingRequestCreatedDateTime", notNullValue())
-        .body("bookingRequestUpdatedDateTime", notNullValue())
-        .body(jsonSchemaValidator("bookingResponse"));
+    ValidatableResponse response =
+        given()
+            .contentType("application/json")
+            .body(VALID_BOOKING)
+            .put(BOOKING + "/" + bookingResponse.getCarrierBookingRequestReference())
+            .then()
+            .assertThat()
+            .statusCode(HttpStatus.SC_OK);
+
+    responseValidator.apply(response);
   }
 
   @Test
@@ -78,20 +78,17 @@ public class BookingPutIT {
     map.put("requestedEquipments", null);
     map.put("documentParties", null);
     map.put("shipmentLocations", null);
-    System.out.println(objectMapper.writeValueAsString(map));
 
-    given()
-        .contentType("application/json")
-        .body(map)
-        .put(BOOKING + "/" + bookingResponse.getCarrierBookingRequestReference())
-        .then()
-        .assertThat()
-        .statusCode(HttpStatus.SC_OK)
-        .body("carrierBookingRequestReference", notNullValue())
-        .body("documentStatus", equalTo(ShipmentEventTypeCode.RECE.toString()))
-        .body("bookingRequestCreatedDateTime", notNullValue())
-        .body("bookingRequestUpdatedDateTime", notNullValue())
-        .body(jsonSchemaValidator("bookingResponse"));
+    ValidatableResponse response =
+        given()
+            .contentType("application/json")
+            .body(map)
+            .put(BOOKING + "/" + bookingResponse.getCarrierBookingRequestReference())
+            .then()
+            .assertThat()
+            .statusCode(HttpStatus.SC_OK);
+
+    responseValidator.apply(response);
   }
 
   @Test
@@ -126,7 +123,6 @@ public class BookingPutIT {
     map.put("expectedArrivalAtPlaceOfDeliveryEndDate", null);
     map.put("expectedDepartureDate", null);
     map.put("exportVoyageNumber", null);
-    System.out.println(objectMapper.writeValueAsString(map));
 
     given()
         .contentType("application/json")
@@ -219,20 +215,24 @@ public class BookingPutIT {
   }
 
   private BookingResponseTO postBooking() {
-    return given()
-        .contentType("application/json")
-        .body(VALID_BOOKING)
-        .post(BOOKING)
-        .then()
-        .assertThat()
-        .statusCode(HttpStatus.SC_ACCEPTED)
-        .body("carrierBookingRequestReference", notNullValue())
-        .body("documentStatus", equalTo(ShipmentEventTypeCode.RECE.toString()))
-        .body("bookingRequestCreatedDateTime", notNullValue())
-        .body("bookingRequestUpdatedDateTime", notNullValue())
-        .body(jsonSchemaValidator("bookingResponse"))
-        .extract()
-        .body()
-        .as(BookingResponseTO.class);
+    ValidatableResponse response =
+        given()
+            .contentType("application/json")
+            .body(VALID_BOOKING)
+            .post(BOOKING)
+            .then()
+            .assertThat()
+            .statusCode(HttpStatus.SC_ACCEPTED);
+
+    return responseValidator.apply(response).extract().body().as(BookingResponseTO.class);
   }
+
+  private final Function<ValidatableResponse, ValidatableResponse> responseValidator =
+      response ->
+          response
+              .body("carrierBookingRequestReference", notNullValue())
+              .body("documentStatus", equalTo(ShipmentEventTypeCode.RECE.toString()))
+              .body("bookingRequestCreatedDateTime", notNullValue())
+              .body("bookingRequestUpdatedDateTime", notNullValue())
+              .body(jsonSchemaValidator("bookingResponse"));
 }
