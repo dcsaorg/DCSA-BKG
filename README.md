@@ -65,7 +65,7 @@ A typical development flow would look like:
 
 1) Create a feature branch with `master` as base, proceed to make changes to feature branch.
 2) Raise PR against `master`. When a PR is raised against master a CI is run to ensure everything is fine.
-3) Merge with `master` after approval by atleast one verified code owner and successful CI run.
+3) Merge with `master` after approval by at least one verified code owner and successful CI run.
 
 > Note: If changes are required in the `DCSA-Event-Core` or `DCSA-Core`, those changes should first be merged into their respective `master` branches before continuing development in this repository.
 
