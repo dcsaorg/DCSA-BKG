@@ -36,7 +36,7 @@ If you would like to build required DCSA packages individually, begin with step 
 mvn spring-boot:run [options]
 
 options:
- -Dspring-boot.run.arguments="--DB_HOSTNAME=localhost:5432 --AUTH0_ENABLED=false --LOG_LEVEL=DEBUG"
+ -Dspring-boot.run.arguments="--db_hostname=localhost:5432 --AUTH0_ENABLED=false --LOG_LEVEL=DEBUG"
 ```
 
 OR using **docker-compose**
