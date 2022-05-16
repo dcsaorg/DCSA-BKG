@@ -8,16 +8,19 @@ import org.dcsa.core.events.edocumentation.model.transferobject.*;
 import org.dcsa.core.events.edocumentation.repository.RequestedEquipmentRepository;
 import org.dcsa.core.events.edocumentation.repository.ShipmentCutOffTimeRepository;
 import org.dcsa.core.events.edocumentation.repository.ShipmentLocationRepository;
-import org.dcsa.core.events.edocumentation.repository.ShipmentTransportRepository;
 import org.dcsa.core.events.edocumentation.service.CarrierClauseService;
 import org.dcsa.core.events.edocumentation.service.ChargeService;
+import org.dcsa.core.events.edocumentation.service.ShipmentLocationService;
 import org.dcsa.core.events.edocumentation.service.TransportService;
 import org.dcsa.core.events.model.*;
 import org.dcsa.core.events.model.enums.*;
 import org.dcsa.core.events.model.mapper.RequestedEquipmentMapper;
 import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
 import org.dcsa.core.events.model.transferobjects.ReferenceTO;
-import org.dcsa.core.events.repository.*;
+import org.dcsa.core.events.repository.BookingRepository;
+import org.dcsa.core.events.repository.CommodityRepository;
+import org.dcsa.core.events.repository.ShipmentRepository;
+import org.dcsa.core.events.repository.ValueAddedServiceRequestRepository;
 import org.dcsa.core.events.service.DocumentPartyService;
 import org.dcsa.core.events.service.ReferenceService;
 import org.dcsa.core.events.service.ShipmentEventService;
@@ -71,19 +74,22 @@ class BKGServiceImplTest {
   @Mock CommodityRepository commodityRepository;
   @Mock ValueAddedServiceRequestRepository valueAddedServiceRequestRepository;
   @Mock RequestedEquipmentRepository requestedEquipmentRepository;
-  @Mock DocumentPartyService documentPartyService;
   @Mock ShipmentLocationRepository shipmentLocationRepository;
   @Mock ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   @Mock VesselRepository vesselRepository;
-  @Mock ShipmentTransportRepository shipmentTransportRepository;
 
+  @Mock DocumentPartyService documentPartyService;
   @Mock ShipmentEventService shipmentEventService;
   @Mock LocationService locationService;
   @Mock ReferenceService referenceService;
   @Mock ChargeService chargeService;
-  @Mock VesselService vesselService;
   @Mock CarrierClauseService carrierClauseService;
   @Mock TransportService transportService;
+  @Mock
+  ShipmentLocationService shipmentLocationService;
+
+  @Mock
+  VesselService vesselService;
 
   @InjectMocks BKGServiceImpl bkgServiceImpl;
 
@@ -95,6 +101,7 @@ class BKGServiceImplTest {
   @Spy BookingSummaryMapper bookingSummaryMapping = Mappers.getMapper(BookingSummaryMapper.class);
   @Spy CarrierClauseMapper carrierClauseMapper = Mappers.getMapper(CarrierClauseMapper.class);
   @Spy ShipmentEventMapper shipmentEventMapper = Mappers.getMapper(ShipmentEventMapper.class);
+  @Spy ShipmentLocationMapper shipmentLocationMapper = Mappers.getMapper(ShipmentLocationMapper.class);
 
   @Spy
   RequestedEquipmentMapper requestedEquipmentMapper =
@@ -531,6 +538,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       // Test all permutations of null values for this check
       for (int i = 1; i < 7; i++) {
@@ -652,6 +660,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -707,6 +716,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -760,6 +770,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
@@ -798,6 +809,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
@@ -842,6 +854,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -903,6 +916,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -949,8 +963,7 @@ class BKGServiceImplTest {
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
-      when(shipmentEventService.create(any()))
-          .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(shipmentEventService.create(any())).thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       LocationTO locationTO1 = locationMapper.locationToDTO(location1);
@@ -958,10 +971,9 @@ class BKGServiceImplTest {
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
       LocationTO locationTO2 = locationMapper.locationToDTO(location2);
       when(locationService.ensureResolvable(eq(placeOfIssue))).thenReturn(Mono.just(locationTO2));
-      when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
-          .thenReturn(Mono.just(Collections.emptyList()));
-      when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
-          .thenReturn(Mono.empty());
+      when(documentPartyService.createDocumentPartiesByBookingID(any(), any())).thenReturn(Mono.just(Collections.emptyList()));
+      when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any())).thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
 
@@ -1028,6 +1040,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(valueAddedServiceRequest));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1098,6 +1111,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(List.of(referenceTO)));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1172,6 +1186,7 @@ class BKGServiceImplTest {
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
           .thenReturn(Mono.just(Collections.emptyList()));
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1250,6 +1265,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(List.of(referenceTO)));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
           .thenReturn(Mono.just(Collections.emptyList()));
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1287,6 +1303,7 @@ class BKGServiceImplTest {
       when(documentPartyService.createDocumentPartiesByBookingID(any(), isNull())).thenReturn(Mono.empty());
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .expectErrorSatisfies(
@@ -1339,6 +1356,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(requestedEquipment));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1466,8 +1484,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(List.of(referenceTO)));
       when(requestedEquipmentRepository.save(any(RequestedEquipment.class)))
           .thenReturn(Mono.just(requestedEquipment));
-      when(locationRepository.save(location1)).thenReturn(Mono.just(location1));
-      when(shipmentLocationRepository.save(any())).thenReturn(Mono.just(shipmentLocation));
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
@@ -1476,7 +1493,6 @@ class BKGServiceImplTest {
       StepVerifier.create(bkgServiceImpl.createBooking(bookingTO))
           .assertNext(
               b -> {
-                verify(locationRepository, times(1)).save(any());
                 verify(locationService, times(2)).ensureResolvable(any());
                 verify(documentPartyService).createDocumentPartiesByBookingID(any(), any());
                 verify(commodityRepository).saveAll(any(Flux.class));
@@ -1734,6 +1750,7 @@ class BKGServiceImplTest {
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1794,6 +1811,8 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
+
 
       // Test all permutations of null values for this check
       for (int i = 1; i < 7; i++) {
@@ -1890,6 +1909,7 @@ class BKGServiceImplTest {
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -1943,6 +1963,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       StepVerifier.create(
               bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
@@ -1984,6 +2005,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       StepVerifier.create(
               bkgServiceImpl.updateBookingByReferenceCarrierBookingRequestReference(
@@ -2028,6 +2050,7 @@ class BKGServiceImplTest {
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -2087,6 +2110,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(locationTO2));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -2147,6 +2171,7 @@ class BKGServiceImplTest {
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -2202,6 +2227,7 @@ class BKGServiceImplTest {
           .thenReturn(Mono.just(locationTO2));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
           .thenReturn(Mono.just(Collections.emptyList()));
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
 
@@ -2278,6 +2304,7 @@ class BKGServiceImplTest {
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
           .thenReturn(Mono.empty());
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -2354,6 +2381,7 @@ class BKGServiceImplTest {
 
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -2438,6 +2466,7 @@ class BKGServiceImplTest {
 
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       ArgumentCaptor<BookingTO> argumentCaptor = ArgumentCaptor.forClass(BookingTO.class);
 
@@ -2519,6 +2548,7 @@ class BKGServiceImplTest {
       LocationTO locationTO2 = locationMapper.locationToDTO(location2);
       when(locationService.ensureResolvable(eq(bookingTO.getPlaceOfIssue())))
           .thenReturn(Mono.just(locationTO2));
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
 
@@ -2675,8 +2705,7 @@ class BKGServiceImplTest {
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
           .thenReturn(Mono.just(List.of(documentPartyTO)));
 
-      when(locationRepository.save(location1)).thenReturn(Mono.just(location1));
-      when(shipmentLocationRepository.save(any())).thenReturn(Mono.just(shipmentLocation));
+      when(shipmentLocationService.createShipmentLocationsByBookingIDAndTOs(any(), any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
@@ -2797,6 +2826,8 @@ class BKGServiceImplTest {
     ReferenceTO referenceTO;
     DocumentPartyTO documentPartyTO;
 
+    ShipmentLocationTO shipmentLocationTO;
+
     @BeforeEach
     public void init() {
       referenceTO = new ReferenceTO();
@@ -2824,7 +2855,7 @@ class BKGServiceImplTest {
       when(referenceService.findByBookingID(any())).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
       when(locationService.fetchLocationDeepObjByID(isNull())).thenReturn(Mono.empty());
 
       StepVerifier.create(
@@ -2841,7 +2872,7 @@ class BKGServiceImplTest {
                 assertNull(b.getReferences());
                 assertEquals(0, b.getRequestedEquipments().size());
                 assertNull(b.getDocumentParties());
-                assertEquals(0, b.getShipmentLocations().size());
+                assertNull(b.getShipmentLocations());
               })
           .verifyComplete();
     }
@@ -2863,7 +2894,7 @@ class BKGServiceImplTest {
       when(valueAddedServiceRequestRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(referenceService.findByBookingID(any())).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
@@ -2881,7 +2912,7 @@ class BKGServiceImplTest {
                 assertNull(b.getReferences());
                 assertEquals(0, b.getRequestedEquipments().size());
                 assertNull(b.getDocumentParties());
-                assertEquals(0, b.getShipmentLocations().size());
+                assertNull(b.getShipmentLocations());
               })
           .verifyComplete();
     }
@@ -2906,7 +2937,7 @@ class BKGServiceImplTest {
       when(referenceService.findByBookingID(any())).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -2929,7 +2960,7 @@ class BKGServiceImplTest {
                 assertNull(b.getReferences());
                 assertEquals(0, b.getRequestedEquipments().size());
                 assertNull(b.getDocumentParties());
-                assertEquals(0, b.getShipmentLocations().size());
+                assertNull(b.getShipmentLocations());
               })
           .verifyComplete();
     }
@@ -2954,7 +2985,7 @@ class BKGServiceImplTest {
       when(referenceService.findByBookingID(any())).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -2977,7 +3008,7 @@ class BKGServiceImplTest {
                 assertNull(b.getReferences());
                 assertEquals(0, b.getRequestedEquipments().size());
                 assertNull(b.getDocumentParties());
-                assertEquals(0, b.getShipmentLocations().size());
+                assertNull(b.getShipmentLocations());
               })
           .verifyComplete();
     }
@@ -3003,7 +3034,7 @@ class BKGServiceImplTest {
       when(referenceService.findByBookingID(any())).thenReturn(Mono.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -3028,7 +3059,7 @@ class BKGServiceImplTest {
                 assertNull(b.getReferences());
                 assertEquals(0, b.getRequestedEquipments().size());
                 assertNull(b.getDocumentParties());
-                assertEquals(0, b.getShipmentLocations().size());
+                assertNull(b.getShipmentLocations());
               })
           .verifyComplete();
     }
@@ -3055,7 +3086,7 @@ class BKGServiceImplTest {
       when(referenceService.findByBookingID(any())).thenReturn(Mono.just(List.of(referenceTO)));
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -3080,7 +3111,7 @@ class BKGServiceImplTest {
                 assertEquals(ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
                 assertEquals(0, b.getRequestedEquipments().size());
                 assertNull(b.getDocumentParties());
-                assertEquals(0, b.getShipmentLocations().size());
+                assertNull(b.getShipmentLocations());
               })
           .verifyComplete();
     }
@@ -3109,7 +3140,7 @@ class BKGServiceImplTest {
       when(requestedEquipmentRepository.findByBookingID(any()))
           .thenReturn(Flux.just(requestedEquipment));
       when(documentPartyService.fetchDocumentPartiesByBookingID(any())).thenReturn(Mono.empty());
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -3135,7 +3166,7 @@ class BKGServiceImplTest {
                 assertEquals(
                     "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
                 assertNull(b.getDocumentParties());
-                assertEquals(0, b.getShipmentLocations().size());
+                assertNull(b.getShipmentLocations());
               })
           .verifyComplete();
     }
@@ -3183,7 +3214,7 @@ class BKGServiceImplTest {
           .thenReturn(Flux.just(requestedEquipment));
       when(documentPartyService.fetchDocumentPartiesByBookingID(any()))
           .thenReturn(Mono.just(List.of(documentPartyTO)));
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -3230,7 +3261,7 @@ class BKGServiceImplTest {
                         .getPartyCode());
                 assertEquals(
                     "Javastraat", b.getDocumentParties().get(0).getDisplayedAddress().get(0));
-                assertEquals(0, b.getShipmentLocations().size());
+                assertNull(b.getShipmentLocations());
               })
           .verifyComplete();
     }
@@ -3264,6 +3295,8 @@ class BKGServiceImplTest {
 
       documentPartyTO.setParty(partyTO);
 
+      shipmentLocationTO = shipmentLocationMapper.shipmentLocationToDtoWithLocationTO(shipmentLocation, locationTO1);
+
       when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
@@ -3279,8 +3312,7 @@ class BKGServiceImplTest {
           .thenReturn(Flux.just(requestedEquipment));
       when(documentPartyService.fetchDocumentPartiesByBookingID(any()))
           .thenReturn(Mono.just(List.of(documentPartyTO)));
-      when(shipmentLocationRepository.findByBookingID(any()))
-          .thenReturn(Flux.just(shipmentLocation));
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
 
       StepVerifier.create(
               bkgServiceImpl.getBookingByCarrierBookingRequestReference(
@@ -3403,6 +3435,8 @@ class BKGServiceImplTest {
     CarrierClauseTO carrierClauseTO;
     TransportTO transportTO;
 
+    ShipmentLocationTO shipmentLocationTO;
+
     @BeforeEach
     public void init() {
       referenceTO = new ReferenceTO();
@@ -3416,6 +3450,8 @@ class BKGServiceImplTest {
 
       chargeTO = chargeMapper.chargeToDTO(charge);
       carrierClauseTO = carrierClauseMapper.carrierClauseToDTO(carrierClause);
+
+      shipmentLocationTO = shipmentLocationMapper.shipmentLocationToDtoWithLocationTO(shipmentLocation, locationMapper.locationToDTO(location1));
 
       LocationTO dischargeLocation = new LocationTO();
       dischargeLocation.setFacilityCode("123456");
@@ -3452,7 +3488,7 @@ class BKGServiceImplTest {
 
       when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(shipment));
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(carrierClauseService.fetchCarrierClausesByShipmentID(any())).thenReturn(Flux.empty());
@@ -3469,7 +3505,7 @@ class BKGServiceImplTest {
                 assertEquals(shipment.getTermsAndConditions(), b.getTermsAndConditions());
                 assertEquals(shipment.getConfirmationDateTime(), b.getShipmentCreatedDateTime());
                 Assertions.assertNull(b.getBooking());
-                assertEquals(0, b.getShipmentLocations().size());
+                assertNull(b.getShipmentLocations());
                 assertEquals(0, b.getShipmentCutOffTimes().size());
                 assertEquals(0, b.getCharges().size());
                 assertEquals(0, b.getCarrierClauses().size());
@@ -3487,18 +3523,14 @@ class BKGServiceImplTest {
       locationTO1.setAddress(address);
       locationTO1.setFacility(facility);
 
-      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
-          .thenReturn(Mono.just(shipment));
-      when(shipmentLocationRepository.findByBookingID(any()))
-          .thenReturn(Flux.just(shipmentLocation));
-      when(shipmentCutOffTimeRepository.findAllByShipmentID(any()))
-          .thenReturn(Flux.just(shipmentCutOffTime));
-      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
-      when(locationService.fetchLocationDeepObjByID(shipmentLocation.getLocationID()))
-          .thenReturn(Mono.just(locationTO1));
+      shipmentLocationTO = shipmentLocationMapper.shipmentLocationToDtoWithLocationTO(shipmentLocation, locationTO1);
 
-      when(carrierClauseService.fetchCarrierClausesByShipmentID(any()))
-          .thenReturn(Flux.just(carrierClauseTO));
+      when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any())).thenReturn(Mono.just(shipment));
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.just(List.of(shipmentLocationTO)));
+      when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.just(shipmentCutOffTime));
+      when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
+
+      when(carrierClauseService.fetchCarrierClausesByShipmentID(any())).thenReturn(Flux.just(carrierClauseTO));
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.empty());
       when(chargeService.fetchChargesByShipmentID(any())).thenReturn(Flux.empty());
       when(transportService.findByShipmentID(any())).thenReturn(Flux.empty());
@@ -3540,14 +3572,14 @@ class BKGServiceImplTest {
       locationTO1.setAddress(address);
       locationTO1.setFacility(facility);
 
+      shipmentLocationTO = shipmentLocationMapper.shipmentLocationToDtoWithLocationTO(shipmentLocation, locationTO1);
+
       when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(shipment));
-      when(shipmentLocationRepository.findByBookingID(any()))
-          .thenReturn(Flux.just(shipmentLocation));
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any()))
+          .thenReturn(Mono.just(List.of(shipmentLocationTO)));
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any()))
           .thenReturn(Flux.just(shipmentCutOffTime));
-      when(locationService.fetchLocationDeepObjByID(shipmentLocation.getLocationID()))
-          .thenReturn(Mono.just(locationTO1));
       when(carrierClauseService.fetchCarrierClausesByShipmentID(any()))
           .thenReturn(Flux.just(carrierClauseTO));
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -3560,8 +3592,9 @@ class BKGServiceImplTest {
                   shipment.getCarrierBookingReference()))
           .assertNext(
               b -> {
+                System.out.println(b);
                 assertEquals(shipment.getCarrierBookingReference(), b.getCarrierBookingReference());
-                Assertions.assertNull(b.getBooking());
+                assertNull(b.getBooking());
                 assertEquals(1, b.getShipmentLocations().size());
                 assertEquals(1, b.getCarrierClauses().size());
                 assertEquals(
@@ -3595,7 +3628,7 @@ class BKGServiceImplTest {
 
       when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(shipment));
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
       when(requestedEquipmentRepository.findByBookingID(any()))
           .thenReturn(Flux.just(confirmedEquipment));
@@ -3629,7 +3662,7 @@ class BKGServiceImplTest {
 
       when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(shipment));
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(carrierClauseService.fetchCarrierClausesByShipmentID(any())).thenReturn(Flux.empty());
@@ -3659,7 +3692,7 @@ class BKGServiceImplTest {
     void testGETShipmentWithTransports() {
 
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.empty());
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(carrierClauseService.fetchCarrierClausesByShipmentID(any())).thenReturn(Flux.empty());
@@ -3736,7 +3769,7 @@ class BKGServiceImplTest {
       loadTransportCall.setExportVoyageID(exportVoyage.getId());
 
       when(bookingRepository.findById((UUID) any())).thenReturn(Mono.empty());
-      when(shipmentLocationRepository.findByBookingID(any())).thenReturn(Flux.empty());
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any())).thenReturn(Mono.empty());
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any())).thenReturn(Flux.empty());
       when(requestedEquipmentRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(chargeService.fetchChargesByShipmentID(any())).thenReturn(Flux.empty());
@@ -3820,10 +3853,12 @@ class BKGServiceImplTest {
 
       documentPartyTO.setParty(partyTO);
 
+      shipmentLocationTO = shipmentLocationMapper.shipmentLocationToDtoWithLocationTO(shipmentLocation, locationTO1);
+
       when(shipmentRepository.findByCarrierBookingReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(shipment));
-      when(shipmentLocationRepository.findByBookingID(any()))
-          .thenReturn(Flux.just(shipmentLocation));
+      when(shipmentLocationService.fetchShipmentLocationsByBookingID(any()))
+          .thenReturn(Mono.just(List.of(shipmentLocationTO)));
       when(shipmentCutOffTimeRepository.findAllByShipmentID(any()))
           .thenReturn(Flux.just(shipmentCutOffTime));
       when(requestedEquipmentRepository.findByBookingID(any()))
