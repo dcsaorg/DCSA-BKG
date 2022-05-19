@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.dcsa.core.events.edocumentation.model.transferobject.CommodityTO;
-import org.dcsa.core.events.model.enums.CargoGrossWeight;
+import org.dcsa.core.events.model.enums.WeightUnit;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,7 +44,7 @@ class CommodityTOTest {
     validCommodityTO.setCommodityType("x".repeat(20));
     validCommodityTO.setHsCode("x".repeat(10));
     validCommodityTO.setCargoGrossWeight(12.12);
-    validCommodityTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
+    validCommodityTO.setCargoGrossWeightUnit(WeightUnit.KGM);
     validCommodityTO.setExportLicenseIssueDate(LocalDate.now());
     validCommodityTO.setExportLicenseExpiryDate(LocalDate.now());
   }

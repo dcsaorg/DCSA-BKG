@@ -95,7 +95,7 @@ class BKGControllerTest {
     commodityTO.setCommodityType("x".repeat(20));
     commodityTO.setHsCode("x".repeat(10));
     commodityTO.setCargoGrossWeight(12.12);
-    commodityTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
+    commodityTO.setCargoGrossWeightUnit(WeightUnit.KGM);
     commodityTO.setExportLicenseIssueDate(LocalDate.now());
     commodityTO.setExportLicenseExpiryDate(LocalDate.now());
     bookingTO.setCommodities(Collections.singletonList(commodityTO));

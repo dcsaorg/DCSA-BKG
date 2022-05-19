@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.dcsa.core.events.edocumentation.model.transferobject.*;
-import org.dcsa.core.events.model.enums.CargoGrossWeight;
 import org.dcsa.core.events.model.enums.CargoMovementType;
 import org.dcsa.core.events.model.enums.CommunicationChannelCode;
 import org.dcsa.core.events.model.enums.ReceiptDeliveryType;
+import org.dcsa.core.events.model.enums.WeightUnit;
 import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
 import org.dcsa.core.events.model.transferobjects.ReferenceTO;
 import org.dcsa.core.exception.ConcreteRequestErrorMessageException;
@@ -63,7 +63,7 @@ class BookingTOTest {
     commodityTO.setCommodityType("x".repeat(20));
     commodityTO.setHsCode("x".repeat(10));
     commodityTO.setCargoGrossWeight(12.12);
-    commodityTO.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
+    commodityTO.setCargoGrossWeightUnit(WeightUnit.KGM);
     validBookingTO.setCommodities(Collections.singletonList(commodityTO));
   }
 

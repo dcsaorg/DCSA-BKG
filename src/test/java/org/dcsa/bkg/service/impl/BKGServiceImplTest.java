@@ -196,7 +196,7 @@ class BKGServiceImplTest {
     commodity.setCommodityType("Mobile phones");
     commodity.setCargoGrossWeight(12000.00);
     commodity.setHsCode("720711");
-    commodity.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
+    commodity.setCargoGrossWeightUnit(WeightUnit.KGM);
     commodity.setExportLicenseIssueDate(LocalDate.now());
     commodity.setExportLicenseExpiryDate(LocalDate.now());
 
