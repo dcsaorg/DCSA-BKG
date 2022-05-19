@@ -196,7 +196,7 @@ class BKGServiceImplTest {
     commodity.setCommodityType("Mobile phones");
     commodity.setCargoGrossWeight(12000.00);
     commodity.setHsCode("720711");
-    commodity.setCargoGrossWeightUnit(CargoGrossWeight.KGM);
+    commodity.setCargoGrossWeightUnit(WeightUnit.KGM);
     commodity.setExportLicenseIssueDate(LocalDate.now());
     commodity.setExportLicenseExpiryDate(LocalDate.now());
 
@@ -450,7 +450,7 @@ class BKGServiceImplTest {
       shipmentLocationTO = new ShipmentLocationTO();
       shipmentLocationTO.setDisplayedName("Singapore");
       shipmentLocationTO.setShipmentLocationTypeCode(LocationType.FCD);
-      shipmentLocationTO.setLocation(locationMapper.locationToDTO(location1));
+      shipmentLocationTO.setLocationTO(locationMapper.locationToDTO(location1));
 
       bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
 
@@ -1585,12 +1585,12 @@ class BKGServiceImplTest {
                         .get(0)
                         .getShipmentLocationTypeCode());
                 assertEquals(
-                    bookingTO.getShipmentLocations().get(0).getLocation().getLocationName(),
+                    bookingTO.getShipmentLocations().get(0).getLocationTO().getLocationName(),
                     argumentCaptor
                         .getValue()
                         .getShipmentLocations()
                         .get(0)
-                        .getLocation()
+                        .getLocationTO()
                         .getLocationName());
               })
           .verifyComplete();
@@ -1692,7 +1692,7 @@ class BKGServiceImplTest {
       shipmentLocationTO = new ShipmentLocationTO();
       shipmentLocationTO.setDisplayedName("Singapore");
       shipmentLocationTO.setShipmentLocationTypeCode(LocationType.FCD);
-      shipmentLocationTO.setLocation(locationMapper.locationToDTO(location1));
+      shipmentLocationTO.setLocationTO(locationMapper.locationToDTO(location1));
 
       bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));
 
@@ -2807,12 +2807,12 @@ class BKGServiceImplTest {
                         .get(0)
                         .getShipmentLocationTypeCode());
                 assertEquals(
-                    bookingTO.getShipmentLocations().get(0).getLocation().getLocationName(),
+                    bookingTO.getShipmentLocations().get(0).getLocationTO().getLocationName(),
                     argumentCaptor
                         .getValue()
                         .getShipmentLocations()
                         .get(0)
-                        .getLocation()
+                        .getLocationTO()
                         .getLocationName());
               })
           .verifyComplete();
@@ -3361,7 +3361,7 @@ class BKGServiceImplTest {
                     "Javastraat", b.getDocumentParties().get(0).getDisplayedAddress().get(0));
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    b.getShipmentLocations().get(0).getLocation().getId());
+                    b.getShipmentLocations().get(0).getLocationTO().getId());
                 assertEquals(
                     LocationType.FCD,
                     b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
@@ -3553,13 +3553,13 @@ class BKGServiceImplTest {
                     shipmentLocation.getEventDateTime(),
                     b.getShipmentLocations().get(0).getEventDateTime());
                 assertEquals(
-                    location1.getId(), b.getShipmentLocations().get(0).getLocation().getId());
+                    location1.getId(), b.getShipmentLocations().get(0).getLocationTO().getId());
                 assertEquals(
                     address.getId(),
-                    b.getShipmentLocations().get(0).getLocation().getAddress().getId());
+                    b.getShipmentLocations().get(0).getLocationTO().getAddress().getId());
                 assertEquals(
                     facility.getFacilityID(),
-                    b.getShipmentLocations().get(0).getLocation().getFacility().getFacilityID());
+                    b.getShipmentLocations().get(0).getLocationTO().getFacility().getFacilityID());
               })
           .verifyComplete();
     }
@@ -3610,13 +3610,13 @@ class BKGServiceImplTest {
                     shipmentLocation.getEventDateTime(),
                     b.getShipmentLocations().get(0).getEventDateTime());
                 assertEquals(
-                    location1.getId(), b.getShipmentLocations().get(0).getLocation().getId());
+                    location1.getId(), b.getShipmentLocations().get(0).getLocationTO().getId());
                 assertEquals(
                     address.getId(),
-                    b.getShipmentLocations().get(0).getLocation().getAddress().getId());
+                    b.getShipmentLocations().get(0).getLocationTO().getAddress().getId());
                 assertEquals(
                     facility.getFacilityID(),
-                    b.getShipmentLocations().get(0).getLocation().getFacility().getFacilityID());
+                    b.getShipmentLocations().get(0).getLocationTO().getFacility().getFacilityID());
               })
           .verifyComplete();
     }
