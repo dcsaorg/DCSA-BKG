@@ -4,7 +4,8 @@ import org.dcsa.bkg.model.transferobjects.BookingCancellationRequestTO;
 import org.dcsa.bkg.service.BKGService;
 import org.dcsa.core.events.edocumentation.model.transferobject.*;
 import org.dcsa.core.events.model.enums.*;
-import org.dcsa.core.events.model.transferobjects.*;
+import org.dcsa.core.events.model.transferobjects.DocumentPartyTO;
+import org.dcsa.core.events.model.transferobjects.ReferenceTO;
 import org.dcsa.core.exception.UpdateException;
 import org.dcsa.core.exception.handler.GlobalExceptionHandler;
 import org.dcsa.core.security.SecurityConfig;
@@ -150,7 +151,7 @@ class BKGControllerTest {
     location.setId("x".repeat(100));
 
     ShipmentLocationTO shipmentLocationTO = new ShipmentLocationTO();
-    shipmentLocationTO.setLocation(location);
+    shipmentLocationTO.setLocationTO(location);
     shipmentLocationTO.setShipmentLocationTypeCode(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     bookingTO.setShipmentLocations(Collections.singletonList(shipmentLocationTO));

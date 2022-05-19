@@ -71,7 +71,7 @@ class BKGShipmentControllerTest {
     shipmentCutOffTime.setCutOffDateTimeCode(CutOffDateTimeCode.AFD);
 
     ShipmentLocationTO shipmentLocation = new ShipmentLocationTO();
-    shipmentLocation.setLocation(location);
+    shipmentLocation.setLocationTO(location);
     shipmentLocation.setShipmentLocationTypeCode(LocationType.PRE);
     shipmentLocation.setDisplayedName("DisplayedName");
     shipmentLocation.setEventDateTime(dateTimeOffset);

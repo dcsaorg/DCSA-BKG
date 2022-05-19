@@ -44,7 +44,7 @@ class ShipmentLocationTOTest {
     location.setId("x".repeat(100));
 
     shipmentLocationTO = new ShipmentLocationTO();
-    shipmentLocationTO.setLocation(location);
+    shipmentLocationTO.setLocationTO(location);
     shipmentLocationTO.setShipmentLocationTypeCode(LocationType.DRL);
     shipmentLocationTO.setDisplayedName("x".repeat(250));
     shipmentLocationTO.setEventDateTime(OffsetDateTime.now());
@@ -61,7 +61,7 @@ class ShipmentLocationTOTest {
   @Test
   @DisplayName("ShipmentLocationTO should throw error if location is not set.")
   void testToVerifyLocationTOIsRequired() {
-    shipmentLocationTO.setLocation(null);
+    shipmentLocationTO.setLocationTO(null);
     Set<ConstraintViolation<ShipmentLocationTO>> violations =
         validator.validate(shipmentLocationTO);
     Assertions.assertTrue(
