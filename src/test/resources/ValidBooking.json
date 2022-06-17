@@ -59,7 +59,7 @@
     ],
     "requestedEquipments": [
         {
-            "requestedEquipmentSizetype": "22GP",
+            "requestedEquipmentSizeType": "22GP",
             "requestedEquipmentUnits": 4,
             "isShipperOwned": false
         }

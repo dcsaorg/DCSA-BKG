@@ -513,8 +513,7 @@ public class BKGServiceImpl implements BKGService {
             re -> {
               RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
               requestedEquipmentTO.setRequestedEquipmentUnits(re.getRequestedEquipmentUnits());
-              requestedEquipmentTO.setRequestedEquipmentSizetype(
-                  re.getRequestedEquipmentSizetype());
+              requestedEquipmentTO.setRequestedEquipmentSizeType(re.getRequestedEquipmentSizeType());
               requestedEquipmentTO.setShipperOwned(re.getIsShipperOwned());
               return requestedEquipmentTO;
             })

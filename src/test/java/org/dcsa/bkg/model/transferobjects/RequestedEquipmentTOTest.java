@@ -23,7 +23,7 @@ class RequestedEquipmentTOTest {
     validator = factory.getValidator();
 
     validRequestedEquipmentTO = new RequestedEquipmentTO();
-    validRequestedEquipmentTO.setRequestedEquipmentSizetype("x".repeat(4));
+    validRequestedEquipmentTO.setRequestedEquipmentSizeType("x".repeat(4));
     validRequestedEquipmentTO.setRequestedEquipmentUnits((int) (Math.random() * 100));
     validRequestedEquipmentTO.setShipperOwned(true);
   }
@@ -39,7 +39,7 @@ class RequestedEquipmentTOTest {
   @Test
   @DisplayName("RequestedEquipmentTO should throw error if requestedEquipmentSizeType is not set.")
   void testToVerifyRequestedEquipmentSizeTypeIsRequired() {
-    validRequestedEquipmentTO.setRequestedEquipmentSizetype(null);
+    validRequestedEquipmentTO.setRequestedEquipmentSizeType(null);
     Set<ConstraintViolation<RequestedEquipmentTO>> violations =
         validator.validate(validRequestedEquipmentTO);
     Assertions.assertTrue(
@@ -51,7 +51,7 @@ class RequestedEquipmentTOTest {
   @DisplayName(
       "RequestedEquipmentTO should throw error if requestedEquipmentSizeType length exceeds max size of 4.")
   void testToVerifyRequestedEquipmentSizeTypeIsNotAllowedToExceed4() {
-    validRequestedEquipmentTO.setRequestedEquipmentSizetype("x".repeat(5));
+    validRequestedEquipmentTO.setRequestedEquipmentSizeType("x".repeat(5));
     Set<ConstraintViolation<RequestedEquipmentTO>> violations =
         validator.validate(validRequestedEquipmentTO);
     Assertions.assertTrue(

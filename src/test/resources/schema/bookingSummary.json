@@ -9,6 +9,7 @@
       "cargoMovementTypeAtDestination",
       "cargoMovementTypeAtOrigin",
       "carrierBookingRequestReference",
+      "communicationChannelCode",
       "deliveryTypeAtDestination",
       "documentStatus",
       "isEquipmentSubstitutionAllowed",
@@ -16,8 +17,7 @@
       "isImportLicenseRequired",
       "isPartialLoadAllowed",
       "receiptTypeAtOrigin",
-      "serviceContractReference",
-      "submissionDateTime"
+      "serviceContractReference"
     ],
     "properties": {
       "carrierBookingRequestReference": {
@@ -50,7 +50,7 @@
       "receiptTypeAtOrigin": {
         "maxLength": 3,
         "type": "string",
-        "description": "Indicates the type of service offered at Origin. Options are defined in the Receipt/Delivery entity.\n",
+        "description": "Indicates the type of service offered at Origin. Options are defined in the Receipt/Delivery entity.\n- CY (Container yard (incl. rail ramp))\n- SD (Store Door)\n- CFS (Container Freight Station)\n",
         "enum": [
           "CY",
           "SD",
@@ -60,7 +60,7 @@
       "deliveryTypeAtDestination": {
         "maxLength": 3,
         "type": "string",
-        "description": "Indicates the type of service offered at Destination. Options are defined in the Receipt/Delivery entity.\n",
+        "description": "Indicates the type of service offered at Destination. Options are defined in the Receipt/Delivery entity.\n- CY (Container yard (incl. rail ramp))\n- SD (Store Door)\n- CFS (Container Freight Station)\n",
         "enum": [
           "CY",
           "SD",
@@ -70,7 +70,7 @@
       "cargoMovementTypeAtOrigin": {
         "maxLength": 3,
         "type": "string",
-        "description": "Refers to the shipment term at the loading of the cargo into the container. Options are defined in the Cargo Movement Type entity.\n",
+        "description": "Refers to the shipment term at the loading of the cargo into the container. Options are defined in the Cargo Movement Type entity.\n- FCL (Full Container Load)\n- LCL (Less than Container Load)\n- BB (Break Bulk)\n",
         "enum": [
           "FCL",
           "LCL",
@@ -80,7 +80,7 @@
       "cargoMovementTypeAtDestination": {
         "maxLength": 3,
         "type": "string",
-        "description": "Refers to the shipment term at the unloading of the cargo out of the container. Options are defined in the Cargo Movement Type entity.\n",
+        "description": "Refers to the shipment term at the unloading of the cargo out of the container. Options are defined in the Cargo Movement Type entity.\n- FCL (Full Container Load)\n- LCL (Less than Container Load)\n- BB (Break Bulk)\n",
         "enum": [
           "FCL",
           "LCL",
@@ -91,6 +91,28 @@
         "maxLength": 30,
         "type": "string",
         "description": "Reference number for agreement between shipper and carrier through which the shipper commits to provide a certain minimum quantity of cargo over a fixed period, and the carrier commits to a certain rate or rate schedule."
+      },
+      "vesselName": {
+        "maxLength": 35,
+        "type": "string",
+        "description": "The name of the Vessel given by the Vessel Operator and registered with IMO.\n"
+      },
+      "exportVoyageNumber": {
+        "maxLength": 50,
+        "type": "string",
+        "description": "The identifier of an export voyage. The vessel operator-specific identifier of the export Voyage. The result will only return schedules including the export Voyage Number\n"
+      },
+      "declaredValue": {
+        "type": "number",
+        "description": "The value of the cargo that the shipper declares to avoid the carrier&apos;s limitation of liability and \"Ad Valorem\" freight, i.e. freight which is calculated based on the value of the goods declared by the shipper.",
+        "format": "float",
+        "minimum": -3.402823669209385e+38,
+        "maximum": 3.402823669209385e+38
+      },
+      "declaredValueCurrency": {
+        "maxLength": 3,
+        "type": "string",
+        "description": "The currency used for the declared value, using the 3-character code defined by ISO 4217."
       },
       "paymentTermCode": {
         "type": "string",
@@ -111,7 +133,7 @@
       "exportDeclarationReference": {
         "maxLength": 35,
         "type": "string",
-        "description": "A government document permitting designated goods to be shipped out of the country.  Reference number assigned by an issuing authority to an Export License. The export license must be valid at time of departure. Required if Export declaration required is ‘True’.\n"
+        "description": "A government document permitting designated goods to be shipped out of the country.  Reference number assigned by an issuing authority to an Export License. The export license must be valid at time of departure. Required if Export declaration required is ÔÇÿTrue'.\n"
       },
       "isImportLicenseRequired": {
         "type": "boolean",
@@ -120,12 +142,7 @@
       "importLicenseReference": {
         "maxLength": 35,
         "type": "string",
-        "description": "A certificate, issued by countries exercising import controls, that permits importation of the articles stated in the license. Reference number assigned by an issuing authority to an Import License. The import license number must be valid at time of arrival. Required if import license required is ‘True’.\n"
-      },
-      "submissionDateTime": {
-        "type": "string",
-        "description": "Date and time of submitting the relevant document and attributes\n",
-        "format": "date-time"
+        "description": "A certificate, issued by countries exercising import controls, that permits importation of the articles stated in the license. Reference number assigned by an issuing authority to an Import License. The import license number must be valid at time of arrival. Required if import license required is ÔÇÿTrue'.\n"
       },
       "isAMSACIFilingRequired": {
         "type": "boolean",
@@ -157,10 +174,9 @@
       },
       "transportDocumentTypeCode": {
         "type": "string",
-        "description": "Specifies the type of the transport document\n- BOL (Bill of Lading)\n- BTO (Bill of Lading to order)\n- SWB (Sea Waybill)\n",
+        "description": "Specifies the type of the transport document\n- BOL (Bill of Lading)\n- SWB (Sea Waybill)\n",
         "enum": [
           "BOL",
-          "BTO",
           "SWB"
         ]
       },
@@ -196,20 +212,10 @@
         "type": "boolean",
         "description": "Indicates if an alternate equipment type can be provided by the carrier.\n"
       },
-      "vesselName": {
-        "maxLength": 35,
-        "type": "string",
-        "description": "The name of the Vessel given by the Vessel Operator and registered with IMO.\n"
-      },
       "vesselIMONumber": {
         "maxLength": 7,
         "type": "string",
         "description": "The unique reference for a registered Vessel. The reference is the International Maritime Organisation (IMO) number, also sometimes known as the Lloyd&apos;s register code, which does not change during the lifetime of the vessel\n"
-      },
-      "exportVoyageNumber": {
-        "maxLength": 50,
-        "type": "string",
-        "description": "The vessel operator-specific identifier of the export Voyage."
       },
       "preCarriageModeOfTransportCode": {
         "type": "string",

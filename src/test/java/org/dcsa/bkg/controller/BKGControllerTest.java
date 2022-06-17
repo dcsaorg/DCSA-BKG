@@ -111,7 +111,7 @@ class BKGControllerTest {
     bookingTO.setReferences(Collections.singletonList(referenceTO));
 
     RequestedEquipmentTO requestedEquipmentTO = new RequestedEquipmentTO();
-    requestedEquipmentTO.setRequestedEquipmentSizetype("x".repeat(4));
+    requestedEquipmentTO.setRequestedEquipmentSizeType("x".repeat(4));
     requestedEquipmentTO.setRequestedEquipmentUnits((int) (Math.random() * 100));
     requestedEquipmentTO.setShipperOwned(true);
     bookingTO.setRequestedEquipments(Collections.singletonList(requestedEquipmentTO));
@@ -451,7 +451,7 @@ class BKGControllerTest {
                   .hasJsonPath()
                   .jsonPath("$.requestedEquipments")
                   .hasJsonPath()
-                  .jsonPath("$.requestedEquipments[0].requestedEquipmentSizetype")
+                  .jsonPath("$.requestedEquipments[0].requestedEquipmentSizeType")
                   .hasJsonPath()
                   .jsonPath("$.requestedEquipments[0].requestedEquipmentUnits")
                   .hasJsonPath()

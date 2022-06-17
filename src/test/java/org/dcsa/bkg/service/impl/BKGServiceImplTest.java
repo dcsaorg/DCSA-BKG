@@ -208,7 +208,7 @@ class BKGServiceImplTest {
     reference.setReferenceType(ReferenceTypeCode.FF);
 
     requestedEquipment = new RequestedEquipment();
-    requestedEquipment.setRequestedEquipmentSizetype("22GP");
+    requestedEquipment.setRequestedEquipmentSizeType("22GP");
     requestedEquipment.setRequestedEquipmentUnits(3);
 
     confirmedEquipment = new RequestedEquipment();
@@ -414,8 +414,8 @@ class BKGServiceImplTest {
       bookingTO.setValueAddedServiceRequests(Collections.singletonList(valueAddedServiceRequestTO));
 
       requestedEquipmentTO = new RequestedEquipmentTO();
-      requestedEquipmentTO.setRequestedEquipmentSizetype(
-          requestedEquipment.getRequestedEquipmentSizetype());
+      requestedEquipmentTO.setRequestedEquipmentSizeType(
+          requestedEquipment.getRequestedEquipmentSizeType());
       requestedEquipmentTO.setRequestedEquipmentUnits(
           requestedEquipment.getRequestedEquipmentUnits());
 
@@ -1256,7 +1256,7 @@ class BKGServiceImplTest {
                         .getValue()
                         .getRequestedEquipments()
                         .get(0)
-                        .getRequestedEquipmentSizetype());
+                        .getRequestedEquipmentSizeType());
               })
           .verifyComplete();
     }
@@ -1431,7 +1431,7 @@ class BKGServiceImplTest {
                         .getValue()
                         .getRequestedEquipments()
                         .get(0)
-                        .getRequestedEquipmentSizetype());
+                        .getRequestedEquipmentSizeType());
 
                 assertEquals(
                     "DCSA",
@@ -1562,7 +1562,7 @@ class BKGServiceImplTest {
                         .getValue()
                         .getRequestedEquipments()
                         .get(0)
-                        .getRequestedEquipmentSizetype());
+                        .getRequestedEquipmentSizeType());
 
                 assertEquals(
                     "DCSA",
@@ -1684,8 +1684,8 @@ class BKGServiceImplTest {
       bookingTO.setValueAddedServiceRequests(Collections.singletonList(valueAddedServiceRequestTO));
 
       requestedEquipmentTO = new RequestedEquipmentTO();
-      requestedEquipmentTO.setRequestedEquipmentSizetype(
-          requestedEquipment.getRequestedEquipmentSizetype());
+      requestedEquipmentTO.setRequestedEquipmentSizeType(
+          requestedEquipment.getRequestedEquipmentSizeType());
       requestedEquipmentTO.setRequestedEquipmentUnits(
           requestedEquipment.getRequestedEquipmentUnits());
 
@@ -2548,7 +2548,7 @@ class BKGServiceImplTest {
                         .getValue()
                         .getRequestedEquipments()
                         .get(0)
-                        .getRequestedEquipmentSizetype());
+                        .getRequestedEquipmentSizeType());
               })
           .verifyComplete();
     }
@@ -2648,14 +2648,14 @@ class BKGServiceImplTest {
                         .getValue()
                         .getRequestedEquipments()
                         .get(0)
-                        .getRequestedEquipmentSizetype());
+                        .getRequestedEquipmentSizeType());
                 assertEquals(
                     "22GP",
                     argumentCaptor
                         .getValue()
                         .getRequestedEquipments()
                         .get(0)
-                        .getRequestedEquipmentSizetype());
+                        .getRequestedEquipmentSizeType());
                 assertEquals(
                     "DCSA",
                     argumentCaptor
@@ -2791,14 +2791,14 @@ class BKGServiceImplTest {
                         .getValue()
                         .getRequestedEquipments()
                         .get(0)
-                        .getRequestedEquipmentSizetype());
+                        .getRequestedEquipmentSizeType());
                 assertEquals(
                     "22GP",
                     argumentCaptor
                         .getValue()
                         .getRequestedEquipments()
                         .get(0)
-                        .getRequestedEquipmentSizetype());
+                        .getRequestedEquipmentSizeType());
                 assertEquals(
                     "DCSA",
                     argumentCaptor
@@ -3212,7 +3212,7 @@ class BKGServiceImplTest {
                     b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
                 assertEquals(ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
                 assertEquals(
-                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
+                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizeType());
                 assertNull(b.getDocumentParties());
                 assertNull(b.getShipmentLocations());
               })
@@ -3287,7 +3287,7 @@ class BKGServiceImplTest {
                     b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
                 assertEquals(ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
                 assertEquals(
-                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
+                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizeType());
                 assertEquals(1, b.getDocumentParties().size());
                 assertEquals("DCSA", b.getDocumentParties().get(0).getParty().getPartyName());
                 assertEquals(
@@ -3387,7 +3387,7 @@ class BKGServiceImplTest {
                     b.getValueAddedServiceRequests().get(0).getValueAddedServiceCode());
                 assertEquals(ReferenceTypeCode.FF, b.getReferences().get(0).getReferenceType());
                 assertEquals(
-                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizetype());
+                    "22GP", b.getRequestedEquipments().get(0).getRequestedEquipmentSizeType());
                 assertEquals(1, b.getDocumentParties().size());
                 assertEquals("DCSA", b.getDocumentParties().get(0).getParty().getPartyName());
                 assertEquals(

@@ -32,7 +32,7 @@
     },
     "shipmentCreatedDateTime": {
       "type": "string",
-      "description": "The date and time when the shipment was created.\n",
+      "description": "The date and time when the shipment was created (equivalent to when the Booking was confirmed).\n",
       "format": "date-time"
     },
     "shipmentUpdatedDateTime": {
@@ -54,6 +54,7 @@
         "cargoMovementTypeAtOrigin",
         "carrierBookingRequestReference",
         "commodities",
+        "communicationChannelCode",
         "deliveryTypeAtDestination",
         "documentStatus",
         "isEquipmentSubstitutionAllowed",
@@ -61,8 +62,7 @@
         "isImportLicenseRequired",
         "isPartialLoadAllowed",
         "receiptTypeAtOrigin",
-        "serviceContractReference",
-        "submissionDateTime"
+        "serviceContractReference"
       ],
       "properties": {
         "carrierBookingRequestReference": {
@@ -95,7 +95,7 @@
         "receiptTypeAtOrigin": {
           "maxLength": 3,
           "type": "string",
-          "description": "Indicates the type of service offered at Origin. Options are defined in the Receipt/Delivery entity.\n",
+          "description": "Indicates the type of service offered at Origin. Options are defined in the Receipt/Delivery entity.\n- CY (Container yard (incl. rail ramp))\n- SD (Store Door)\n- CFS (Container Freight Station)\n",
           "enum": [
             "CY",
             "SD",
@@ -105,7 +105,7 @@
         "deliveryTypeAtDestination": {
           "maxLength": 3,
           "type": "string",
-          "description": "Indicates the type of service offered at Destination. Options are defined in the Receipt/Delivery entity.\n",
+          "description": "Indicates the type of service offered at Destination. Options are defined in the Receipt/Delivery entity.\n- CY (Container yard (incl. rail ramp))\n- SD (Store Door)\n- CFS (Container Freight Station)\n",
           "enum": [
             "CY",
             "SD",
@@ -115,7 +115,7 @@
         "cargoMovementTypeAtOrigin": {
           "maxLength": 3,
           "type": "string",
-          "description": "Refers to the shipment term at the loading of the cargo into the container. Options are defined in the Cargo Movement Type entity.\n",
+          "description": "Refers to the shipment term at the loading of the cargo into the container. Options are defined in the Cargo Movement Type entity.\n- FCL (Full Container Load)\n- LCL (Less than Container Load)\n- BB (Break Bulk)\n",
           "enum": [
             "FCL",
             "LCL",
@@ -125,7 +125,7 @@
         "cargoMovementTypeAtDestination": {
           "maxLength": 3,
           "type": "string",
-          "description": "Refers to the shipment term at the unloading of the cargo out of the container. Options are defined in the Cargo Movement Type entity.\n",
+          "description": "Refers to the shipment term at the unloading of the cargo out of the container. Options are defined in the Cargo Movement Type entity.\n- FCL (Full Container Load)\n- LCL (Less than Container Load)\n- BB (Break Bulk)\n",
           "enum": [
             "FCL",
             "LCL",
@@ -136,6 +136,28 @@
           "maxLength": 30,
           "type": "string",
           "description": "Reference number for agreement between shipper and carrier through which the shipper commits to provide a certain minimum quantity of cargo over a fixed period, and the carrier commits to a certain rate or rate schedule."
+        },
+        "vesselName": {
+          "maxLength": 35,
+          "type": "string",
+          "description": "The name of the Vessel given by the Vessel Operator and registered with IMO.\n"
+        },
+        "exportVoyageNumber": {
+          "maxLength": 50,
+          "type": "string",
+          "description": "The identifier of an export voyage. The vessel operator-specific identifier of the export Voyage. The result will only return schedules including the export Voyage Number\n"
+        },
+        "declaredValue": {
+          "type": "number",
+          "description": "The value of the cargo that the shipper declares to avoid the carrier&apos;s limitation of liability and \"Ad Valorem\" freight, i.e. freight which is calculated based on the value of the goods declared by the shipper.",
+          "format": "float",
+          "minimum": -3.402823669209385e+38,
+          "maximum": 3.402823669209385e+38
+        },
+        "declaredValueCurrency": {
+          "maxLength": 3,
+          "type": "string",
+          "description": "The currency used for the declared value, using the 3-character code defined by ISO 4217."
         },
         "paymentTermCode": {
           "type": "string",
@@ -156,7 +178,7 @@
         "exportDeclarationReference": {
           "maxLength": 35,
           "type": "string",
-          "description": "A government document permitting designated goods to be shipped out of the country.  Reference number assigned by an issuing authority to an Export License. The export license must be valid at time of departure. Required if Export declaration required is ÔÇÿTrueÔÇÖ.\n"
+          "description": "A government document permitting designated goods to be shipped out of the country.  Reference number assigned by an issuing authority to an Export License. The export license must be valid at time of departure. Required if Export declaration required is ÔÇÿTrue'.\n"
         },
         "isImportLicenseRequired": {
           "type": "boolean",
@@ -165,12 +187,7 @@
         "importLicenseReference": {
           "maxLength": 35,
           "type": "string",
-          "description": "A certificate, issued by countries exercising import controls, that permits importation of the articles stated in the license. Reference number assigned by an issuing authority to an Import License. The import license number must be valid at time of arrival. Required if import license required is ÔÇÿTrueÔÇÖ.\n"
-        },
-        "submissionDateTime": {
-          "type": "string",
-          "description": "Date and time of submitting the relevant document and attributes\n",
-          "format": "date-time"
+          "description": "A certificate, issued by countries exercising import controls, that permits importation of the articles stated in the license. Reference number assigned by an issuing authority to an Import License. The import license number must be valid at time of arrival. Required if import license required is ÔÇÿTrue'.\n"
         },
         "isAMSACIFilingRequired": {
           "type": "boolean",
@@ -202,10 +219,9 @@
         },
         "transportDocumentTypeCode": {
           "type": "string",
-          "description": "Specifies the type of the transport document\n- BOL (Bill of Lading)\n- BTO (Bill of Lading to order)\n- SWB (Sea Waybill)\n",
+          "description": "Specifies the type of the transport document\n- BOL (Bill of Lading)\n- SWB (Sea Waybill)\n",
           "enum": [
             "BOL",
-            "BTO",
             "SWB"
           ]
         },
@@ -241,20 +257,10 @@
           "type": "boolean",
           "description": "Indicates if an alternate equipment type can be provided by the carrier.\n"
         },
-        "vesselName": {
-          "maxLength": 35,
-          "type": "string",
-          "description": "The name of the Vessel given by the Vessel Operator and registered with IMO.\n"
-        },
         "vesselIMONumber": {
           "maxLength": 7,
           "type": "string",
           "description": "The unique reference for a registered Vessel. The reference is the International Maritime Organisation (IMO) number, also sometimes known as the Lloyd&apos;s register code, which does not change during the lifetime of the vessel\n"
-        },
-        "exportVoyageNumber": {
-          "maxLength": 50,
-          "type": "string",
-          "description": "The vessel operator-specific identifier of the export Voyage."
         },
         "preCarriageModeOfTransportCode": {
           "type": "string",
@@ -273,7 +279,7 @@
                 "address"
               ],
               "type": "object",
-              "description": "An interfrace used to express a location using an `Address` object\n",
+              "description": "An interface used to express a location using an `Address` object\n",
               "properties": {
                 "locationName": {
                   "maxLength": 100,
@@ -292,37 +298,37 @@
                     "street": {
                       "maxLength": 100,
                       "type": "string",
-                      "description": "The name of the street of the partyÔÇÖs address."
+                      "description": "The name of the street of the party's address."
                     },
                     "streetNumber": {
                       "maxLength": 50,
                       "type": "string",
-                      "description": "The number of the street of the partyÔÇÖs address."
+                      "description": "The number of the street of the party's address."
                     },
                     "floor": {
                       "maxLength": 50,
                       "type": "string",
-                      "description": "The floor of the partyÔÇÖs street number."
+                      "description": "The floor of the party's street number."
                     },
                     "postCode": {
-                      "maxLength": 10,
+                      "maxLength": 50,
                       "type": "string",
-                      "description": "The post code of the partyÔÇÖs address."
+                      "description": "The post code of the party's address."
                     },
                     "city": {
                       "maxLength": 65,
                       "type": "string",
-                      "description": "The city name of the partyÔÇÖs address."
+                      "description": "The city name of the party's address."
                     },
                     "stateRegion": {
                       "maxLength": 65,
                       "type": "string",
-                      "description": "The state/region of the partyÔÇÖs address."
+                      "description": "The state/region of the party's address."
                     },
                     "country": {
                       "maxLength": 75,
                       "type": "string",
-                      "description": "The country of the partyÔÇÖs address."
+                      "description": "The country of the party's address."
                     }
                   }
                 }
@@ -333,7 +339,7 @@
                 "UNLocationCode"
               ],
               "type": "object",
-              "description": "An interfrace used to express a location using a `Un Location Code`\n",
+              "description": "An interface used to express a location using a `Un Location Code`\n",
               "properties": {
                 "locationName": {
                   "maxLength": 100,
@@ -348,92 +354,91 @@
               }
             }
           ],
-          "description": "General purpose object to capture location-related data, the location can be specified in **any** of the following ways: `UN Location Code` or an `Address`.\n"
+          "description": "General purpose object to capture `Invoice Payable At` location. The location can be specified in **any** of the following ways: `UN Location Code` and/or an `Address`.\n"
         },
-        "placeOfIssue": {
-          "type": "object",
-          "description": "General purpose object to capture location-related data, the location can be specified in **any** of the following ways: `geoLocation` (lat+long), `UN Location Code`, a `Facility` or an `Address`.\n\nIf multiple ways are used - then they all have to point to the same location!\n",
-          "properties": {
-            "locationName": {
-              "maxLength": 100,
-              "type": "string",
-              "description": "The name of the location."
-            },
-            "latitude": {
-              "maxLength": 10,
-              "type": "string",
-              "description": "Geographic coordinate that specifies the northÔÇôsouth position of a point on the Earth&apos;s surface."
-            },
-            "longitude": {
-              "maxLength": 11,
-              "type": "string",
-              "description": "Geographic coordinate that specifies the eastÔÇôwest position of a point on the Earth&apos;s surface."
-            },
-            "UNLocationCode": {
-              "maxLength": 5,
-              "type": "string",
-              "description": "The UN Location code specifying where the place is located."
-            },
-            "facilityCode": {
-              "maxLength": 6,
-              "type": "string",
-              "description": "The code used for identifying the specific facility. This code does <b>not</b> include the UN Location Code.\n"
-            },
-            "facilityCodeListProvider": {
-              "type": "string",
-              "description": "The provider used for identifying the facility Code\n",
-              "enum": [
-                "BIC",
-                "SMDG"
-              ]
-            },
-            "address": {
-              "description": "Address related information",
+        "placeOfBLIssue": {
+          "anyOf": [
+            {
+              "required": [
+                "address"
+              ],
               "type": "object",
+              "description": "An interface used to express a location using an `Address` object\n",
               "properties": {
-                "name": {
+                "locationName": {
                   "maxLength": 100,
                   "type": "string",
-                  "description": "Name of the address"
+                  "description": "The name of the location."
                 },
-                "street": {
+                "address": {
+                  "description": "Address related information",
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "maxLength": 100,
+                      "type": "string",
+                      "description": "Name of the address"
+                    },
+                    "street": {
+                      "maxLength": 100,
+                      "type": "string",
+                      "description": "The name of the street of the party's address."
+                    },
+                    "streetNumber": {
+                      "maxLength": 50,
+                      "type": "string",
+                      "description": "The number of the street of the party's address."
+                    },
+                    "floor": {
+                      "maxLength": 50,
+                      "type": "string",
+                      "description": "The floor of the party's street number."
+                    },
+                    "postCode": {
+                      "maxLength": 50,
+                      "type": "string",
+                      "description": "The post code of the party's address."
+                    },
+                    "city": {
+                      "maxLength": 65,
+                      "type": "string",
+                      "description": "The city name of the party's address."
+                    },
+                    "stateRegion": {
+                      "maxLength": 65,
+                      "type": "string",
+                      "description": "The state/region of the party's address."
+                    },
+                    "country": {
+                      "maxLength": 75,
+                      "type": "string",
+                      "description": "The country of the party's address."
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "required": [
+                "UNLocationCode"
+              ],
+              "type": "object",
+              "description": "An interface used to express a location using a `Un Location Code`\n",
+              "properties": {
+                "locationName": {
                   "maxLength": 100,
                   "type": "string",
-                  "description": "The name of the street of the partyÔÇÖs address."
+                  "description": "The name of the location."
                 },
-                "streetNumber": {
-                  "maxLength": 50,
+                "UNLocationCode": {
+                  "maxLength": 5,
                   "type": "string",
-                  "description": "The number of the street of the partyÔÇÖs address."
-                },
-                "floor": {
-                  "maxLength": 50,
-                  "type": "string",
-                  "description": "The floor of the partyÔÇÖs street number."
-                },
-                "postCode": {
-                  "maxLength": 10,
-                  "type": "string",
-                  "description": "The post code of the partyÔÇÖs address."
-                },
-                "city": {
-                  "maxLength": 65,
-                  "type": "string",
-                  "description": "The city name of the partyÔÇÖs address."
-                },
-                "stateRegion": {
-                  "maxLength": 65,
-                  "type": "string",
-                  "description": "The state/region of the partyÔÇÖs address."
-                },
-                "country": {
-                  "maxLength": 75,
-                  "type": "string",
-                  "description": "The country of the partyÔÇÖs address."
+                  "description": "The UN Location code specifying where the place is located."
                 }
               }
             }
-          }
+          ],
+          "description": "General purpose object to capture `Place of B/L Issue` location. The location can be specified in **any** of the following ways: `UN Location Code` and/or an `Address`.\n\nThe location where the original transport document (`Bill of Lading`) will be issued.\n"
         },
         "commodities": {
           "type": "array",
@@ -480,7 +485,7 @@
               },
               "cargoGrossVolumeUnit": {
                 "type": "string",
-                "description": "The unit of measure which can be expressed in either imperial or metric terms\n- MTQ (Cubic meter)\n- FTQ (Cubic foot)\n",
+                "description": "The unit of measure which can be expressed in either imperial or metric terms\n- FTQ (Cubic meter)\n- MTQ (Cubic foot)\n",
                 "enum": [
                   "MTQ",
                   "FTQ"
@@ -542,7 +547,7 @@
             "properties": {
               "referenceType": {
                 "type": "string",
-                "description": "The reference type codes defined by DCSA.\n- FF (Freight ForwarderÔÇÖs Reference)\n- SI (ShipperÔÇÖs Reference)\n- PO (Purchase Order Reference)\n- CR (CustomerÔÇÖs Reference)\n- AAO (ConsigneeÔÇÖs Reference)\n- ECR (Empty container release reference)\n- CSI (Customer shipment ID)\n- BPR (Booking party reference number)\n- BID (Booking Request ID)\n\nMore details can be found on <a href=\"https://github.com/dcsaorg/DCSA-Information-Model/blob/master/datamodel/referencedata.d/referencetypes.csv\">GitHub</a>. Be aware that the list is a subset of the possible values.\n",
+                "description": "The reference type codes defined by DCSA.\n- FF (Freight Forwarder's Reference)\n- SI (Shipper's Reference)\n- PO (Purchase Order Reference)\n- CR (Customer's Reference)\n- AAO (Consignee's Reference)\n- ECR (Empty container release reference)\n- CSI (Customer shipment ID)\n- BPR (Booking party reference number)\n- BID (Booking Request ID)\n\nMore details can be found on <a href=\"https://github.com/dcsaorg/DCSA-Information-Model/blob/master/datamodel/referencedata.d/referencetypes.csv\">GitHub</a>. Be aware that the list is a subset of the possible values.\n",
                 "enum": [
                   "FF",
                   "SI",
@@ -651,37 +656,37 @@
                       "street": {
                         "maxLength": 100,
                         "type": "string",
-                        "description": "The name of the street of the partyÔÇÖs address."
+                        "description": "The name of the street of the party's address."
                       },
                       "streetNumber": {
                         "maxLength": 50,
                         "type": "string",
-                        "description": "The number of the street of the partyÔÇÖs address."
+                        "description": "The number of the street of the party's address."
                       },
                       "floor": {
                         "maxLength": 50,
                         "type": "string",
-                        "description": "The floor of the partyÔÇÖs street number."
+                        "description": "The floor of the party's street number."
                       },
                       "postCode": {
-                        "maxLength": 10,
+                        "maxLength": 50,
                         "type": "string",
-                        "description": "The post code of the partyÔÇÖs address."
+                        "description": "The post code of the party's address."
                       },
                       "city": {
                         "maxLength": 65,
                         "type": "string",
-                        "description": "The city name of the partyÔÇÖs address."
+                        "description": "The city name of the party's address."
                       },
                       "stateRegion": {
                         "maxLength": 65,
                         "type": "string",
-                        "description": "The state/region of the partyÔÇÖs address."
+                        "description": "The state/region of the party's address."
                       },
                       "country": {
                         "maxLength": 75,
                         "type": "string",
-                        "description": "The country of the partyÔÇÖs address."
+                        "description": "The country of the party's address."
                       }
                     }
                   },
@@ -806,93 +811,124 @@
               "shipmentLocationTypeCode"
             ],
             "type": "object",
-            "description": "maps the relationship between Shipment and Location, e.g., the place of receipt and the places of delivery for a specific shipment.",
-            "title": "shipmentLocation",
+            "description": "maps the relationship between Shipment and Location, e.g., the `Place of Receipt` and the `Place of Delivery` for a specific shipment. This is a reusable object between `Booking` and `Transport Document`\n",
             "properties": {
               "location": {
-                "type": "object",
-                "description": "General purpose object to capture location-related data, the location can be specified in **any** of the following ways: `geoLocation` (lat+long), `UN Location Code`, a `Facility` or an `Address`.\n\nIf multiple ways are used - then they all have to point to the same location!\n",
-                "properties": {
-                  "locationName": {
-                    "maxLength": 100,
-                    "type": "string",
-                    "description": "The name of the location."
-                  },
-                  "latitude": {
-                    "maxLength": 10,
-                    "type": "string",
-                    "description": "Geographic coordinate that specifies the northÔÇôsouth position of a point on the Earth&apos;s surface."
-                  },
-                  "longitude": {
-                    "maxLength": 11,
-                    "type": "string",
-                    "description": "Geographic coordinate that specifies the eastÔÇôwest position of a point on the Earth&apos;s surface."
-                  },
-                  "UNLocationCode": {
-                    "maxLength": 5,
-                    "type": "string",
-                    "description": "The UN Location code specifying where the place is located."
-                  },
-                  "facilityCode": {
-                    "maxLength": 6,
-                    "type": "string",
-                    "description": "The code used for identifying the specific facility. This code does <b>not</b> include the UN Location Code.\n"
-                  },
-                  "facilityCodeListProvider": {
-                    "type": "string",
-                    "description": "The provider used for identifying the facility Code\n",
-                    "enum": [
-                      "BIC",
-                      "SMDG"
-                    ]
-                  },
-                  "address": {
-                    "description": "Address related information",
+                "anyOf": [
+                  {
+                    "required": [
+                      "address"
+                    ],
                     "type": "object",
+                    "description": "An interface used to express a location using an `Address` object\n",
                     "properties": {
-                      "name": {
+                      "locationName": {
                         "maxLength": 100,
                         "type": "string",
-                        "description": "Name of the address"
+                        "description": "The name of the location."
                       },
-                      "street": {
+                      "address": {
+                        "description": "Address related information",
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "maxLength": 100,
+                            "type": "string",
+                            "description": "Name of the address"
+                          },
+                          "street": {
+                            "maxLength": 100,
+                            "type": "string",
+                            "description": "The name of the street of the party's address."
+                          },
+                          "streetNumber": {
+                            "maxLength": 50,
+                            "type": "string",
+                            "description": "The number of the street of the party's address."
+                          },
+                          "floor": {
+                            "maxLength": 50,
+                            "type": "string",
+                            "description": "The floor of the party's street number."
+                          },
+                          "postCode": {
+                            "maxLength": 50,
+                            "type": "string",
+                            "description": "The post code of the party's address."
+                          },
+                          "city": {
+                            "maxLength": 65,
+                            "type": "string",
+                            "description": "The city name of the party's address."
+                          },
+                          "stateRegion": {
+                            "maxLength": 65,
+                            "type": "string",
+                            "description": "The state/region of the party's address."
+                          },
+                          "country": {
+                            "maxLength": 75,
+                            "type": "string",
+                            "description": "The country of the party's address."
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "UNLocationCode"
+                    ],
+                    "type": "object",
+                    "description": "An interface used to express a location using a `Un Location Code`\n",
+                    "properties": {
+                      "locationName": {
                         "maxLength": 100,
                         "type": "string",
-                        "description": "The name of the street of the partyÔÇÖs address."
+                        "description": "The name of the location."
                       },
-                      "streetNumber": {
-                        "maxLength": 50,
+                      "UNLocationCode": {
+                        "maxLength": 5,
                         "type": "string",
-                        "description": "The number of the street of the partyÔÇÖs address."
+                        "description": "The UN Location code specifying where the place is located."
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "facilityCode",
+                      "facilityCodeListProvider"
+                    ],
+                    "type": "object",
+                    "description": "An interface used to express a location using a `Facility`. The facility can either be expressed using a `BIC` code or a `SMDG` code. The `facilityCode` does not contain the `UNLocationCode` - this should be provided in the `UnLocationCode` attribute.\n",
+                    "properties": {
+                      "locationName": {
+                        "maxLength": 100,
+                        "type": "string",
+                        "description": "The name of the location."
                       },
-                      "floor": {
-                        "maxLength": 50,
+                      "UNLocationCode": {
+                        "maxLength": 5,
                         "type": "string",
-                        "description": "The floor of the partyÔÇÖs street number."
+                        "description": "The UN Location code specifying where the place is located."
                       },
-                      "postCode": {
-                        "maxLength": 10,
+                      "facilityCode": {
+                        "maxLength": 6,
                         "type": "string",
-                        "description": "The post code of the partyÔÇÖs address."
+                        "description": "The code used for identifying the specific facility. This code does <b>not</b> include the UN Location Code.\n"
                       },
-                      "city": {
-                        "maxLength": 65,
+                      "facilityCodeListProvider": {
                         "type": "string",
-                        "description": "The city name of the partyÔÇÖs address."
-                      },
-                      "stateRegion": {
-                        "maxLength": 65,
-                        "type": "string",
-                        "description": "The state/region of the partyÔÇÖs address."
-                      },
-                      "country": {
-                        "maxLength": 75,
-                        "type": "string",
-                        "description": "The country of the partyÔÇÖs address."
+                        "description": "The provider used for identifying the facility Code. Some facility codes are only defined in combination with an `UN Location Code`\n- BIC (Requires a UN Location Code)\n- SMDG (Requires a UN Location Code)\n",
+                        "enum": [
+                          "BIC",
+                          "SMDG"
+                        ]
                       }
                     }
                   }
-                }
+                ],
+                "description": "General purpose object to capture the location in the `ShipmentLocation`. The location can be specified in **any** of the following ways: `UN Location Code`, `Facility` and/or an `Address`.\n"
               },
               "displayedName": {
                 "maxLength": 250,
@@ -901,7 +937,7 @@
               },
               "shipmentLocationTypeCode": {
                 "type": "string",
-                "description": "Links to the Location Type Code defined by DCSA.\n- PRE (Place of Receipt)\n- POL (Port of Loading)\n- POD (Port of Discharge)\n- PDE (Place of Delivery)\n- PCF (Pre-carriage From)\n- PSR (Pre-carriage under shipperÔÇÖs responsibility)\n- OIR (Onward In-land Routing)\n- DRL (Depot release location)\n- ORI (Origin of goods)\n- IEL (Container intermediate export stop off location)\n- PTP (Prohibited transshipment port)\n- RTP (Requested transshipment port)\n- FCD (Full container drop-off location)\n- ECP (Empty container pick-up date and time)\n- IPA (Invoice payable at)\n",
+                "description": "Links to the Location Type Code defined by DCSA.\n- PRE (Place of Receipt)\n- POL (Port of Loading)\n- POD (Port of Discharge)\n- PDE (Place of Delivery)\n- PCF (Pre-carriage From)\n- PSR (Pre-carriage under shipper's responsibility)\n- OIR (Onward In-land Routing)\n- DRL (Depot release location)\n- ORI (Origin of goods)\n- IEL (Container intermediate export stop off location)\n- PTP (Prohibited transshipment port)\n- RTP (Requested transshipment port)\n- FCD (Full container drop-off location)\n- ECP (Empty container pick-up date and time)\n",
                 "enum": [
                   "PRE",
                   "POL",
@@ -916,8 +952,7 @@
                   "PTP",
                   "RTP",
                   "FCD",
-                  "ECP",
-                  "IPA"
+                  "ECP"
                 ]
               },
               "eventDateTime": {
@@ -961,174 +996,238 @@
             "maximum": 2147483647
           },
           "loadLocation": {
-            "type": "object",
-            "description": "General purpose object to capture location-related data, the location can be specified in **any** of the following ways: `geoLocation` (lat+long), `UN Location Code`, a `Facility` or an `Address`.\n\nIf multiple ways are used - then they all have to point to the same location!\n",
-            "properties": {
-              "locationName": {
-                "maxLength": 100,
-                "type": "string",
-                "description": "The name of the location."
-              },
-              "latitude": {
-                "maxLength": 10,
-                "type": "string",
-                "description": "Geographic coordinate that specifies the northÔÇôsouth position of a point on the Earth&apos;s surface."
-              },
-              "longitude": {
-                "maxLength": 11,
-                "type": "string",
-                "description": "Geographic coordinate that specifies the eastÔÇôwest position of a point on the Earth&apos;s surface."
-              },
-              "UNLocationCode": {
-                "maxLength": 5,
-                "type": "string",
-                "description": "The UN Location code specifying where the place is located."
-              },
-              "facilityCode": {
-                "maxLength": 6,
-                "type": "string",
-                "description": "The code used for identifying the specific facility. This code does <b>not</b> include the UN Location Code.\n"
-              },
-              "facilityCodeListProvider": {
-                "type": "string",
-                "description": "The provider used for identifying the facility Code\n",
-                "enum": [
-                  "BIC",
-                  "SMDG"
-                ]
-              },
-              "address": {
-                "description": "Address related information",
+            "anyOf": [
+              {
+                "required": [
+                  "address"
+                ],
                 "type": "object",
+                "description": "An interface used to express a location using an `Address` object\n",
                 "properties": {
-                  "name": {
+                  "locationName": {
                     "maxLength": 100,
                     "type": "string",
-                    "description": "Name of the address"
+                    "description": "The name of the location."
                   },
-                  "street": {
+                  "address": {
+                    "description": "Address related information",
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "maxLength": 100,
+                        "type": "string",
+                        "description": "Name of the address"
+                      },
+                      "street": {
+                        "maxLength": 100,
+                        "type": "string",
+                        "description": "The name of the street of the party's address."
+                      },
+                      "streetNumber": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "description": "The number of the street of the party's address."
+                      },
+                      "floor": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "description": "The floor of the party's street number."
+                      },
+                      "postCode": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "description": "The post code of the party's address."
+                      },
+                      "city": {
+                        "maxLength": 65,
+                        "type": "string",
+                        "description": "The city name of the party's address."
+                      },
+                      "stateRegion": {
+                        "maxLength": 65,
+                        "type": "string",
+                        "description": "The state/region of the party's address."
+                      },
+                      "country": {
+                        "maxLength": 75,
+                        "type": "string",
+                        "description": "The country of the party's address."
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "required": [
+                  "UNLocationCode"
+                ],
+                "type": "object",
+                "description": "An interface used to express a location using a `Un Location Code`\n",
+                "properties": {
+                  "locationName": {
                     "maxLength": 100,
                     "type": "string",
-                    "description": "The name of the street of the partyÔÇÖs address."
+                    "description": "The name of the location."
                   },
-                  "streetNumber": {
-                    "maxLength": 50,
+                  "UNLocationCode": {
+                    "maxLength": 5,
                     "type": "string",
-                    "description": "The number of the street of the partyÔÇÖs address."
+                    "description": "The UN Location code specifying where the place is located."
+                  }
+                }
+              },
+              {
+                "required": [
+                  "facilityCode",
+                  "facilityCodeListProvider"
+                ],
+                "type": "object",
+                "description": "An interface used to express a location using a `Facility`. The facility can either be expressed using a `BIC` code or a `SMDG` code. The `facilityCode` does not contain the `UNLocationCode` - this should be provided in the `UnLocationCode` attribute.\n",
+                "properties": {
+                  "locationName": {
+                    "maxLength": 100,
+                    "type": "string",
+                    "description": "The name of the location."
                   },
-                  "floor": {
-                    "maxLength": 50,
+                  "UNLocationCode": {
+                    "maxLength": 5,
                     "type": "string",
-                    "description": "The floor of the partyÔÇÖs street number."
+                    "description": "The UN Location code specifying where the place is located."
                   },
-                  "postCode": {
-                    "maxLength": 10,
+                  "facilityCode": {
+                    "maxLength": 6,
                     "type": "string",
-                    "description": "The post code of the partyÔÇÖs address."
+                    "description": "The code used for identifying the specific facility. This code does <b>not</b> include the UN Location Code.\n"
                   },
-                  "city": {
-                    "maxLength": 65,
+                  "facilityCodeListProvider": {
                     "type": "string",
-                    "description": "The city name of the partyÔÇÖs address."
-                  },
-                  "stateRegion": {
-                    "maxLength": 65,
-                    "type": "string",
-                    "description": "The state/region of the partyÔÇÖs address."
-                  },
-                  "country": {
-                    "maxLength": 75,
-                    "type": "string",
-                    "description": "The country of the partyÔÇÖs address."
+                    "description": "The provider used for identifying the facility Code. Some facility codes are only defined in combination with an `UN Location Code`\n- BIC (Requires a UN Location Code)\n- SMDG (Requires a UN Location Code)\n",
+                    "enum": [
+                      "BIC",
+                      "SMDG"
+                    ]
                   }
                 }
               }
-            }
+            ],
+            "description": "General purpose object to capture the `Load Location`. The location can be specified in **any** of the following ways: `UN Location Code`, `Facility` and/or an `Address`.\n"
           },
           "dischargeLocation": {
-            "type": "object",
-            "description": "General purpose object to capture location-related data, the location can be specified in **any** of the following ways: `geoLocation` (lat+long), `UN Location Code`, a `Facility` or an `Address`.\n\nIf multiple ways are used - then they all have to point to the same location!\n",
-            "properties": {
-              "locationName": {
-                "maxLength": 100,
-                "type": "string",
-                "description": "The name of the location."
-              },
-              "latitude": {
-                "maxLength": 10,
-                "type": "string",
-                "description": "Geographic coordinate that specifies the northÔÇôsouth position of a point on the Earth&apos;s surface."
-              },
-              "longitude": {
-                "maxLength": 11,
-                "type": "string",
-                "description": "Geographic coordinate that specifies the eastÔÇôwest position of a point on the Earth&apos;s surface."
-              },
-              "UNLocationCode": {
-                "maxLength": 5,
-                "type": "string",
-                "description": "The UN Location code specifying where the place is located."
-              },
-              "facilityCode": {
-                "maxLength": 6,
-                "type": "string",
-                "description": "The code used for identifying the specific facility. This code does <b>not</b> include the UN Location Code.\n"
-              },
-              "facilityCodeListProvider": {
-                "type": "string",
-                "description": "The provider used for identifying the facility Code\n",
-                "enum": [
-                  "BIC",
-                  "SMDG"
-                ]
-              },
-              "address": {
-                "description": "Address related information",
+            "anyOf": [
+              {
+                "required": [
+                  "address"
+                ],
                 "type": "object",
+                "description": "An interface used to express a location using an `Address` object\n",
                 "properties": {
-                  "name": {
+                  "locationName": {
                     "maxLength": 100,
                     "type": "string",
-                    "description": "Name of the address"
+                    "description": "The name of the location."
                   },
-                  "street": {
+                  "address": {
+                    "description": "Address related information",
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "maxLength": 100,
+                        "type": "string",
+                        "description": "Name of the address"
+                      },
+                      "street": {
+                        "maxLength": 100,
+                        "type": "string",
+                        "description": "The name of the street of the party's address."
+                      },
+                      "streetNumber": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "description": "The number of the street of the party's address."
+                      },
+                      "floor": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "description": "The floor of the party's street number."
+                      },
+                      "postCode": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "description": "The post code of the party's address."
+                      },
+                      "city": {
+                        "maxLength": 65,
+                        "type": "string",
+                        "description": "The city name of the party's address."
+                      },
+                      "stateRegion": {
+                        "maxLength": 65,
+                        "type": "string",
+                        "description": "The state/region of the party's address."
+                      },
+                      "country": {
+                        "maxLength": 75,
+                        "type": "string",
+                        "description": "The country of the party's address."
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "required": [
+                  "UNLocationCode"
+                ],
+                "type": "object",
+                "description": "An interface used to express a location using a `Un Location Code`\n",
+                "properties": {
+                  "locationName": {
                     "maxLength": 100,
                     "type": "string",
-                    "description": "The name of the street of the partyÔÇÖs address."
+                    "description": "The name of the location."
                   },
-                  "streetNumber": {
-                    "maxLength": 50,
+                  "UNLocationCode": {
+                    "maxLength": 5,
                     "type": "string",
-                    "description": "The number of the street of the partyÔÇÖs address."
+                    "description": "The UN Location code specifying where the place is located."
+                  }
+                }
+              },
+              {
+                "required": [
+                  "facilityCode",
+                  "facilityCodeListProvider"
+                ],
+                "type": "object",
+                "description": "An interface used to express a location using a `Facility`. The facility can either be expressed using a `BIC` code or a `SMDG` code. The `facilityCode` does not contain the `UNLocationCode` - this should be provided in the `UnLocationCode` attribute.\n",
+                "properties": {
+                  "locationName": {
+                    "maxLength": 100,
+                    "type": "string",
+                    "description": "The name of the location."
                   },
-                  "floor": {
-                    "maxLength": 50,
+                  "UNLocationCode": {
+                    "maxLength": 5,
                     "type": "string",
-                    "description": "The floor of the partyÔÇÖs street number."
+                    "description": "The UN Location code specifying where the place is located."
                   },
-                  "postCode": {
-                    "maxLength": 10,
+                  "facilityCode": {
+                    "maxLength": 6,
                     "type": "string",
-                    "description": "The post code of the partyÔÇÖs address."
+                    "description": "The code used for identifying the specific facility. This code does <b>not</b> include the UN Location Code.\n"
                   },
-                  "city": {
-                    "maxLength": 65,
+                  "facilityCodeListProvider": {
                     "type": "string",
-                    "description": "The city name of the partyÔÇÖs address."
-                  },
-                  "stateRegion": {
-                    "maxLength": 65,
-                    "type": "string",
-                    "description": "The state/region of the partyÔÇÖs address."
-                  },
-                  "country": {
-                    "maxLength": 75,
-                    "type": "string",
-                    "description": "The country of the partyÔÇÖs address."
+                    "description": "The provider used for identifying the facility Code. Some facility codes are only defined in combination with an `UN Location Code`\n- BIC (Requires a UN Location Code)\n- SMDG (Requires a UN Location Code)\n",
+                    "enum": [
+                      "BIC",
+                      "SMDG"
+                    ]
                   }
                 }
               }
-            }
+            ],
+            "description": "General purpose object to capture the `Discharge Location`. The location can be specified in **any** of the following ways: `UN Location Code`, `Facility` and/or an `Address`.\n"
           },
           "plannedDepartureDate": {
             "type": "string",
@@ -1163,12 +1262,12 @@
           "importVoyageNumber": {
             "maxLength": 50,
             "type": "string",
-            "description": "The vessel operator-specific identifier of the import Voyage."
+            "description": "The identifier of an import voyage. The vessel operator-specific identifier of the import Voyage.\n"
           },
           "exportVoyageNumber": {
             "maxLength": 50,
             "type": "string",
-            "description": "The vessel operator-specific identifier of the export Voyage."
+            "description": "The identifier of an export voyage. The vessel operator-specific identifier of the export Voyage. The result will only return schedules including the export Voyage Number\n"
           },
           "isUnderShippersResponsibility": {
             "type": "boolean",
@@ -1189,7 +1288,7 @@
         "properties": {
           "cutOffDateTimeCode": {
             "type": "string",
-            "description": "Code for the cut-off time\n- DCO (Documentation cut-off)\n- VCO (VGM cut-off)\n- FCO (FCL delivery cut-off)\n- LCO (LCL delivery cut-off)\n- ECP (Empty container pick-up date and time)\n- EFC (Earliest full-container delivery date)\n- AFD (AMS Filing Due date)\n- EGI (Earliest Possible Gate in)\n",
+            "description": "Code for the cut-off time\n- DCO (Documentation cut-off)\n- VCO (VGM cut-off)\n- FCO (FCL delivery cut-off)\n- LCO (LCL delivery cut-off)\n- ECP (Empty container pick-up date and time)\n- EFC (Earliest full-container delivery date)\n- AFD (AMS Filing Due date)\n",
             "enum": [
               "DCO",
               "VCO",
@@ -1197,8 +1296,7 @@
               "LCO",
               "ECP",
               "EFC",
-              "AFD",
-              "EGI"
+              "AFD"
             ]
           },
           "cutOffDateTime": {
@@ -1217,93 +1315,124 @@
           "shipmentLocationTypeCode"
         ],
         "type": "object",
-        "description": "maps the relationship between Shipment and Location, e.g., the place of receipt and the places of delivery for a specific shipment.",
-        "title": "shipmentLocation",
+        "description": "maps the relationship between Shipment and Location, e.g., the `Place of Receipt` and the `Place of Delivery` for a specific shipment. This is a reusable object between `Booking` and `Transport Document`\n",
         "properties": {
           "location": {
-            "type": "object",
-            "description": "General purpose object to capture location-related data, the location can be specified in **any** of the following ways: `geoLocation` (lat+long), `UN Location Code`, a `Facility` or an `Address`.\n\nIf multiple ways are used - then they all have to point to the same location!\n",
-            "properties": {
-              "locationName": {
-                "maxLength": 100,
-                "type": "string",
-                "description": "The name of the location."
-              },
-              "latitude": {
-                "maxLength": 10,
-                "type": "string",
-                "description": "Geographic coordinate that specifies the northÔÇôsouth position of a point on the Earth&apos;s surface."
-              },
-              "longitude": {
-                "maxLength": 11,
-                "type": "string",
-                "description": "Geographic coordinate that specifies the eastÔÇôwest position of a point on the Earth&apos;s surface."
-              },
-              "UNLocationCode": {
-                "maxLength": 5,
-                "type": "string",
-                "description": "The UN Location code specifying where the place is located."
-              },
-              "facilityCode": {
-                "maxLength": 6,
-                "type": "string",
-                "description": "The code used for identifying the specific facility. This code does <b>not</b> include the UN Location Code.\n"
-              },
-              "facilityCodeListProvider": {
-                "type": "string",
-                "description": "The provider used for identifying the facility Code\n",
-                "enum": [
-                  "BIC",
-                  "SMDG"
-                ]
-              },
-              "address": {
-                "description": "Address related information",
+            "anyOf": [
+              {
+                "required": [
+                  "address"
+                ],
                 "type": "object",
+                "description": "An interface used to express a location using an `Address` object\n",
                 "properties": {
-                  "name": {
+                  "locationName": {
                     "maxLength": 100,
                     "type": "string",
-                    "description": "Name of the address"
+                    "description": "The name of the location."
                   },
-                  "street": {
+                  "address": {
+                    "description": "Address related information",
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "maxLength": 100,
+                        "type": "string",
+                        "description": "Name of the address"
+                      },
+                      "street": {
+                        "maxLength": 100,
+                        "type": "string",
+                        "description": "The name of the street of the party's address."
+                      },
+                      "streetNumber": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "description": "The number of the street of the party's address."
+                      },
+                      "floor": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "description": "The floor of the party's street number."
+                      },
+                      "postCode": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "description": "The post code of the party's address."
+                      },
+                      "city": {
+                        "maxLength": 65,
+                        "type": "string",
+                        "description": "The city name of the party's address."
+                      },
+                      "stateRegion": {
+                        "maxLength": 65,
+                        "type": "string",
+                        "description": "The state/region of the party's address."
+                      },
+                      "country": {
+                        "maxLength": 75,
+                        "type": "string",
+                        "description": "The country of the party's address."
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "required": [
+                  "UNLocationCode"
+                ],
+                "type": "object",
+                "description": "An interface used to express a location using a `Un Location Code`\n",
+                "properties": {
+                  "locationName": {
                     "maxLength": 100,
                     "type": "string",
-                    "description": "The name of the street of the partyÔÇÖs address."
+                    "description": "The name of the location."
                   },
-                  "streetNumber": {
-                    "maxLength": 50,
+                  "UNLocationCode": {
+                    "maxLength": 5,
                     "type": "string",
-                    "description": "The number of the street of the partyÔÇÖs address."
+                    "description": "The UN Location code specifying where the place is located."
+                  }
+                }
+              },
+              {
+                "required": [
+                  "facilityCode",
+                  "facilityCodeListProvider"
+                ],
+                "type": "object",
+                "description": "An interface used to express a location using a `Facility`. The facility can either be expressed using a `BIC` code or a `SMDG` code. The `facilityCode` does not contain the `UNLocationCode` - this should be provided in the `UnLocationCode` attribute.\n",
+                "properties": {
+                  "locationName": {
+                    "maxLength": 100,
+                    "type": "string",
+                    "description": "The name of the location."
                   },
-                  "floor": {
-                    "maxLength": 50,
+                  "UNLocationCode": {
+                    "maxLength": 5,
                     "type": "string",
-                    "description": "The floor of the partyÔÇÖs street number."
+                    "description": "The UN Location code specifying where the place is located."
                   },
-                  "postCode": {
-                    "maxLength": 10,
+                  "facilityCode": {
+                    "maxLength": 6,
                     "type": "string",
-                    "description": "The post code of the partyÔÇÖs address."
+                    "description": "The code used for identifying the specific facility. This code does <b>not</b> include the UN Location Code.\n"
                   },
-                  "city": {
-                    "maxLength": 65,
+                  "facilityCodeListProvider": {
                     "type": "string",
-                    "description": "The city name of the partyÔÇÖs address."
-                  },
-                  "stateRegion": {
-                    "maxLength": 65,
-                    "type": "string",
-                    "description": "The state/region of the partyÔÇÖs address."
-                  },
-                  "country": {
-                    "maxLength": 75,
-                    "type": "string",
-                    "description": "The country of the partyÔÇÖs address."
+                    "description": "The provider used for identifying the facility Code. Some facility codes are only defined in combination with an `UN Location Code`\n- BIC (Requires a UN Location Code)\n- SMDG (Requires a UN Location Code)\n",
+                    "enum": [
+                      "BIC",
+                      "SMDG"
+                    ]
                   }
                 }
               }
-            }
+            ],
+            "description": "General purpose object to capture the location in the `ShipmentLocation`. The location can be specified in **any** of the following ways: `UN Location Code`, `Facility` and/or an `Address`.\n"
           },
           "displayedName": {
             "maxLength": 250,
@@ -1312,7 +1441,7 @@
           },
           "shipmentLocationTypeCode": {
             "type": "string",
-            "description": "Links to the Location Type Code defined by DCSA.\n- PRE (Place of Receipt)\n- POL (Port of Loading)\n- POD (Port of Discharge)\n- PDE (Place of Delivery)\n- PCF (Pre-carriage From)\n- PSR (Pre-carriage under shipperÔÇÖs responsibility)\n- OIR (Onward In-land Routing)\n- DRL (Depot release location)\n- ORI (Origin of goods)\n- IEL (Container intermediate export stop off location)\n- PTP (Prohibited transshipment port)\n- RTP (Requested transshipment port)\n- FCD (Full container drop-off location)\n- ECP (Empty container pick-up date and time)\n- IPA (Invoice payable at)\n",
+            "description": "Links to the Location Type Code defined by DCSA.\n- PRE (Place of Receipt)\n- POL (Port of Loading)\n- POD (Port of Discharge)\n- PDE (Place of Delivery)\n- PCF (Pre-carriage From)\n- PSR (Pre-carriage under shipper's responsibility)\n- OIR (Onward In-land Routing)\n- DRL (Depot release location)\n- ORI (Origin of goods)\n- IEL (Container intermediate export stop off location)\n- PTP (Prohibited transshipment port)\n- RTP (Requested transshipment port)\n- FCD (Full container drop-off location)\n- ECP (Empty container pick-up date and time)\n",
             "enum": [
               "PRE",
               "POL",
@@ -1327,8 +1456,7 @@
               "PTP",
               "RTP",
               "FCD",
-              "ECP",
-              "IPA"
+              "ECP"
             ]
           },
           "eventDateTime": {
