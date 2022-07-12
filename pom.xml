@@ -17,7 +17,7 @@
 
 	<properties>
 		<!-- Define DCSA-Event-Core version -->
-		<dcsa.events.version>0.0.61</dcsa.events.version>
+		<dcsa.events.version>0.0.62</dcsa.events.version>
 		<dcsa.event.tag/>
 		<dcsa.artifacttype>-SNAPSHOT</dcsa.artifacttype>
 		<event-core.version>${dcsa.events.version}${dcsa.event.tag}${dcsa.artifacttype}</event-core.version>
