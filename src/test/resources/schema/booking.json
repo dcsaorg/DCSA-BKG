@@ -511,7 +511,12 @@
               "ECR",
               "CSI",
               "BPR",
-              "BID"
+              "BID",
+              "EQ",
+              "RUC",
+              "DUE",
+              "CER",
+              "AES"
             ]
           },
           "referenceValue": {
