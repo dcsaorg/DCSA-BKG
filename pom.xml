@@ -28,7 +28,7 @@
 		<core.version>${dcsa.core.version}${dcsa.core.tag}${dcsa.artifacttype}</core.version>
 		<!-- End: Re-Define DCSA-Core version -->
 		<!-- Define Shared Kernel version -->
-		<dcsa.shared-kernel.version>0.0.3</dcsa.shared-kernel.version>
+		<dcsa.shared-kernel.version>0.0.4</dcsa.shared-kernel.version>
 		<dcsa.shared-kernel.tag/>
 		<dcsa.shared-kernel.artifacttype>-SNAPSHOT</dcsa.shared-kernel.artifacttype>
 		<shared-kernel.version>${dcsa.shared-kernel.version}${dcsa.shared-kernel.tag}${dcsa.shared-kernel.artifacttype}</shared-kernel.version>
