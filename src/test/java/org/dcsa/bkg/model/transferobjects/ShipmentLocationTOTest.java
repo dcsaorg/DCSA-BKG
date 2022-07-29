@@ -20,6 +20,7 @@ import javax.validation.ValidatorFactory;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @DisplayName("Tests for ShipmentLocationTOTest")
 class ShipmentLocationTOTest {
@@ -41,7 +42,7 @@ class ShipmentLocationTOTest {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     LocationTO location = new LocationTO();
-    location.setId("x".repeat(100));
+    location.setId(UUID.randomUUID());
 
     shipmentLocationTO = new ShipmentLocationTO();
     shipmentLocationTO.setLocationTO(location);

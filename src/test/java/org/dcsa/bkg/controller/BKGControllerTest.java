@@ -148,7 +148,7 @@ class BKGControllerTest {
     bookingTO.setDocumentParties(Collections.singletonList(documentPartyTO));
 
     LocationTO location = new LocationTO();
-    location.setId("x".repeat(100));
+    location.setId(UUID.randomUUID());
 
     ShipmentLocationTO shipmentLocationTO = new ShipmentLocationTO();
     shipmentLocationTO.setLocationTO(location);
