@@ -155,18 +155,18 @@ class BKGServiceImplTest {
     booking = new Booking();
     booking.setId(UUID.randomUUID());
     booking.setCarrierBookingRequestReference("ef223019-ff16-4870-be69-9dbaaaae9b11");
-    booking.setInvoicePayableAt("c703277f-84ca-4816-9ccf-fad8e202d3b6");
-    booking.setPlaceOfIssueID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745");
+    booking.setInvoicePayableAt(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6"));
+    booking.setPlaceOfIssueID(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"));
     booking.setDocumentStatus(ShipmentEventTypeCode.RECE);
 
     location1 = new Location();
-    location1.setId("c703277f-84ca-4816-9ccf-fad8e202d3b6");
+    location1.setId(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6"));
     location1.setLocationName("Hamburg");
     location1.setAddressID(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
     location1.setFacilityID(UUID.fromString("74dcf8e6-4ed4-439e-a935-ec183df73013"));
 
     location2 = new Location();
-    location2.setId("7bf6f428-58f0-4347-9ce8-d6be2f5d5745");
+    location2.setId(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"));
     location2.setLocationName("Singapore");
     location2.setAddressID(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
     location2.setFacilityID(UUID.fromString("74dcf8e6-4ed4-439e-a935-ec183df73013"));
@@ -217,12 +217,12 @@ class BKGServiceImplTest {
 
     documentParty = new DocumentParty();
     documentParty.setId(UUID.fromString("3d9542f8-c362-4fa5-8902-90e30d87f1d4"));
-    documentParty.setPartyID("d04fb8c6-eb9c-474d-9cf7-86aa6bfcc2a2");
+    documentParty.setPartyID(UUID.fromString("d04fb8c6-eb9c-474d-9cf7-86aa6bfcc2a2"));
     documentParty.setBookingID(booking.getId());
     documentParty.setPartyFunction(PartyFunction.DDS);
 
     party = new Party();
-    party.setId("a680fe72-503e-40b3-9cfc-dcadafdecf15");
+    party.setId(UUID.fromString("a680fe72-503e-40b3-9cfc-dcadafdecf15"));
     party.setPartyName("DCSA");
     party.setAddressID(address.getId());
 
@@ -952,10 +952,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertNull(argumentCaptor.getValue().getCommodities());
                 assertNull(argumentCaptor.getValue().getValueAddedServiceRequests());
                 assertNull(argumentCaptor.getValue().getReferences());
@@ -1016,10 +1016,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -1083,10 +1083,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -1156,10 +1156,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -1233,10 +1233,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -1408,10 +1408,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -1539,10 +1539,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -2164,10 +2164,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertNull(argumentCaptor.getValue().getCommodities());
                 assertNull(argumentCaptor.getValue().getValueAddedServiceRequests());
                 assertNull(argumentCaptor.getValue().getReferences());
@@ -2290,10 +2290,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -2361,10 +2361,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -2439,10 +2439,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -2525,10 +2525,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -2625,10 +2625,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -2768,10 +2768,10 @@ class BKGServiceImplTest {
                 assertEquals("Rum Runner", argumentCaptor.getValue().getVesselName());
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    argumentCaptor.getValue().getInvoicePayableAt().getId());
+                    argumentCaptor.getValue().getInvoicePayableAt().getId().toString());
                 assertEquals(
                     "7bf6f428-58f0-4347-9ce8-d6be2f5d5745",
-                    argumentCaptor.getValue().getPlaceOfIssue().getId());
+                    argumentCaptor.getValue().getPlaceOfIssue().getId().toString());
                 assertEquals(
                     "Mobile phones",
                     argumentCaptor.getValue().getCommodities().get(0).getCommodityType());
@@ -2927,9 +2927,9 @@ class BKGServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6")))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location1)));
-      when(locationService.fetchLocationDeepObjByID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745")))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
 
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -2948,8 +2948,8 @@ class BKGServiceImplTest {
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals(
-                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
-                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId().toString());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId().toString());
                 assertEquals(0, b.getCommodities().size());
                 assertEquals(0, b.getValueAddedServiceRequests().size());
                 assertNull(b.getReferences());
@@ -2971,9 +2971,9 @@ class BKGServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6")))
           .thenReturn(Mono.just(locationTO1));
-      when(locationService.fetchLocationDeepObjByID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745")))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.empty());
       when(valueAddedServiceRequestRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -2991,8 +2991,8 @@ class BKGServiceImplTest {
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals(
-                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
-                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId().toString());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId().toString());
                 assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -3020,9 +3020,9 @@ class BKGServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6")))
           .thenReturn(Mono.just(locationTO1));
-      when(locationService.fetchLocationDeepObjByID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745")))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
       when(valueAddedServiceRequestRepository.findByBookingID(any())).thenReturn(Flux.empty());
@@ -3040,8 +3040,8 @@ class BKGServiceImplTest {
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals(
-                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
-                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId().toString());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId().toString());
                 assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -3069,9 +3069,9 @@ class BKGServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6")))
           .thenReturn(Mono.just(locationTO1));
-      when(locationService.fetchLocationDeepObjByID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745")))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
       when(valueAddedServiceRequestRepository.findByBookingID(any()))
@@ -3090,8 +3090,8 @@ class BKGServiceImplTest {
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals(
-                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
-                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId().toString());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId().toString());
                 assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -3122,9 +3122,9 @@ class BKGServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6")))
           .thenReturn(Mono.just(locationTO1));
-      when(locationService.fetchLocationDeepObjByID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745")))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
       when(valueAddedServiceRequestRepository.findByBookingID(any()))
@@ -3143,8 +3143,8 @@ class BKGServiceImplTest {
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals(
-                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
-                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId().toString());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId().toString());
                 assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -3176,9 +3176,9 @@ class BKGServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6")))
           .thenReturn(Mono.just(locationTO1));
-      when(locationService.fetchLocationDeepObjByID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745")))
           .thenReturn(Mono.just(locationTO2));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
       when(valueAddedServiceRequestRepository.findByBookingID(any()))
@@ -3198,8 +3198,8 @@ class BKGServiceImplTest {
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals(
-                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
-                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId().toString());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId().toString());
                 assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -3250,9 +3250,9 @@ class BKGServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6")))
           .thenReturn(Mono.just(locationTO1));
-      when(locationService.fetchLocationDeepObjByID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745")))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
       when(valueAddedServiceRequestRepository.findByBookingID(any()))
@@ -3273,8 +3273,8 @@ class BKGServiceImplTest {
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals(
-                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
-                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId().toString());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId().toString());
                 assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -3350,9 +3350,9 @@ class BKGServiceImplTest {
       when(bookingRepository.findByCarrierBookingRequestReferenceAndValidUntilIsNull(any()))
           .thenReturn(Mono.just(booking));
 
-      when(locationService.fetchLocationDeepObjByID("c703277f-84ca-4816-9ccf-fad8e202d3b6"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6")))
           .thenReturn(Mono.just(locationTO1));
-      when(locationService.fetchLocationDeepObjByID("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"))
+      when(locationService.fetchLocationDeepObjByID(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745")))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location2)));
       when(commodityRepository.findByBookingID(any())).thenReturn(Flux.just(commodity));
       when(valueAddedServiceRequestRepository.findByBookingID(any()))
@@ -3373,8 +3373,8 @@ class BKGServiceImplTest {
                 assertEquals(
                     "ef223019-ff16-4870-be69-9dbaaaae9b11", b.getCarrierBookingRequestReference());
                 assertEquals(
-                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId());
-                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId());
+                    "c703277f-84ca-4816-9ccf-fad8e202d3b6", b.getInvoicePayableAt().getId().toString());
+                assertEquals("7bf6f428-58f0-4347-9ce8-d6be2f5d5745", b.getPlaceOfIssue().getId().toString());
                 assertEquals(
                     UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"),
                     b.getInvoicePayableAt().getAddress().getId());
@@ -3412,7 +3412,7 @@ class BKGServiceImplTest {
                     "Javastraat", b.getDocumentParties().get(0).getDisplayedAddress().get(0));
                 assertEquals(
                     "c703277f-84ca-4816-9ccf-fad8e202d3b6",
-                    b.getShipmentLocations().get(0).getLocationTO().getId());
+                    b.getShipmentLocations().get(0).getLocationTO().getId().toString());
                 assertEquals(
                     LocationType.FCD,
                     b.getShipmentLocations().get(0).getShipmentLocationTypeCode());
@@ -3509,14 +3509,14 @@ class BKGServiceImplTest {
       LocationTO dischargeLocation = new LocationTO();
       dischargeLocation.setFacilityCode("123456");
       dischargeLocation.setFacilityCodeListProvider(FacilityCodeListProvider.SMDG);
-      dischargeLocation.setId("7bf6f428-58f0-4347-9ce8-d6be2f5d5745");
+      dischargeLocation.setId(UUID.fromString("7bf6f428-58f0-4347-9ce8-d6be2f5d5745"));
       dischargeLocation.setAddressID(UUID.fromString("8fecc6d0-2a78-401d-948a-b9753f6b53d5"));
       dischargeLocation.setFacilityID(UUID.fromString("74dcf8e6-4ed4-439e-a935-ec183df73013"));
 
       LocationTO loadLocation = new LocationTO();
       loadLocation.setFacilityCode("654321");
       loadLocation.setFacilityCodeListProvider(FacilityCodeListProvider.SMDG);
-      loadLocation.setId("c703277f-84ca-4816-9ccf-fad8e202d3b6");
+      loadLocation.setId(UUID.fromString("c703277f-84ca-4816-9ccf-fad8e202d3b6"));
 
       transportTO = new TransportTO();
       transportTO.setTransportPlanStageSequenceNumber(
