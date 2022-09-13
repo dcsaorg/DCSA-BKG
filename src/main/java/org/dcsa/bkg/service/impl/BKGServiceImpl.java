@@ -88,6 +88,8 @@ public class BKGServiceImpl implements BKGService {
 
     Mono<Voyage> voyageMono = Mono.empty();
     if (bookingRequest.getExportVoyageNumber() != null) {
+      // Since carrierVoyageNumber is not unique in Voyage and booking does not supply a service to make it
+      // unique we just take the first Voyage found.
       voyageMono = voyageRepository.findByCarrierVoyageNumber(bookingRequest.getExportVoyageNumber())
         .switchIfEmpty(Mono.error(ConcreteRequestErrorMessageException.invalidInput("No voyage found with exportVoyageNumber " + bookingRequest.getExportVoyageNumber())))
         .next().doOnNext(voyage -> {
