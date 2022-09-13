@@ -48,6 +48,7 @@ public class BKGServiceImpl implements BKGService {
   private final VesselRepository vesselRepository;
   private final ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   private final RequestedEquipmentEquipmentRepository requestedEquipmentEquipmentRepository;
+  private final VoyageRepository voyageRepository;
 
   // mappers
   private final BookingMapper bookingMapper;
@@ -85,7 +86,17 @@ public class BKGServiceImpl implements BKGService {
     requestedBooking.setBookingRequestDateTime(now);
     requestedBooking.setUpdatedDateTime(now);
 
-    return bookingRepository
+    Mono<Voyage> voyageMono = Mono.empty();
+    if (bookingRequest.getExportVoyageNumber() != null) {
+      voyageMono = voyageRepository.findByCarrierVoyageNumber(bookingRequest.getExportVoyageNumber())
+        .switchIfEmpty(Mono.error(ConcreteRequestErrorMessageException.invalidInput("No voyage found with exportVoyageNumber " + bookingRequest.getExportVoyageNumber())))
+        .next().doOnNext(voyage -> {
+          requestedBooking.setVoyageID(voyage.getId());
+        });
+    }
+
+    return voyageMono.then(
+      bookingRepository
         .save(requestedBooking)
         .flatMap(
             bookingRefreshed ->
@@ -104,7 +115,8 @@ public class BKGServiceImpl implements BKGService {
                                     shipmentEventMapper.shipmentEventFromBookingTO(
                                         bookingTO, booking.getId(), null))
                                 .thenReturn(bookingTO)))
-        .map(bookingMapper::dtoToBookingResponseTO);
+        .map(bookingMapper::dtoToBookingResponseTO)
+    );
   }
 
   private Mono<BookingTO> createDeepObjectsForBooking(BookingTO bookingRequest, Booking booking) {
@@ -419,7 +431,11 @@ public class BKGServiceImpl implements BKGService {
                 .doOnNext(bookingTO::setDocumentParties),
             shipmentLocationService
                 .fetchShipmentLocationsByBookingID(booking.getId())
-                .doOnNext(bookingTO::setShipmentLocations))
+                .doOnNext(bookingTO::setShipmentLocations),
+            Mono.justOrEmpty(booking.getVoyageID())
+                .flatMap(voyageRepository::findById)
+                .doOnNext(voyage -> bookingTO.setExportVoyageNumber(voyage.getCarrierVoyageNumber()))
+      )
         .thenReturn(bookingTO);
   }
 

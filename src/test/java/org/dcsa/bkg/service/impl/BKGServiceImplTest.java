@@ -20,6 +20,7 @@ import org.dcsa.core.events.repository.BookingRepository;
 import org.dcsa.core.events.repository.CommodityRepository;
 import org.dcsa.core.events.repository.ShipmentRepository;
 import org.dcsa.core.events.repository.ValueAddedServiceRequestRepository;
+import org.dcsa.core.events.repository.VoyageRepository;
 import org.dcsa.core.events.service.DocumentPartyService;
 import org.dcsa.core.events.service.ReferenceService;
 import org.dcsa.core.events.service.ShipmentEventService;
@@ -77,6 +78,7 @@ class BKGServiceImplTest {
   @Mock ShipmentLocationRepository shipmentLocationRepository;
   @Mock ShipmentCutOffTimeRepository shipmentCutOffTimeRepository;
   @Mock VesselRepository vesselRepository;
+  @Mock VoyageRepository voyageRepository;
 
   @Mock DocumentPartyService documentPartyService;
   @Mock ShipmentEventService shipmentEventService;
@@ -540,6 +542,7 @@ class BKGServiceImplTest {
       when(vesselRepository.findByVesselNameOrEmpty(vessel.getVesselName()))
           .thenReturn(Flux.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
@@ -664,6 +667,7 @@ class BKGServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
@@ -721,6 +725,7 @@ class BKGServiceImplTest {
       when(vesselRepository.findByVesselIMONumberOrEmpty(vessel.getVesselIMONumber()))
           .thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
@@ -778,6 +783,7 @@ class BKGServiceImplTest {
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
           .thenReturn(Mono.just(Collections.emptyList()));
       when(referenceService.createReferencesByBookingIDAndTOs(any(UUID.class), any()))
@@ -816,6 +822,7 @@ class BKGServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
       when(vesselRepository.findByVesselNameOrEmpty(any()))
           .thenReturn(Flux.just(vessel, new Vessel()));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
@@ -862,6 +869,7 @@ class BKGServiceImplTest {
       when(vesselRepository.findByVesselNameOrEmpty(vessel.getVesselName()))
           .thenReturn(Flux.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
       when(documentPartyService.createDocumentPartiesByBookingID(any(), any()))
@@ -918,6 +926,7 @@ class BKGServiceImplTest {
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
 
@@ -981,6 +990,7 @@ class BKGServiceImplTest {
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
           .thenAnswer(arguments -> Mono.just(arguments.getArguments()[0]));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
 
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       LocationTO locationTO1 = locationMapper.locationToDTO(location1);
@@ -1042,6 +1052,7 @@ class BKGServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(shipmentEventService.create(any()))
@@ -1116,6 +1127,7 @@ class BKGServiceImplTest {
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
 
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       LocationTO locationTO1 = locationMapper.locationToDTO(location1);
@@ -1195,6 +1207,7 @@ class BKGServiceImplTest {
       LocationTO locationTO1 = locationMapper.locationToDTO(location1);
       when(locationService.ensureResolvable(any())).thenReturn(Mono.just(locationTO1));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
       LocationTO locationTO2 = locationMapper.locationToDTO(location2);
       when(locationService.ensureResolvable(eq(placeOfIssue))).thenReturn(Mono.just(locationTO2));
       when(commodityRepository.saveAll(any(Flux.class))).thenReturn(Flux.just(commodity));
@@ -1276,6 +1289,7 @@ class BKGServiceImplTest {
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       when(bookingRepository.setPlaceOfIssueIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
 
       when(locationService.ensureResolvable(eq(invoicePayableAt)))
           .thenAnswer(answer -> Mono.just(locationMapper.locationToDTO(location1)));
@@ -1323,6 +1337,7 @@ class BKGServiceImplTest {
 
       when(bookingRepository.save(any())).thenReturn(Mono.just(booking));
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
       when(shipmentEventService.create(any())).thenReturn(Mono.empty());
       when(documentPartyService.createDocumentPartiesByBookingID(any(), isNull()))
           .thenReturn(Mono.empty());
@@ -1364,6 +1379,7 @@ class BKGServiceImplTest {
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
 
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       LocationTO locationTO1 = locationMapper.locationToDTO(location1);
@@ -1495,6 +1511,7 @@ class BKGServiceImplTest {
       when(bookingRepository.findById(any(UUID.class))).thenReturn(Mono.just(booking));
       when(vesselRepository.findByVesselIMONumberOrEmpty(any())).thenReturn(Mono.just(vessel));
       when(bookingRepository.setVesselIDFor(any(), any())).thenReturn(Mono.just(true));
+      when(voyageRepository.findByCarrierVoyageNumber(any())).thenReturn(Flux.just(voyage));
 
       when(bookingRepository.setInvoicePayableAtFor(any(), any())).thenReturn(Mono.just(true));
       LocationTO locationTO1 = locationMapper.locationToDTO(location1);
